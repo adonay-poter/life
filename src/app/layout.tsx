@@ -56,6 +56,25 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} h-full antialiased`}
     >
+      <head>
+        {process.env.NODE_ENV !== 'production' && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+                if ('serviceWorker' in navigator) {
+                  navigator.serviceWorker.getRegistrations().then((registrations) => {
+                    for (let r of registrations) {
+                      r.unregister().then(() => {
+                        console.log('Unregistered active service worker in development mode.');
+                      });
+                    }
+                  });
+                }
+              `,
+            }}
+          />
+        )}
+      </head>
       <body className="min-h-full bg-[#F7F5F2] flex flex-col font-sans">
         <ClientWrapper>{children}</ClientWrapper>
       </body>

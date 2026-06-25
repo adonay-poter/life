@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useDashboard, Task, Project } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { 
@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 
 export default function TasksPage() {
+  const dragCounters = useRef<Record<string, number>>({});
+  const dragTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const {
     projects,
     tasks,
@@ -106,20 +109,34 @@ export default function TasksPage() {
 
   const handleDragEnter = (e: React.DragEvent, status: Task['status']) => {
     e.preventDefault();
-    setDraggedOverColumn(status);
+    if (dragTimeout.current) clearTimeout(dragTimeout.current);
+    
+    dragCounters.current[status] = (dragCounters.current[status] || 0) + 1;
+    if (dragCounters.current[status] === 1) {
+      setDraggedOverColumn(status);
+    }
   };
 
-  const handleDragLeave = () => {
-    setDraggedOverColumn(null);
+  const handleDragLeave = (e: React.DragEvent, status: Task['status']) => {
+    dragCounters.current[status] = Math.max(0, (dragCounters.current[status] || 0) - 1);
+    if (dragCounters.current[status] === 0) {
+      dragTimeout.current = setTimeout(() => {
+        setDraggedOverColumn((prev) => (prev === status ? null : prev));
+      }, 50);
+    }
   };
 
   const handleDragEnd = () => {
+    if (dragTimeout.current) clearTimeout(dragTimeout.current);
+    dragCounters.current = {};
     setDraggedTaskId(null);
     setDraggedOverColumn(null);
   };
 
   const handleDrop = async (e: React.DragEvent, status: Task['status']) => {
     e.preventDefault();
+    if (dragTimeout.current) clearTimeout(dragTimeout.current);
+    dragCounters.current = {};
     setDraggedOverColumn(null);
     const id = e.dataTransfer.getData('text/plain') || draggedTaskId;
     if (id) {
@@ -526,21 +543,19 @@ export default function TasksPage() {
                   key={col.status}
                   onDragOver={handleDragOver}
                   onDragEnter={(e) => handleDragEnter(e, col.status)}
-                  onDragLeave={handleDragLeave}
+                  onDragLeave={(e) => handleDragLeave(e, col.status)}
                   onDrop={(e) => handleDrop(e, col.status)}
-                  className={`bg-white border p-4 rounded-sm flex flex-col min-h-[400px] md:min-h-[500px] transition-all duration-200 ${
+                  className={`bg-white border p-4 rounded-sm flex flex-col min-h-[400px] md:min-h-[500px] transition-all duration-200 relative ${
                     isDraggedOver ? 'border-dashed border-[#1A1C1E] bg-[#F7F5F2]/50 scale-[1.01]' : 'border-[#6C7278]/40'
                   } ${
                     isVisibleOnMobile ? 'flex' : 'hidden md:flex'
                   }`}
                 >
-                  <span className={`font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em] block border-b border-[#6C7278]/25 pb-1.5 mb-3 font-bold ${
-                    draggedTaskId ? 'pointer-events-none' : ''
-                  }`}>
+                  <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em] block border-b border-[#6C7278]/25 pb-1.5 mb-3 font-bold">
                     {col.name} ({columnTasks.length})
                   </span>
 
-                  <div className={`space-y-3 flex-1 ${draggedTaskId ? 'pointer-events-none' : ''}`}>
+                  <div className="space-y-3 flex-1">
                     {columnTasks.map((task) => {
                       const isBlocked = isTaskBlocked(task);
                       // Subtasks list
