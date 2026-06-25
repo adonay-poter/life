@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDashboard, getLocalDateString } from '@/context/DashboardContext';
+import { useDashboard } from '@/context/DashboardContext';
+import { getLocalDateString } from '@/utils/dateUtils';
 import { Search, Calendar, ChevronRight } from 'lucide-react';
 
 export default function JournalPage() {

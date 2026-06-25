@@ -3,7 +3,8 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useDashboard, getLocalDateString } from '@/context/DashboardContext';
+import { useDashboard } from '@/context/DashboardContext';
+import { getLocalDateString } from '@/utils/dateUtils';
 import {
   LayoutDashboard,
   Inbox,

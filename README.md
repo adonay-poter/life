@@ -1,36 +1,80 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Heritage: Personal Life Dashboard
+
+A personal dashboard designed with architectural minimalism and journalistic gravitas. Heritage uses a warm, high-contrast palette reminiscent of classic broadsheet newspapers and matte art galleries—deep ink text on a warm limestone background with a single intentional accent color (`#B8422E`) for driving focus and interactions.
+
+## Key Features
+
+- 📥 **Inbox**: Capture raw thoughts, links, and quick tasks instantly.
+- 📋 **Projects & Tasks**: Complete separation of project management (clients, deadlines, goals) and task execution (Kanban board, calendar view, and today's focus).
+- ⚡ **Habits**: Tracker for establishing daily habits with streaks.
+- 📝 **Journal**: A clean, distraction-free space for daily reflection and logs.
+- 🎓 **Academy**: Personal learning resource tracking and skill development library.
+- 🔗 **Supabase Integration**: Fully backed by a Supabase database for persistent data storage.
+
+## Design System
+
+Designed around the **Heritage** style guide:
+- **Primary Text (`#1A1C1E`)**: Deep charcoal/ink for editorial headlines.
+- **Background (`#F7F5F2`)**: Warm limestone/off-white matte texture.
+- **Secondary (`#6C7278`)**: Muted slate for borders, metadata, and structural lines.
+- **Tertiary (`#B8422E`)**: Crimson accent. Used selectively to highlight single calls-to-action per view.
+- **Typography**: Editorial serif headings combined with highly readable sans-serif body text.
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js (v20 or higher)
+- npm or another package manager (Yarn, pnpm, Bun)
+- A Supabase Project (for database storage)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation & Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/adonay-poter/life.git
+   cd life
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Configure Environment Variables:**
+   Copy the example environment file and fill in your Supabase connection parameters:
+   ```bash
+   cp .env.example .env.local
+   ```
+   Open `.env.local` and add your:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `GEMINI_API_KEY` (if you are utilizing optional AI scraper utilities)
 
-## Learn More
+3. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+4. **Run the Development Server:**
+   ```bash
+   npm run dev
+   ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. Open [http://localhost:3000](http://localhost:3000) in your browser to view your dashboard.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Deployment
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The easiest way to deploy this dashboard is through the **[Vercel Platform](https://vercel.com/new)**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Deploying to Vercel
+
+1. Link your GitHub repository to Vercel.
+2. In the Vercel Project Settings, add the following Environment Variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `GEMINI_API_KEY`
+3. Click **Deploy**. Vercel will automatically build and deploy the Next.js app on every push to your `main` branch.
+
+### GitHub Actions (CI)
+
+A CI workflow is configured under `.github/workflows/ci.yml` that automatically runs build and lint checks on every push or pull request to the `main` branch to guarantee codebase stability.

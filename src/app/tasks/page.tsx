@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDashboard, Task, Project, getLocalDateString } from '@/context/DashboardContext';
+import { useDashboard, Task, Project } from '@/context/DashboardContext';
+import { getLocalDateString } from '@/utils/dateUtils';
 import { 
   Plus, 
   Trash2, 
@@ -109,6 +110,11 @@ export default function TasksPage() {
   };
 
   const handleDragLeave = () => {
+    setDraggedOverColumn(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedTaskId(null);
     setDraggedOverColumn(null);
   };
 
@@ -528,11 +534,13 @@ export default function TasksPage() {
                     isVisibleOnMobile ? 'flex' : 'hidden md:flex'
                   }`}
                 >
-                  <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em] block border-b border-[#6C7278]/25 pb-1.5 mb-3 font-bold">
+                  <span className={`font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em] block border-b border-[#6C7278]/25 pb-1.5 mb-3 font-bold ${
+                    draggedTaskId ? 'pointer-events-none' : ''
+                  }`}>
                     {col.name} ({columnTasks.length})
                   </span>
 
-                  <div className="space-y-3 flex-1">
+                  <div className={`space-y-3 flex-1 ${draggedTaskId ? 'pointer-events-none' : ''}`}>
                     {columnTasks.map((task) => {
                       const isBlocked = isTaskBlocked(task);
                       // Subtasks list
@@ -544,6 +552,7 @@ export default function TasksPage() {
                           key={task.id}
                           draggable
                           onDragStart={(e) => handleDragStart(e, task.id)}
+                          onDragEnd={handleDragEnd}
                           className="bg-[#F7F5F2] border border-[#6C7278]/30 p-3 rounded-[2px] cursor-grab active:cursor-grabbing hover:border-[#1A1C1E] relative group transition-all"
                         >
                           {/* Project Name and Category Tags */}

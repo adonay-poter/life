@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useDashboard, Task, getLocalDateString } from '@/context/DashboardContext';
+import { useDashboard, Task } from '@/context/DashboardContext';
+import { getLocalDateString } from '@/utils/dateUtils';
 import { Square, Pin, PinOff, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 

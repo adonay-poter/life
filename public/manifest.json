@@ -14,5 +14,35 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "shortcuts": [
+    {
+      "name": "Quick Inbox",
+      "short_name": "Inbox",
+      "description": "Capture thoughts and quick items in your inbox",
+      "url": "/inbox",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Manage Tasks",
+      "short_name": "Tasks",
+      "description": "View task board, calendar, and focus list",
+      "url": "/tasks",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Track Habits",
+      "short_name": "Habits",
+      "description": "Log and track your daily habits",
+      "url": "/habits",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Daily Journal",
+      "short_name": "Journal",
+      "description": "Write and read daily journal entries",
+      "url": "/journal",
+      "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
   ]
 }

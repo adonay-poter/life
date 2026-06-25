@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useDashboard, Project, Task, getLocalDateString } from '@/context/DashboardContext';
+import { useDashboard, Project, Task } from '@/context/DashboardContext';
+import { getLocalDateString } from '@/utils/dateUtils';
 import { 
   Plus, 
   Trash2, 

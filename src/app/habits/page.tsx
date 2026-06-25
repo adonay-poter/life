@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useDashboard, getLocalDateString } from '@/context/DashboardContext';
+import { useDashboard } from '@/context/DashboardContext';
+import { getLocalDateString } from '@/utils/dateUtils';
 import { Trash2, Check, Smile, Moon, Droplet } from 'lucide-react';
 
 export default function HabitsPage() {
