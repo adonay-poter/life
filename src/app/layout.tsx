@@ -32,13 +32,13 @@ const zemach = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'ሁሉ - Life Dashboard',
+  title: 'Hulu - ሁሉ - Life Dashboard',
   description: 'Architectural minimalism meets journalistic gravitas. A fully-featured life operating system.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'ሁሉ',
+    title: 'Hulu - ሁሉ',
   },
   formatDetection: {
     telephone: false,

@@ -557,7 +557,7 @@ function ProjectsContent() {
                               <span className={`font-label text-[8px] border px-2 py-0.5 uppercase tracking-wider font-bold rounded-sm ${getStatusBadgeStyle(p.status)}`}>
                                 {p.status || 'active'}
                               </span>
-                              <div className="opacity-0 group-hover:opacity-100 flex space-x-2 transition-opacity">
+                              <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex space-x-2 transition-opacity">
                                 <button
                                   type="button"
                                   onClick={() => startEditing(p)}
