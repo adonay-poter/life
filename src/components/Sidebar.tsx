@@ -109,8 +109,8 @@ export default function Sidebar() {
       {/* Upper Logo & Nav Section */}
       <div className="space-y-8">
         <div>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-[#1A1C1E] border-b border-[#6C7278] pb-3">
-            HERITAGE
+          <h1 className="font-amharic text-2xl font-bold tracking-tight text-[#1A1C1E] border-b border-[#6C7278] pb-3">
+            ሁሉ
           </h1>
           <p className="font-label text-[10px] text-[#6C7278] mt-1 uppercase tracking-[0.15em]">
             Life Operating System

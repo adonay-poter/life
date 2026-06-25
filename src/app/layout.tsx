@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Fraunces, Public_Sans, Space_Grotesk } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import ClientWrapper from '@/components/ClientWrapper';
 
@@ -24,14 +25,20 @@ const spaceGrotesk = Space_Grotesk({
   display: 'swap',
 });
 
+const zemach = localFont({
+  src: '../../Zemach_Regular_eafc59f80a.otf',
+  variable: '--font-zemach',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
-  title: 'Heritage - Life Dashboard',
+  title: 'ሁሉ - Life Dashboard',
   description: 'Architectural minimalism meets journalistic gravitas. A fully-featured life operating system.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Heritage',
+    title: 'ሁሉ',
   },
   formatDetection: {
     telephone: false,
@@ -44,7 +51,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-};
+ };
 
 export default function RootLayout({
   children,
@@ -54,7 +61,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${zemach.variable} h-full antialiased`}
     >
       <head>
         {process.env.NODE_ENV !== 'production' && (

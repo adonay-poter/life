@@ -19,6 +19,7 @@
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-sans: var(--font-public-sans), Arial, Helvetica, sans-serif;
   --font-label: var(--font-space-grotesk), monospace;
+  --font-amharic: var(--font-zemach), sans-serif;
   
   --radius-sm: 2px;
   --radius-md: 4px;

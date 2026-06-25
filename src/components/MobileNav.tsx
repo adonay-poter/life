@@ -85,7 +85,7 @@ export default function MobileNav() {
       {/* Top Mobile Header */}
       <header className="sticky top-0 bg-white border-b border-[#6C7278] px-4 py-3 flex items-center justify-between z-40">
         <div className="flex items-baseline space-x-2">
-          <span className="font-display font-bold text-xl text-[#1A1C1E] tracking-tight">HERITAGE</span>
+          <span className="font-amharic font-bold text-xl text-[#1A1C1E] tracking-tight">ሁሉ</span>
           <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-[0.1em]">OS</span>
         </div>
         

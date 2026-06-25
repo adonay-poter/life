@@ -55,6 +55,7 @@ export default function InboxPage() {
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   // Scraper states
   const [isScraping, setIsScraping] = useState(false);
@@ -399,20 +400,22 @@ export default function InboxPage() {
         </p>
       </header>
 
-      {/* Search Bar */}
-      <div className="relative border-2 border-[#1A1C1E] bg-white px-3 py-2 flex items-center space-x-2 rounded-sm shadow-[2px_2px_0px_0px_#1A1C1E]">
-        <Search className="h-4 w-4 text-[#1A1C1E] shrink-0" />
+      {/* Search Bar (Desktop) */}
+      <div className="hidden lg:flex relative border-2 border-[#1A1C1E] bg-white px-4 py-3 items-center space-x-3 rounded-sm shadow-[2px_2px_0px_0px_#1A1C1E]">
+        <Search className="h-5 w-5 text-[#1A1C1E] shrink-0" />
         <input
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search all inboxes by title, content, URL, or tag..."
-          className="w-full bg-transparent text-xs text-[#1A1C1E] focus:outline-none font-sans"
+          onFocus={() => setIsSearchFocused(true)}
+          onBlur={() => setIsSearchFocused(false)}
+          placeholder="Search all inboxes globally by title, content, URL, or tag..."
+          className="w-full bg-transparent text-sm text-[#1A1C1E] focus:outline-none font-sans"
         />
         {searchQuery && (
           <button
             onClick={() => setSearchQuery('')}
-            className="font-label text-[10px] text-[#B8422E] hover:underline uppercase tracking-wider font-semibold cursor-pointer"
+            className="font-label text-xs text-[#B8422E] hover:underline uppercase tracking-wider font-semibold cursor-pointer"
           >
             Clear
           </button>
@@ -423,12 +426,13 @@ export default function InboxPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* ==========================================
-            COLUMN 1: MULTI-MODAL QUICK CAPTURE
+            COLUMN 1: MULTI-MODAL QUICK CAPTURE & MOBILE SEARCH
            ========================================== */}
-        <section className="bg-white border border-[#6C7278] p-6 rounded-sm self-start">
-          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
-            Intel Capture System
-          </span>
+        <div className="space-y-8 self-start">
+          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm ${isSearchFocused || searchQuery.trim().length > 0 ? 'hidden lg:block' : ''}`}>
+            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
+              Intel Capture System
+            </span>
           <form onSubmit={handleCapture} className="space-y-4">
             {/* Capture Type Selection */}
             <div className="flex border border-[#6C7278] font-label text-xs">
@@ -602,6 +606,29 @@ export default function InboxPage() {
             </button>
           </form>
         </section>
+
+        {/* Search Bar (Mobile - Below Intel Capture System) */}
+        <div className="flex lg:hidden relative border-2 border-[#1A1C1E] bg-white px-4 py-3 items-center space-x-3 rounded-sm shadow-[2px_2px_0px_0px_#1A1C1E]">
+          <Search className="h-5 w-5 text-[#1A1C1E] shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setIsSearchFocused(false)}
+            placeholder="Search globally..."
+            className="w-full bg-transparent text-sm text-[#1A1C1E] focus:outline-none font-sans"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="font-label text-xs text-[#B8422E] hover:underline uppercase tracking-wider font-semibold cursor-pointer"
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </div>
 
         {/* ==========================================
             COLUMN 2 & 3: TRIAGE Kanban columns
@@ -907,41 +934,46 @@ export default function InboxPage() {
               );
             };
 
+            const isSearching = searchQuery.trim().length > 0;
+            const globalSearchResults = filterBySearch(inboxItems);
+
             return (
               <>
-                {/* Navigation Tabs */}
-                <div className="flex border-b border-[#6C7278]/40 font-label text-xs space-x-4 mb-4">
-                  <button
-                    onClick={() => setActiveTab('queue')}
-                    className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
-                      activeTab === 'queue'
-                        ? 'border-[#B8422E] text-[#1A1C1E]'
-                        : 'border-transparent text-[#6C7278] hover:text-[#1A1C1E]'
-                    }`}
-                  >
-                    Triage Queue ({unsortedItems.length})
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('knowledge')}
-                    className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
-                      activeTab === 'knowledge'
-                        ? 'border-[#B8422E] text-[#1A1C1E]'
-                        : 'border-transparent text-[#6C7278] hover:text-[#1A1C1E]'
-                    }`}
-                  >
-                    Knowledge Base ({knowledgeItems.length})
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('snoozed_archived')}
-                    className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
-                      activeTab === 'snoozed_archived'
-                        ? 'border-[#B8422E] text-[#1A1C1E]'
-                        : 'border-transparent text-[#6C7278] hover:text-[#1A1C1E]'
-                    }`}
-                  >
-                    Snoozed & Archived ({snoozedItems.length + archivedItems.length})
-                  </button>
-                </div>
+                {/* Navigation Tabs (Hidden during search) */}
+                {!isSearching && (
+                  <div className="flex border-b border-[#6C7278]/40 font-label text-xs space-x-4 mb-4">
+                    <button
+                      onClick={() => setActiveTab('queue')}
+                      className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
+                        activeTab === 'queue'
+                          ? 'border-[#B8422E] text-[#1A1C1E]'
+                          : 'border-transparent text-[#6C7278] hover:text-[#1A1C1E]'
+                      }`}
+                    >
+                      Triage Queue ({unsortedItems.length})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('knowledge')}
+                      className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
+                        activeTab === 'knowledge'
+                          ? 'border-[#B8422E] text-[#1A1C1E]'
+                          : 'border-transparent text-[#6C7278] hover:text-[#1A1C1E]'
+                      }`}
+                    >
+                      Knowledge Base ({knowledgeItems.length})
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('snoozed_archived')}
+                      className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
+                        activeTab === 'snoozed_archived'
+                          ? 'border-[#B8422E] text-[#1A1C1E]'
+                          : 'border-transparent text-[#6C7278] hover:text-[#1A1C1E]'
+                      }`}
+                    >
+                      Snoozed & Archived ({snoozedItems.length + archivedItems.length})
+                    </button>
+                  </div>
+                )}
 
                 {/* DRAG AND DROP TARGET PANELS (Rendered contextually when dragging) */}
                 {isDragging && (
@@ -1029,77 +1061,90 @@ export default function InboxPage() {
                   </div>
                 )}
 
-                {/* Tab content renders */}
-                {activeTab === 'queue' && (
+                {/* Search Results rendering or Tab content renders */}
+                {isSearching ? (
                   <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
-                        Pending Triage Queue ({unsortedItems.length})
+                        Search Results ({globalSearchResults.length})
                       </span>
                     </div>
-                    {renderInboxCards(filteredUnsorted, "Triage queue is empty. Active items resolved.")}
+                    {renderInboxCards(globalSearchResults, "No items match your search query across all inboxes.")}
                   </div>
-                )}
-
-                {activeTab === 'knowledge' && (
-                  <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
-                        Knowledge Base & Permanent Reference Vault ({knowledgeItems.length})
-                      </span>
-                    </div>
-                    {renderInboxCards(filteredKnowledge, "Knowledge Base is empty. Capture quotes, ideas, snippets, or links.")}
-                  </div>
-                )}
-
-                {activeTab === 'snoozed_archived' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Snoozed Queue */}
-                    <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
-                      <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
-                        Snoozed Queue ({snoozedItems.length})
-                      </span>
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {filteredSnoozed.map((item) => (
-                          <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
-                            <span className="font-sans text-xs text-[#1A1C1E] truncate shrink-0 max-w-[150px]">{item.title}</span>
-                            <button
-                              onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
-                              className="font-label text-[9px] text-[#B8422E] hover:underline uppercase tracking-wide cursor-pointer"
-                            >
-                              Unsnooze
-                            </button>
-                          </div>
-                        ))}
-                        {filteredSnoozed.length === 0 && (
-                          <p className="font-sans text-[11px] text-[#6C7278] italic text-center py-4">No snoozed items.</p>
-                        )}
+                ) : (
+                  <>
+                    {activeTab === 'queue' && (
+                      <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
+                            Pending Triage Queue ({unsortedItems.length})
+                          </span>
+                        </div>
+                        {renderInboxCards(filteredUnsorted, "Triage queue is empty. Active items resolved.")}
                       </div>
-                    </div>
+                    )}
 
-                    {/* Archived Queue */}
-                    <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
-                      <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
-                        Archived Log ({archivedItems.length})
-                      </span>
-                      <div className="space-y-3 max-h-96 overflow-y-auto">
-                        {filteredArchived.map((item) => (
-                          <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
-                            <span className="font-sans text-xs text-[#6C7278] truncate shrink-0 max-w-[150px]">{item.title}</span>
-                            <button
-                              onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
-                              className="font-label text-[9px] text-[#1A1C1E] hover:underline uppercase tracking-wide cursor-pointer"
-                            >
-                              Restore
-                            </button>
-                          </div>
-                        ))}
-                        {filteredArchived.length === 0 && (
-                          <p className="font-sans text-[11px] text-[#6C7278] italic text-center py-4">Archive is empty.</p>
-                        )}
+                    {activeTab === 'knowledge' && (
+                      <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
+                            Knowledge Base & Permanent Reference Vault ({knowledgeItems.length})
+                          </span>
+                        </div>
+                        {renderInboxCards(filteredKnowledge, "Knowledge Base is empty. Capture quotes, ideas, snippets, or links.")}
                       </div>
-                    </div>
-                  </div>
+                    )}
+
+                    {activeTab === 'snoozed_archived' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Snoozed Queue */}
+                        <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
+                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
+                            Snoozed Queue ({snoozedItems.length})
+                          </span>
+                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {filteredSnoozed.map((item) => (
+                              <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
+                                <span className="font-sans text-xs text-[#1A1C1E] truncate shrink-0 max-w-[150px]">{item.title}</span>
+                                <button
+                                  onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
+                                  className="font-label text-[9px] text-[#B8422E] hover:underline uppercase tracking-wide cursor-pointer"
+                                >
+                                  Unsnooze
+                                </button>
+                              </div>
+                            ))}
+                            {filteredSnoozed.length === 0 && (
+                              <p className="font-sans text-[11px] text-[#6C7278] italic text-center py-4">No snoozed items.</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Archived Queue */}
+                        <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
+                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
+                            Archived Log ({archivedItems.length})
+                          </span>
+                          <div className="space-y-3 max-h-96 overflow-y-auto">
+                            {filteredArchived.map((item) => (
+                              <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
+                                <span className="font-sans text-xs text-[#6C7278] truncate shrink-0 max-w-[150px]">{item.title}</span>
+                                <button
+                                  onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
+                                  className="font-label text-[9px] text-[#1A1C1E] hover:underline uppercase tracking-wide cursor-pointer"
+                                >
+                                  Restore
+                                </button>
+                              </div>
+                            ))}
+                            {filteredArchived.length === 0 && (
+                              <p className="font-sans text-[11px] text-[#6C7278] italic text-center py-4">Archive is empty.</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             );

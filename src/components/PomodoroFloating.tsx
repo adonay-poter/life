@@ -126,7 +126,7 @@ export default function PomodoroFloating() {
   const progressPct = ((totalDuration - timeRemaining) / totalDuration) * 100;
 
   return (
-    <div className="fixed bottom-16 md:bottom-6 right-6 z-50">
+    <div className="hidden md:block fixed bottom-16 md:bottom-6 right-6 z-50">
       {/* COLLAPSED FLOATING BUBBLE */}
       {!isOpen ? (
         <button
