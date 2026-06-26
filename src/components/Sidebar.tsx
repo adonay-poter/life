@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
@@ -15,7 +15,9 @@ import {
   BookOpen,
   Wifi,
   WifiOff,
-  RefreshCw
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export default function Sidebar() {
@@ -28,6 +30,40 @@ export default function Sidebar() {
     habitRecords,
     lessons
   } = useDashboard();
+
+  // Collapsed Sidebar States
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load collapse state from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('sidebar_collapsed');
+    if (stored !== null) {
+      setIsCollapsed(stored === 'true');
+    }
+    setIsLoaded(true);
+  }, []);
+
+  // Persist collapse state to localStorage
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('sidebar_collapsed', isCollapsed.toString());
+  }, [isCollapsed, isLoaded]);
+
+  // Window Resize Listener to auto-collapse on tablet viewports
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && window.innerWidth < 1024) {
+        setIsCollapsed(true);
+      } else if (window.innerWidth >= 1200) {
+        setIsCollapsed(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ==========================================
   // METRIC CALCULATIONS
@@ -105,16 +141,32 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-[#6C7278] min-h-screen flex flex-col justify-between p-6 hidden md:flex">
+    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-white border-r border-[#6C7278] min-h-screen flex flex-col justify-between py-6 transition-all duration-300 hidden md:flex shrink-0`}>
       {/* Upper Logo & Nav Section */}
       <div className="space-y-8">
-        <div>
-          <h1 className="font-amharic text-2xl font-bold tracking-tight text-[#1A1C1E] border-b border-[#6C7278] pb-3">
-            ሁሉ
-          </h1>
-          <p className="font-label text-[10px] text-[#6C7278] mt-1 uppercase tracking-[0.15em]">
-            Life Operating System
-          </p>
+        <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-[#6C7278] pb-3`}>
+          {!isCollapsed ? (
+            <div>
+              <h1 className="font-amharic text-2xl font-bold tracking-tight text-[#1A1C1E]">
+                ሁሉ
+              </h1>
+              <p className="font-label text-xs text-[#6C7278] mt-0.5 uppercase tracking-[0.15em]">
+                Life Operating System
+              </p>
+            </div>
+          ) : (
+            <h1 className="font-amharic text-2xl font-bold text-[#1A1C1E]">
+              ሁ
+            </h1>
+          )}
+
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="text-[#6C7278] hover:text-[#1A1C1E] p-1 transition-all rounded-sm hover:bg-[#F7F5F2] cursor-pointer"
+            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          >
+            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+          </button>
         </div>
 
         {/* Navigation Menu */}
@@ -126,14 +178,24 @@ export default function Sidebar() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center space-x-3 px-4 py-3 text-sm font-label tracking-wide transition-all-custom rounded-sm ${
+                className={`flex items-center ${
+                  isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-3'
+                } text-sm font-label tracking-wide transition-all-custom rounded-sm relative group ${
                   isActive
                     ? 'bg-[#1A1C1E] text-white'
                     : 'text-[#1A1C1E] hover:bg-[#F7F5F2] border border-transparent hover:border-[#6C7278]/25'
                 }`}
+                title={isCollapsed ? item.name : undefined}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                <span>{item.name}</span>
+                {!isCollapsed && <span>{item.name}</span>}
+
+                {/* Collapsed Tooltip Overlay */}
+                {isCollapsed && (
+                  <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[#1A1C1E] text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-[#6C7278]/40">
+                    {item.name}
+                  </div>
+                )}
               </Link>
             );
           })}
@@ -141,46 +203,79 @@ export default function Sidebar() {
       </div>
 
       {/* Footer Section: Life Score & Status */}
-      <div className="space-y-6 pt-6 border-t border-[#6C7278]">
+      <div className="space-y-4 pt-4 border-t border-[#6C7278] flex flex-col items-center">
         {/* Dynamic Life Score */}
-        <div className="bg-[#F7F5F2] border border-[#6C7278]/30 p-4 rounded-sm">
-          <div className="flex justify-between items-center mb-1">
-            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em]">
-              Life Score
-            </span>
-            <span className="font-display text-lg font-bold text-[#B8422E]">{lifeScore}%</span>
+        {!isCollapsed ? (
+          <div className="bg-[#F7F5F2] border border-[#6C7278]/30 p-4 rounded-sm w-full">
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
+                Life Score
+              </span>
+              <span className="font-display text-lg font-bold text-[#B8422E]">{lifeScore}%</span>
+            </div>
+            <div className="w-full bg-[#6C7278]/20 h-1.5 rounded-none overflow-hidden">
+              <div
+                className="bg-[#B8422E] h-full transition-all duration-500"
+                style={{ width: `${lifeScore}%` }}
+              ></div>
+            </div>
           </div>
-          {/* Flat horizontal bar */}
-          <div className="w-full bg-[#6C7278]/20 h-1.5 rounded-none overflow-hidden">
-            <div
-              className="bg-[#B8422E] h-full transition-all duration-500"
-              style={{ width: `${lifeScore}%` }}
-            ></div>
+        ) : (
+          <div className="text-center group relative cursor-pointer">
+            <span className="font-display text-xs font-bold text-[#B8422E]">{lifeScore}%</span>
+            <div className="w-12 bg-[#6C7278]/20 h-1 mt-1 rounded-none overflow-hidden">
+              <div
+                className="bg-[#B8422E] h-full transition-all duration-500"
+                style={{ width: `${lifeScore}%` }}
+              ></div>
+            </div>
+            {/* Tooltip */}
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[#1A1C1E] text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-[#6C7278]/40">
+              Life Score: {lifeScore}%
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Connection & Sync Status Indicators */}
-        <div className="flex items-center justify-between font-label text-[10px] text-[#6C7278]">
-          <div className="flex items-center space-x-1.5">
-            {isOnline ? (
-              <>
-                <Wifi className="h-3.5 w-3.5 text-emerald-700" />
-                <span className="uppercase tracking-[0.05em]">Cloud Connected</span>
-              </>
-            ) : (
-              <>
-                <WifiOff className="h-3.5 w-3.5 text-[#B8422E]" />
-                <span className="uppercase tracking-[0.05em] text-[#B8422E]">Working Offline</span>
-              </>
+        {!isCollapsed ? (
+          <div className="flex items-center justify-between font-label text-xs text-[#6C7278] w-full">
+            <div className="flex items-center space-x-1.5">
+              {isOnline ? (
+                <>
+                  <Wifi className="h-3.5 w-3.5 text-emerald-700" />
+                  <span className="uppercase tracking-[0.05em]">Cloud Connected</span>
+                </>
+              ) : (
+                <>
+                  <WifiOff className="h-3.5 w-3.5 text-[#B8422E]" />
+                  <span className="uppercase tracking-[0.05em] text-[#B8422E]">Working Offline</span>
+                </>
+              )}
+            </div>
+            {syncPending && (
+              <div className="flex items-center space-x-1">
+                <RefreshCw className="h-3 w-3 animate-spin text-[#B8422E]" />
+                <span className="uppercase tracking-[0.05em] text-[#B8422E]">Syncing</span>
+              </div>
             )}
           </div>
-          {syncPending && (
-            <div className="flex items-center space-x-1">
-              <RefreshCw className="h-3 w-3 animate-spin text-[#B8422E]" />
-              <span className="uppercase tracking-[0.05em] text-[#B8422E]">Syncing</span>
+        ) : (
+          <div className="flex flex-col items-center space-y-2 relative group cursor-pointer">
+            {isOnline ? (
+              <Wifi className="h-4 w-4 text-emerald-700" />
+            ) : (
+              <WifiOff className="h-4 w-4 text-[#B8422E]" />
+            )}
+            {syncPending && (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin text-[#B8422E]" />
+            )}
+            {/* Tooltip */}
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[#1A1C1E] text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-[#6C7278]/40">
+              {isOnline ? 'Cloud Connected' : 'Working Offline'}
+              {syncPending && ' (Syncing)'}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </aside>
   );

@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
+import { useToast } from '@/context/ToastContext';
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { 
   BookOpen, 
   HelpCircle, 
@@ -34,12 +36,76 @@ function AcademyContent() {
 
   const searchParams = useSearchParams();
   const targetCourseId = searchParams ? searchParams.get('courseId') : null;
+  const { showToast } = useToast();
+
+  // Delete confirmation modal states
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<{ id: string; title: string } | null>(null);
 
   // Navigation & UI States
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const [academyTab, setAcademyTab] = useState<'matrix' | 'flashcards'>('matrix');
   const [isNotePreview, setIsNotePreview] = useState(false);
+
+  const activeCourse = courses.find((c) => c.id === selectedCourseId);
+  const activeModule = courseModules.find((m) => m.id === selectedModuleId);
+
+  const [localNotes, setLocalNotes] = useState<string>('');
+  const [isSavingNotes, setIsSavingNotes] = useState(false);
+
+  const notesRef = useRef(localNotes);
+  const activeModuleIdRef = useRef(activeModule?.id);
+
+  // Sync ref
+  useEffect(() => {
+    notesRef.current = localNotes;
+  }, [localNotes]);
+
+  // Load notes into local state when module selection changes
+  useEffect(() => {
+    const prevModuleId = activeModuleIdRef.current;
+    if (prevModuleId && prevModuleId !== activeModule?.id) {
+      const prevModule = courseModules.find((m) => m.id === prevModuleId);
+      if (prevModule && notesRef.current !== (prevModule.notes || '')) {
+        updateModuleNotes(prevModuleId, notesRef.current);
+      }
+    }
+
+    if (activeModule) {
+      setLocalNotes(activeModule.notes || '');
+      activeModuleIdRef.current = activeModule.id;
+    } else {
+      setLocalNotes('');
+      activeModuleIdRef.current = undefined;
+    }
+  }, [selectedModuleId, activeModule?.id]);
+
+  // Debounced save
+  useEffect(() => {
+    if (!activeModule) return;
+    if (localNotes === (activeModule.notes || '')) return;
+
+    setIsSavingNotes(true);
+    const timer = setTimeout(async () => {
+      await updateModuleNotes(activeModule.id, localNotes);
+      setIsSavingNotes(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [localNotes]);
+
+  // Flush on unmount
+  useEffect(() => {
+    return () => {
+      if (activeModuleIdRef.current) {
+        const mod = courseModules.find((m) => m.id === activeModuleIdRef.current);
+        if (mod && notesRef.current !== (mod.notes || '')) {
+          updateModuleNotes(activeModuleIdRef.current, notesRef.current);
+        }
+      }
+    };
+  }, []);
 
   // Form states
   const [showAddCourse, setShowAddCourse] = useState(false);
@@ -78,6 +144,7 @@ function AcademyContent() {
     e.preventDefault();
     if (!newCourseTitle.trim()) return;
     addCourse(newCourseTitle, newCourseDesc, newCourseCategory || 'General');
+    showToast('New skill matrix created successfully.', 'success');
     setNewCourseTitle('');
     setNewCourseDesc('');
     setNewCourseCategory('');
@@ -178,8 +245,7 @@ function AcademyContent() {
     });
   };
 
-  const activeCourse = courses.find((c) => c.id === selectedCourseId);
-  const activeModule = courseModules.find((m) => m.id === selectedModuleId);
+  // activeCourse and activeModule defined above
   
   const dueCards = getDueFlashcards();
   const activeCard = dueCards[activeFlashcardIndex];
@@ -193,7 +259,7 @@ function AcademyContent() {
             <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
               THE ACADEMY
             </h2>
-            <p className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+            <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
               Course Matrices &bull; Spaced Repetition Flashcards
             </p>
           </div>
@@ -214,13 +280,13 @@ function AcademyContent() {
               <h2 className="font-display text-2xl font-bold tracking-tight text-[#1A1C1E]">
                 {activeCourse?.title}
               </h2>
-              <p className="font-label text-[9px] text-[#6C7278] uppercase tracking-[0.25em]">
+              <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.25em]">
                 STUDIO WORKSPACE &bull; {activeCourse?.category}
               </p>
             </div>
           </div>
 
-          <div className="flex border border-[#6C7278] font-label text-[9px] uppercase tracking-wider select-none shrink-0 self-end">
+          <div className="flex border border-[#6C7278] font-label text-xs uppercase tracking-wider select-none shrink-0 self-end">
             <button
               onClick={() => setAcademyTab('matrix')}
               className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer ${
@@ -250,7 +316,7 @@ function AcademyContent() {
            ========================================== */
         <div className="space-y-6">
           <div className="flex justify-between items-center">
-            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em]">
+            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
               Learning Matrices
             </span>
             <button
@@ -270,7 +336,7 @@ function AcademyContent() {
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-[9px] uppercase text-[#6C7278]">Course / Matrix Title</label>
+                  <label className="block text-xs uppercase text-[#6C7278]">Course / Matrix Title</label>
                   <input
                     type="text"
                     value={newCourseTitle}
@@ -281,7 +347,7 @@ function AcademyContent() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-[9px] uppercase text-[#6C7278]">Category (Skill Class)</label>
+                  <label className="block text-xs uppercase text-[#6C7278]">Category (Skill Class)</label>
                   <input
                     type="text"
                     value={newCourseCategory}
@@ -292,7 +358,7 @@ function AcademyContent() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-[9px] uppercase text-[#6C7278]">Skill Roadmap Summary</label>
+                <label className="block text-xs uppercase text-[#6C7278]">Skill Roadmap Summary</label>
                 <textarea
                   value={newCourseDesc}
                   onChange={(e) => setNewCourseDesc(e.target.value)}
@@ -301,13 +367,13 @@ function AcademyContent() {
                 />
               </div>
               <div className="flex space-x-3 pt-2">
-                <button type="submit" className="flex-1 bg-[#1A1C1E] text-white py-2 uppercase text-[10px] tracking-wider font-bold cursor-pointer">
+                <button type="submit" className="flex-1 bg-[#1A1C1E] text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer">
                   Save Skill Matrix
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddCourse(false)}
-                  className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] uppercase text-[10px] tracking-wider cursor-pointer"
+                  className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] uppercase text-xs tracking-wider cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -325,7 +391,7 @@ function AcademyContent() {
                   className="bg-white border border-[#6C7278]/40 p-5 flex flex-col justify-between space-y-6 rounded-sm relative group hover:border-[#1A1C1E] transition-all"
                 >
                   <div className="space-y-2">
-                    <span className="font-label text-[8px] bg-[#6C7278]/20 px-1.5 py-0.5 text-[#1A1C1E] uppercase tracking-wide">
+                    <span className="font-label text-xs bg-[#6C7278]/20 px-1.5 py-0.5 text-[#1A1C1E] uppercase tracking-wide">
                       {course.category}
                     </span>
                     <h4 className="font-display text-lg font-bold text-[#1A1C1E] tracking-tight line-clamp-1">
@@ -340,7 +406,7 @@ function AcademyContent() {
 
                   <div className="border-t border-[#6C7278]/20 pt-4 flex items-center justify-between">
                     <div>
-                      <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-wider block">
+                      <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block">
                         Completion
                       </span>
                       <span className="font-display text-md font-semibold text-[#B8422E]">
@@ -356,14 +422,17 @@ function AcademyContent() {
                           setSelectedModuleId(modules[0].id);
                         }
                       }}
-                      className="border border-[#1A1C1E] hover:bg-[#1A1C1E] hover:text-white transition-all px-3 py-1.5 font-label text-[9px] uppercase tracking-widest font-bold cursor-pointer"
+                      className="border border-[#1A1C1E] hover:bg-[#1A1C1E] hover:text-white transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
                     >
                       ENTER STUDIO
                     </button>
                   </div>
 
                   <button
-                    onClick={() => deleteCourse(course.id)}
+                    onClick={() => {
+                      setCourseToDelete({ id: course.id, title: course.title });
+                      setDeleteModalOpen(true);
+                    }}
                     className="opacity-0 group-hover:opacity-100 text-[#6C7278] hover:text-[#B8422E] absolute right-4 top-4 transition-opacity cursor-pointer"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -381,7 +450,7 @@ function AcademyContent() {
           
           {/* LEFT SIDE: HIERARCHICAL INDEX CHECKLIST */}
           <section className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-6 max-h-[600px] overflow-y-auto">
-            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-2 border-b border-[#6C7278]/20 pb-1">
+            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2 border-b border-[#6C7278]/20 pb-1">
               Modules & Lessons Index
             </span>
 
@@ -407,7 +476,7 @@ function AcademyContent() {
                         >
                           {mod.title}
                         </h5>
-                        <span className="font-label text-[8px] text-[#6C7278] uppercase">
+                        <span className="font-label text-xs text-[#6C7278] uppercase">
                           Module {mod.order_index}
                         </span>
                       </div>
@@ -448,7 +517,7 @@ function AcademyContent() {
 
                       {/* Add Lesson Input */}
                       {isSelected && (
-                        <div className="mt-3 pt-3 border-t border-[#6C7278]/15 space-y-2 font-label text-[10px]">
+                        <div className="mt-3 pt-3 border-t border-[#6C7278]/15 space-y-2 font-label text-xs">
                           <div className="flex gap-2">
                             <input
                               type="text"
@@ -479,8 +548,8 @@ function AcademyContent() {
             </div>
 
             {/* Add Module controller */}
-            <div className="pt-4 border-t border-[#6C7278]/20 font-label text-[10px]">
-              <span className="block text-[8px] uppercase text-[#6C7278] mb-2 font-bold">New Module</span>
+            <div className="pt-4 border-t border-[#6C7278]/20 font-label text-xs">
+              <span className="block text-xs uppercase text-[#6C7278] mb-2 font-bold">New Module</span>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -505,14 +574,14 @@ function AcademyContent() {
               <div className="space-y-4 flex-1 flex flex-col justify-between">
                 <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-2">
                   <div>
-                    <span className="font-label text-[9px] text-[#6C7278] uppercase">Studio Notepad</span>
+                    <span className="font-label text-xs text-[#6C7278] uppercase">Studio Notepad</span>
                     <h5 className="font-display text-md font-bold text-[#1A1C1E] truncate max-w-[200px]">
                       {activeModule.title}
                     </h5>
                   </div>
 
                   {/* Toggle Preview / Edit */}
-                  <div className="flex border border-[#6C7278] font-label text-[8px]">
+                  <div className="flex border border-[#6C7278] font-label text-xs">
                     <button
                       onClick={() => setIsNotePreview(false)}
                       className={`px-2 py-1 flex items-center space-x-1 cursor-pointer ${!isNotePreview ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E]'}`}
@@ -534,20 +603,20 @@ function AcademyContent() {
                 <div className="flex-1 mt-4">
                   {!isNotePreview ? (
                     <textarea
-                      value={activeModule.notes || ''}
-                      onChange={(e) => updateModuleNotes(activeModule.id, e.target.value)}
+                      value={localNotes}
+                      onChange={(e) => setLocalNotes(e.target.value)}
                       placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
                       className="w-full h-[350px] bg-[#F7F5F2]/45 border border-[#6C7278]/30 px-4 py-3 text-xs text-[#1A1C1E] focus:outline-none focus:border-[#B8422E] font-mono resize-none leading-relaxed"
                     />
                   ) : (
                     <div className="w-full h-[350px] bg-white border border-[#6C7278]/15 px-4 py-3 overflow-y-auto max-h-[350px] space-y-2 border-heritage rounded-sm">
-                      {renderMarkdown(activeModule.notes || '')}
+                      {renderMarkdown(localNotes)}
                     </div>
                   )}
                 </div>
 
-                <div className="border-t border-[#6C7278]/20 pt-3 flex justify-between items-center text-[10px] font-label text-[#6C7278]">
-                  <span>Notes auto-saved to backend</span>
+                <div className="border-t border-[#6C7278]/20 pt-3 flex justify-between items-center text-xs font-label text-[#6C7278]">
+                  <span>{isSavingNotes ? 'Saving...' : 'Notes auto-saved to backend'}</span>
                   <span className="font-mono">Markdown syntax supported</span>
                 </div>
               </div>
@@ -569,7 +638,7 @@ function AcademyContent() {
           {/* Flashcard Study Desk (Deck queue viewer) */}
           <section className="lg:col-span-2 bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between min-h-[400px]">
             <div>
-              <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-4 border-b border-[#6C7278]/20 pb-1">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4 border-b border-[#6C7278]/20 pb-1">
                 Leitner Review Station ({dueCards.length} cards due)
               </span>
 
@@ -580,7 +649,7 @@ function AcademyContent() {
                     onClick={() => setIsFlipped(!isFlipped)}
                     className="w-full max-w-md h-48 border border-[#6C7278] bg-[#F7F5F2] hover:border-[#B8422E] cursor-pointer flex flex-col justify-center p-6 relative transition-all duration-300"
                   >
-                    <span className="absolute top-3 left-3 font-label text-[8px] text-[#6C7278] uppercase">
+                    <span className="absolute top-3 left-3 font-label text-xs text-[#6C7278] uppercase">
                       Box {activeCard.box} &bull; {isFlipped ? 'Answer' : 'Question'}
                     </span>
 
@@ -588,7 +657,7 @@ function AcademyContent() {
                       {isFlipped ? activeCard.back : activeCard.front}
                     </p>
                     
-                    <span className="absolute bottom-3 right-3 font-label text-[8px] text-[#6C7278] uppercase tracking-wider">
+                    <span className="absolute bottom-3 right-3 font-label text-xs text-[#6C7278] uppercase tracking-wider">
                       Click Card to Flip
                     </span>
                   </div>
@@ -622,14 +691,14 @@ function AcademyContent() {
               ) : (
                 <div className="text-center py-24">
                   <span className="font-display text-md italic text-[#6C7278] block">No cards due for review.</span>
-                  <span className="font-sans text-[11px] text-[#6C7278] mt-1 block">Leitner box intervals satisfied. Add flashcards below.</span>
+                  <span className="font-sans text-xs text-[#6C7278] mt-1 block">Leitner box intervals satisfied. Add flashcards below.</span>
                 </div>
               )}
             </div>
 
             {/* Deck queue list footer */}
             {dueCards.length > 1 && (
-              <div className="flex justify-between items-center pt-4 border-t border-[#6C7278]/20 font-label text-[10px]">
+              <div className="flex justify-between items-center pt-4 border-t border-[#6C7278]/20 font-label text-xs">
                 <button
                   disabled={activeFlashcardIndex === 0}
                   onClick={() => { setActiveFlashcardIndex(prev => prev - 1); setIsFlipped(false); }}
@@ -651,13 +720,13 @@ function AcademyContent() {
 
           {/* Flashcard Add Panel */}
           <section className="bg-white border border-[#6C7278] p-6 rounded-sm self-start">
-            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
+            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
               Add New Flashcard
             </span>
 
             <form onSubmit={handleAddFlashcardSubmit} className="space-y-4 font-label text-xs">
               <div className="space-y-1.5">
-                <label className="block text-[9px] uppercase text-[#6C7278]">Module Source</label>
+                <label className="block text-xs uppercase text-[#6C7278]">Module Source</label>
                 <select
                   value={selectedModuleId || ''}
                   onChange={(e) => setSelectedModuleId(e.target.value)}
@@ -674,7 +743,7 @@ function AcademyContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[9px] uppercase text-[#6C7278]">Front Question</label>
+                <label className="block text-xs uppercase text-[#6C7278]">Front Question</label>
                 <textarea
                   value={fcQuestion}
                   onChange={(e) => setFcQuestion(e.target.value)}
@@ -686,7 +755,7 @@ function AcademyContent() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[9px] uppercase text-[#6C7278]">Back Answer</label>
+                <label className="block text-xs uppercase text-[#6C7278]">Back Answer</label>
                 <textarea
                   value={fcAnswer}
                   onChange={(e) => setFcAnswer(e.target.value)}
@@ -701,7 +770,7 @@ function AcademyContent() {
               <button
                 type="submit"
                 disabled={!selectedModuleId || !fcQuestion || !fcAnswer}
-                className="w-full btn-tertiary uppercase text-[10px] tracking-wider font-bold mt-2 cursor-pointer"
+                className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer"
               >
                 SAVE FLASHCARD
               </button>
@@ -710,6 +779,21 @@ function AcademyContent() {
 
         </div>
       )}
+      <ConfirmDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setCourseToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (courseToDelete) {
+            await deleteCourse(courseToDelete.id);
+            showToast('Skill matrix deleted successfully.', 'info');
+          }
+        }}
+        itemName={courseToDelete?.title || ''}
+        itemType="skill matrix"
+      />
     </div>
   );
 }

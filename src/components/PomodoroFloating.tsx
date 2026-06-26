@@ -12,11 +12,50 @@ export default function PomodoroFloating() {
   const [timeRemaining, setTimeRemaining] = useState(1500); // 25 minutes in seconds
   const [isRunning, setIsRunning] = useState(false);
   const [isBreak, setIsBreak] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Load state from localStorage on mount
+  useEffect(() => {
+    const storedTime = localStorage.getItem('pomodoro_timeRemaining');
+    const storedRunning = localStorage.getItem('pomodoro_isRunning');
+    const storedBreak = localStorage.getItem('pomodoro_isBreak');
+    const storedTaskId = localStorage.getItem('pomodoro_activeTaskId');
+
+    if (storedTime !== null) setTimeRemaining(parseInt(storedTime, 10));
+    if (storedRunning !== null) setIsRunning(storedRunning === 'true');
+    if (storedBreak !== null) setIsBreak(storedBreak === 'true');
+    if (storedTaskId !== null) setActiveTaskId(storedTaskId);
+    setIsLoaded(true);
+  }, []);
+
+  // Persist state to localStorage
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('pomodoro_timeRemaining', timeRemaining.toString());
+    localStorage.setItem('pomodoro_isRunning', isRunning.toString());
+    localStorage.setItem('pomodoro_isBreak', isBreak.toString());
+    localStorage.setItem('pomodoro_activeTaskId', activeTaskId);
+  }, [timeRemaining, isRunning, isBreak, activeTaskId, isLoaded]);
+
+  // Sync timer to browser document title
+  useEffect(() => {
+    const originalTitle = 'Hulu - ሁሉ - Life Dashboard';
+    if (isRunning) {
+      const typeLabel = isBreak ? 'Break' : 'Focus';
+      document.title = `${typeLabel} (${formatTime(timeRemaining)}) | Hulu`;
+    } else {
+      document.title = originalTitle;
+    }
+    return () => {
+      document.title = originalTitle;
+    };
+  }, [isRunning, isBreak, timeRemaining]);
+
   // Sync active task to first pending task if none selected or if selected task is completed/missing
   useEffect(() => {
+    if (!isLoaded) return;
     let active = true;
     const pendingTasks = tasks.filter((t) => t.status !== 'done');
     const isCurrentActivePending = pendingTasks.some((t) => t.id === activeTaskId);
@@ -34,7 +73,7 @@ export default function PomodoroFloating() {
     return () => {
       active = false;
     };
-  }, [tasks, activeTaskId]);
+  }, [tasks, activeTaskId, isLoaded]);
 
   // Web Audio synth beep
   const playAlertSound = () => {
@@ -140,7 +179,7 @@ export default function PomodoroFloating() {
             {formatTime(timeRemaining)}
           </span>
           {isBreak && (
-            <span className="font-label text-[8px] bg-[#B8422E] text-white px-1 uppercase tracking-wide">
+            <span className="font-label text-xs bg-[#B8422E] text-white px-1 uppercase tracking-wide">
               Break
             </span>
           )}
@@ -152,7 +191,7 @@ export default function PomodoroFloating() {
           <div className="flex justify-between items-center border-b border-[#6C7278]/30 pb-2">
             <div className="flex items-center space-x-2">
               <Timer className="h-4 w-4 text-[#B8422E]" />
-              <span className="font-label text-[10px] font-bold tracking-[0.1em] uppercase text-[#6C7278]">
+              <span className="font-label text-xs font-bold tracking-[0.1em] uppercase text-[#6C7278]">
                 {isBreak ? 'Break Session' : 'Focus Session'}
               </span>
             </div>
@@ -191,7 +230,7 @@ export default function PomodoroFloating() {
               <span className="font-display text-2xl font-bold tracking-tight text-[#1A1C1E]">
                 {formatTime(timeRemaining)}
               </span>
-              <span className="font-label text-[8px] text-[#6C7278] uppercase tracking-[0.1em]">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
                 {isBreak ? 'resting' : 'focusing'}
               </span>
             </div>
@@ -217,7 +256,7 @@ export default function PomodoroFloating() {
 
           {/* LINKED TASK DROPDOWN */}
           <div className="space-y-1.5 pt-2 border-t border-[#6C7278]/30">
-            <label className="block font-label text-[9px] text-[#6C7278] uppercase tracking-[0.1em]">
+            <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
               Link Focus Task
             </label>
             {pendingTasks.length > 0 ? (
@@ -233,11 +272,11 @@ export default function PomodoroFloating() {
                 ))}
               </select>
             ) : (
-              <p className="font-sans text-[11px] text-[#6C7278] italic">No active tasks available</p>
+              <p className="font-sans text-xs text-[#6C7278] italic">No active tasks available</p>
             )}
 
             {activeTask && (
-              <div className="flex items-center space-x-1.5 mt-2 bg-[#F7F5F2] px-2 py-1 text-[10px] text-[#6C7278] border border-[#6C7278]/20 font-sans">
+              <div className="flex items-center space-x-1.5 mt-2 bg-[#F7F5F2] px-2 py-1 text-xs text-[#6C7278] border border-[#6C7278]/20 font-sans">
                 <CheckCircle2 className="h-3 w-3 text-emerald-700 shrink-0" />
                 <span className="truncate">Sessions logged: {activeTask.pomodoro_sessions || 0}</span>
               </div>

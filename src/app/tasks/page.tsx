@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useDashboard, Task, Project } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useToast } from '@/context/ToastContext';
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { 
   Plus, 
   Trash2, 
@@ -17,7 +20,7 @@ import {
   X
 } from 'lucide-react';
 
-export default function TasksPage() {
+function TasksContent() {
   const dragCounters = useRef<Record<string, number>>({});
   const dragTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -32,8 +35,30 @@ export default function TasksPage() {
     deleteTask
   } = useDashboard();
 
+  const { showToast } = useToast();
+
+  // Delete confirmation modal states
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState<{ id: string; name: string } | null>(null);
+
+  const triggerDeleteTask = (id: string, name: string) => {
+    setTaskToDelete({ id, name });
+    setDeleteModalOpen(true);
+  };
+
+  const searchParams = useSearchParams();
+  const initialTab = searchParams ? (searchParams.get('tab') as 'kanban' | 'calendar' | 'today') : null;
+
   // Tab State
-  const [activeTab, setActiveTab] = useState<'kanban' | 'calendar' | 'today'>('kanban');
+  const [activeTab, setActiveTab] = useState<'kanban' | 'calendar' | 'today'>(initialTab || 'kanban');
+
+  // Sync tab with search parameters on deep links
+  useEffect(() => {
+    const tabParam = searchParams ? searchParams.get('tab') : null;
+    if (tabParam === 'kanban' || tabParam === 'calendar' || tabParam === 'today') {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Category Filter State
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
@@ -114,6 +139,7 @@ export default function TasksPage() {
       recurring: editTaskRecurring,
     });
     
+    showToast('Task updated successfully.', 'success');
     setIsEditingTask(false);
   };
 
@@ -133,6 +159,7 @@ export default function TasksPage() {
       activeTask.category
     );
     
+    showToast('Subtask created successfully.', 'success');
     setNewSubtaskName('');
   };
 
@@ -165,6 +192,8 @@ export default function TasksPage() {
       newTaskDepIds,
       newTaskCategory
     );
+
+    showToast('Task created successfully.', 'success');
 
     // Reset Form
     setNewTaskName('');
@@ -291,7 +320,7 @@ export default function TasksPage() {
               <div
                 key={t.id}
                 onClick={() => updateTaskStatus(t.id, t.status === 'done' ? 'todo' : 'done')}
-                className={`text-[9px] px-1 py-0.5 font-sans truncate cursor-pointer border rounded-[2px] ${
+                className={`text-xs px-1 py-0.5 font-sans truncate cursor-pointer border rounded-[2px] ${
                   t.status === 'done'
                     ? 'bg-[#6C7278]/10 text-[#6C7278] line-through border-transparent'
                     : 'bg-[#B8422E]/10 text-[#B8422E] border-[#B8422E]/20'
@@ -352,13 +381,13 @@ export default function TasksPage() {
           <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
             TASKS & SCHEDULES
           </h2>
-          <p className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+          <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
             Operational Throughput &bull; Categorized Action Engines
           </p>
         </div>
 
         {/* View Selection Tabs */}
-        <div className="flex border border-[#6C7278] font-label text-[10px] uppercase tracking-wider select-none shrink-0 self-end">
+        <div className="flex border border-[#6C7278] font-label text-xs uppercase tracking-wider select-none shrink-0 self-end">
           <button
             onClick={() => setActiveTab('kanban')}
             className={`px-4 py-2 flex items-center space-x-1.5 transition-all cursor-pointer ${
@@ -432,7 +461,7 @@ export default function TasksPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Assign to Project</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Assign to Project</label>
               <select
                 value={newTaskProjId}
                 onChange={(e) => {
@@ -449,7 +478,7 @@ export default function TasksPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Task Category *</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Task Category *</label>
               <select
                 value={newTaskCategory}
                 onChange={(e) => setNewTaskCategory(e.target.value as Task['category'])}
@@ -464,7 +493,7 @@ export default function TasksPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Task Name *</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Task Name *</label>
               <input
                 type="text"
                 value={newTaskName}
@@ -477,7 +506,7 @@ export default function TasksPage() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-[9px] uppercase text-[#6C7278]">Detailed Description</label>
+            <label className="block text-xs uppercase text-[#6C7278]">Detailed Description</label>
             <textarea
               value={newTaskDesc}
               onChange={(e) => setNewTaskDesc(e.target.value)}
@@ -488,7 +517,7 @@ export default function TasksPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Priority Level</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Priority Level</label>
               <select
                 value={newTaskPriority}
                 onChange={(e) => setNewTaskPriority(e.target.value as Task['priority'])}
@@ -500,7 +529,7 @@ export default function TasksPage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Due Date</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Due Date</label>
               <input
                 type="date"
                 value={newTaskDueDate}
@@ -509,7 +538,7 @@ export default function TasksPage() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Recurring Reset</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Recurring Reset</label>
               <select
                 value={newTaskRecurring}
                 onChange={(e) => setNewTaskRecurring(e.target.value as Task['recurring'])}
@@ -526,7 +555,7 @@ export default function TasksPage() {
           {/* Subtask & Dependency options */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#6C7278]/25">
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Parent Task (For Subtask)</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Parent Task (For Subtask)</label>
               <select
                 value={newTaskParentId}
                 onChange={(e) => setNewTaskParentId(e.target.value)}
@@ -542,7 +571,7 @@ export default function TasksPage() {
             </div>
             
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Blocked By (Dependency)</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Blocked By (Dependency)</label>
               <div className="flex flex-wrap gap-2 max-h-[100px] overflow-y-auto border border-[#6C7278]/30 bg-[#F7F5F2] p-2 rounded-sm">
                 {tasks
                   .filter((t) => t.project_id === (newTaskProjId || undefined) && t.status !== 'done')
@@ -557,7 +586,7 @@ export default function TasksPage() {
                             prev.includes(t.id) ? prev.filter(id => id !== t.id) : [...prev, t.id]
                           );
                         }}
-                        className={`font-label text-[9px] px-2 py-1 uppercase tracking-wide border rounded-[2px] transition-all cursor-pointer ${
+                        className={`font-label text-xs px-2 py-1 uppercase tracking-wide border rounded-[2px] transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-[#1A1C1E] text-white border-[#1A1C1E] font-bold'
                             : 'bg-white text-[#1A1C1E] border-[#6C7278]/25 hover:bg-[#F7F5F2]'
@@ -568,7 +597,7 @@ export default function TasksPage() {
                     );
                   })}
                 {tasks.filter((t) => t.project_id === (newTaskProjId || undefined) && t.status !== 'done').length === 0 && (
-                  <span className="font-sans text-[10px] text-[#6C7278] italic">No active tasks in this project.</span>
+                  <span className="font-sans text-xs text-[#6C7278] italic">No active tasks in this project.</span>
                 )}
               </div>
             </div>
@@ -578,14 +607,14 @@ export default function TasksPage() {
             <button
               type="submit"
               disabled={!newTaskName}
-              className="flex-1 bg-[#1A1C1E] text-white py-2 uppercase tracking-wider text-[10px] font-bold disabled:opacity-50 cursor-pointer"
+              className="flex-1 bg-[#1A1C1E] text-white py-2 uppercase tracking-wider text-xs font-bold disabled:opacity-50 cursor-pointer"
             >
               Create Task
             </button>
             <button
               type="button"
               onClick={() => setShowAddTask(false)}
-              className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] uppercase tracking-wider text-[10px] cursor-pointer"
+              className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] uppercase tracking-wider text-xs cursor-pointer"
             >
               Cancel
             </button>
@@ -661,13 +690,13 @@ export default function TasksPage() {
                           {/* Project Name and Category Tags */}
                           <div className="flex flex-wrap gap-1 mb-2">
                             <span 
-                              className="font-label text-[9px] text-white px-1.5 py-0.5 uppercase tracking-wide block w-fit font-bold rounded-[2px]"
+                              className="font-label text-xs text-white px-1.5 py-0.5 uppercase tracking-wide block w-fit font-bold rounded-[2px]"
                               style={{ backgroundColor: parentProject?.color || '#6C7278' }}
                             >
                               {parentProject ? parentProject.name : 'Standalone'}
                             </span>
                             {task.category && (
-                              <span className="font-label text-[9px] text-[#B8422E] bg-[#B8422E]/10 border border-[#B8422E]/25 px-1.5 py-0.5 uppercase tracking-wide block w-fit font-bold rounded-[2px]">
+                              <span className="font-label text-xs text-[#B8422E] bg-[#B8422E]/10 border border-[#B8422E]/25 px-1.5 py-0.5 uppercase tracking-wide block w-fit font-bold rounded-[2px]">
                                 {task.category}
                               </span>
                             )}
@@ -702,14 +731,14 @@ export default function TasksPage() {
                           {isBlocked && (
                             <div className="mt-2 flex items-center space-x-1 text-[#B8422E]">
                               <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                              <span className="font-label text-[10px] uppercase tracking-wider font-bold">Blocked (depends unresolved)</span>
+                              <span className="font-label text-xs uppercase tracking-wider font-bold">Blocked (depends unresolved)</span>
                             </div>
                           )}
 
                           {/* Subtask progress */}
                           {subtasks.length > 0 && (
                             <div className="mt-2.5 space-y-1.5 border-t border-[#6C7278]/15 pt-2">
-                              <span className="font-label text-[10px] uppercase text-[#6C7278] tracking-wider block font-bold">
+                              <span className="font-label text-xs uppercase text-[#6C7278] tracking-wider block font-bold">
                                 Subtasks ({subtasks.filter(s => s.status === 'done').length}/{subtasks.length})
                               </span>
                               <div className="space-y-1 bg-white/40 p-1.5 rounded-sm">
@@ -734,7 +763,7 @@ export default function TasksPage() {
 
                           {/* Bottom footer details */}
                           <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-[#6C7278]/15">
-                            <span className="font-label text-[10px] bg-white border border-[#6C7278]/30 px-1.5 py-0.2 uppercase text-[#6C7278] font-bold rounded-[2px]">
+                            <span className="font-label text-xs bg-white border border-[#6C7278]/30 px-1.5 py-0.2 uppercase text-[#6C7278] font-bold rounded-[2px]">
                               {task.priority}
                             </span>
 
@@ -748,9 +777,7 @@ export default function TasksPage() {
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (confirm('Are you sure you want to delete this task?')) {
-                                  deleteTask(task.id);
-                                }
+                                triggerDeleteTask(task.id, task.name);
                               }}
                               className="text-stone-400 hover:text-[#B8422E] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-1"
                             >
@@ -759,7 +786,7 @@ export default function TasksPage() {
                           </div>
 
                           {/* Mobile Card Move Actions Dropdown */}
-                          <div className="mt-2.5 pt-2 border-t border-[#6C7278]/15 flex items-center justify-between md:hidden font-label text-[9px]">
+                          <div className="mt-2.5 pt-2 border-t border-[#6C7278]/15 flex items-center justify-between md:hidden font-label text-xs">
                             <span className="text-[#6C7278] uppercase font-bold">Move status:</span>
                             <select
                               value={task.status}
@@ -768,7 +795,7 @@ export default function TasksPage() {
                                 e.stopPropagation();
                                 updateTaskStatus(task.id, e.target.value as Task['status']);
                               }}
-                              className="bg-[#F7F5F2] border border-[#6C7278] px-1.5 py-0.5 text-[10px] text-[#1A1C1E] focus:outline-none font-sans rounded-[2px]"
+                              className="bg-[#F7F5F2] border border-[#6C7278] px-1.5 py-0.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px]"
                             >
                               <option value="backlog">Backlog</option>
                               <option value="todo">Todo</option>
@@ -800,7 +827,7 @@ export default function TasksPage() {
               <h4 className="font-display text-lg font-bold text-[#1A1C1E] uppercase tracking-wide">
                 {currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
               </h4>
-              <div className="flex space-x-2 font-label text-[10px]">
+              <div className="flex space-x-2 font-label text-xs">
                 <button onClick={() => changeMonth(-1)} className="px-2.5 py-1 border border-[#6C7278] hover:bg-[#F7F5F2] uppercase cursor-pointer">
                   &larr; Prev
                 </button>
@@ -811,7 +838,7 @@ export default function TasksPage() {
             </div>
 
             {/* Day Labels */}
-            <div className="grid grid-cols-7 gap-1 text-center font-label text-[9px] text-[#6C7278] uppercase tracking-wider mb-2 font-bold select-none">
+            <div className="grid grid-cols-7 gap-1 text-center font-label text-xs text-[#6C7278] uppercase tracking-wider mb-2 font-bold select-none">
               <div>Sun</div>
               <div>Mon</div>
               <div>Tue</div>
@@ -833,7 +860,7 @@ export default function TasksPage() {
               <h4 className="font-display text-sm font-bold text-[#1A1C1E] uppercase tracking-wide">
                 {currentDate.toLocaleString('en-US', { month: 'long', year: 'numeric' })}
               </h4>
-              <div className="flex space-x-1.5 font-label text-[10px]">
+              <div className="flex space-x-1.5 font-label text-xs">
                 <button onClick={() => changeMonth(-1)} className="px-2.5 py-1 border border-[#6C7278] hover:bg-[#F7F5F2] uppercase font-bold">
                   &larr; PREV
                 </button>
@@ -844,7 +871,7 @@ export default function TasksPage() {
             </div>
 
             {/* Day Labels */}
-            <div className="grid grid-cols-7 gap-1 text-center font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold select-none">
+            <div className="grid grid-cols-7 gap-1 text-center font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold select-none">
               <div>S</div>
               <div>M</div>
               <div>T</div>
@@ -887,7 +914,7 @@ export default function TasksPage() {
             {/* Mobile Agenda List */}
             <div className="mt-4 pt-4 border-t border-[#6C7278]/20 space-y-3">
               <div className="flex justify-between items-baseline">
-                <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.1em] font-bold">
+                <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em] font-bold">
                   Day Agenda
                 </span>
                 <span className="font-label text-xs text-[#B8422E] font-bold">
@@ -923,18 +950,18 @@ export default function TasksPage() {
                                 {task.name}
                               </span>
                               <div className="flex items-center space-x-2 mt-0.5">
-                                <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-wider font-semibold">
+                                <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-semibold">
                                   {parentProject ? parentProject.name : 'Standalone'}
                                 </span>
                                 {task.category && (
-                                  <span className="font-label text-[9px] text-[#B8422E] uppercase font-bold">
+                                  <span className="font-label text-xs text-[#B8422E] uppercase font-bold">
                                     &bull; {task.category}
                                   </span>
                                 )}
                               </div>
                             </div>
                           </div>
-                          <span className="font-label text-[10px] bg-white border border-[#6C7278]/30 px-1.5 py-0.2 uppercase text-[#6C7278] font-bold rounded-[2px] shrink-0">
+                          <span className="font-label text-xs bg-white border border-[#6C7278]/30 px-1.5 py-0.2 uppercase text-[#6C7278] font-bold rounded-[2px] shrink-0">
                             {task.priority}
                           </span>
                         </div>
@@ -988,7 +1015,7 @@ export default function TasksPage() {
                         {task.description && (
                           <p className="font-sans text-xs text-[#2C2D30] mt-1">{task.description}</p>
                         )}
-                        <div className="flex items-center space-x-2 mt-2 font-label text-[10px]">
+                        <div className="flex items-center space-x-2 mt-2 font-label text-xs">
                           <span className="bg-white border border-[#6C7278]/25 px-1.5 py-0.2 text-[#6C7278] font-bold rounded-[2px]">
                             {task.priority.toUpperCase()}
                           </span>
@@ -1025,9 +1052,7 @@ export default function TasksPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm('Are you sure you want to delete this task?')) {
-                            deleteTask(task.id);
-                          }
+                          triggerDeleteTask(task.id, task.name);
                         }}
                         className="text-stone-300 hover:text-[#B8422E] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer p-1"
                       >
@@ -1066,7 +1091,7 @@ export default function TasksPage() {
                     const parentProj = projects.find((p) => p.id === activeTask.project_id);
                     return (
                       <span 
-                        className="font-label text-[9px] text-white px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]"
+                        className="font-label text-xs text-white px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]"
                         style={{ backgroundColor: parentProj?.color || '#6C7278' }}
                       >
                         {parentProj ? parentProj.name : 'Standalone Task'}
@@ -1076,13 +1101,13 @@ export default function TasksPage() {
                   
                   {/* Category Badge */}
                   {activeTask.category && (
-                    <span className="font-label text-[9px] text-[#B8422E] bg-[#B8422E]/10 border border-[#B8422E]/25 px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+                    <span className="font-label text-xs text-[#B8422E] bg-[#B8422E]/10 border border-[#B8422E]/25 px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
                       {activeTask.category}
                     </span>
                   )}
 
                   {/* Status Badge */}
-                  <span className="font-label text-[9px] text-white bg-[#1A1C1E] px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+                  <span className="font-label text-xs text-white bg-[#1A1C1E] px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
                     {activeTask.status.replace('_', ' ')}
                   </span>
                 </div>
@@ -1116,7 +1141,7 @@ export default function TasksPage() {
               <div className="md:col-span-2 space-y-6">
                 {/* Description */}
                 <div className="space-y-2">
-                  <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
+                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
                     Detailed Description
                   </span>
                   
@@ -1136,7 +1161,7 @@ export default function TasksPage() {
 
                 {/* Subtasks Section */}
                 <div className="space-y-4">
-                  <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
+                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
                     Subtasks
                   </span>
                   
@@ -1162,7 +1187,7 @@ export default function TasksPage() {
                               
                               <button
                                 type="button"
-                                onClick={() => deleteTask(sub.id)}
+                                onClick={() => triggerDeleteTask(sub.id, sub.name)}
                                 className="text-stone-400 hover:text-[#B8422E] p-1 cursor-pointer transition-colors"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -1188,7 +1213,7 @@ export default function TasksPage() {
                     <button
                       type="submit"
                       disabled={!newSubtaskName.trim()}
-                      className="bg-[#1A1C1E] text-white hover:bg-[#B8422E] font-label text-[10px] uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
+                      className="bg-[#1A1C1E] text-white hover:bg-[#B8422E] font-label text-xs uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
                     >
                       <Plus className="h-3 w-3" />
                       <span>Add</span>
@@ -1199,7 +1224,7 @@ export default function TasksPage() {
                 {/* Blockers & Dependencies */}
                 {activeTask.dependencies && activeTask.dependencies.length > 0 && (
                   <div className="space-y-2">
-                    <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
+                    <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
                       Dependencies (Blocks this task)
                     </span>
                     <div className="space-y-1.5">
@@ -1225,7 +1250,7 @@ export default function TasksPage() {
           <div className="space-y-5 bg-[#F7F5F2]/40 border-t md:border-t-0 md:border-l border-[#6C7278]/20 pt-5 md:pt-0 md:pl-5">
             {/* Status Edit */}
             <div className="space-y-1">
-              <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                 Status
               </label>
               <select
@@ -1243,7 +1268,7 @@ export default function TasksPage() {
 
             {/* Priority Edit */}
             <div className="space-y-1">
-              <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                 Priority
               </label>
               {isEditingTask ? (
@@ -1257,7 +1282,7 @@ export default function TasksPage() {
                   <option value="low">Low</option>
                 </select>
               ) : (
-                <span className={`inline-block font-label text-[10px] font-bold border px-2 py-0.5 uppercase tracking-wide rounded-[2px] ${
+                <span className={`inline-block font-label text-xs font-bold border px-2 py-0.5 uppercase tracking-wide rounded-[2px] ${
                   activeTask.priority === 'high'
                     ? 'border-[#B8422E]/40 text-[#B8422E] bg-[#B8422E]/5'
                     : 'border-[#6C7278]/40 text-[#6C7278] bg-white'
@@ -1270,7 +1295,7 @@ export default function TasksPage() {
             {/* Project Selector (Edit Mode Only) */}
             {isEditingTask && (
               <div className="space-y-1">
-                <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+                <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                   Project
                 </label>
                 <select
@@ -1289,7 +1314,7 @@ export default function TasksPage() {
             {/* Category Selector (Edit Mode Only) */}
             {isEditingTask && (
               <div className="space-y-1">
-                <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+                <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                   Category
                 </label>
                 <select
@@ -1308,7 +1333,7 @@ export default function TasksPage() {
 
             {/* Due Date */}
             <div className="space-y-1">
-              <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                 Due Date
               </label>
               {isEditingTask ? (
@@ -1330,7 +1355,7 @@ export default function TasksPage() {
 
             {/* Recurring Option */}
             <div className="space-y-1">
-              <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                 Recurring Frequency
               </label>
               {isEditingTask ? (
@@ -1353,7 +1378,7 @@ export default function TasksPage() {
 
             {/* Pomodoro Focus Sessions */}
             <div className="space-y-2 border-t border-[#6C7278]/25 pt-3">
-              <label className="font-label text-[10px] text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
                 Focus Sessions
               </label>
               <div className="flex items-center space-x-3">
@@ -1364,7 +1389,7 @@ export default function TasksPage() {
                 <button
                   type="button"
                   onClick={() => updateTaskPomodoro(activeTask.id, (activeTask.pomodoro_sessions || 0) + 1)}
-                  className="bg-white border border-[#6C7278]/40 hover:bg-[#F7F5F2] hover:border-[#1A1C1E] font-label text-[9px] font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
+                  className="bg-white border border-[#6C7278]/40 hover:bg-[#F7F5F2] hover:border-[#1A1C1E] font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
                 >
                   <span>+1 Session</span>
                 </button>
@@ -1374,7 +1399,7 @@ export default function TasksPage() {
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-[#6C7278]/25 p-4 bg-[#F7F5F2]/30 flex flex-wrap justify-between items-center gap-3 font-label text-[10px] uppercase font-bold">
+        <div className="border-t border-[#6C7278]/25 p-4 bg-[#F7F5F2]/30 flex flex-wrap justify-between items-center gap-3 font-label text-xs uppercase font-bold">
           <div className="flex items-center space-x-2">
             <button
               type="button"
@@ -1392,10 +1417,7 @@ export default function TasksPage() {
             <button
               type="button"
               onClick={() => {
-                if (confirm('Are you sure you want to delete this task?')) {
-                  deleteTask(activeTask.id);
-                  handleCloseModal();
-                }
+                triggerDeleteTask(activeTask.id, activeTask.name);
               }}
               className="px-3 py-1.5 bg-white border border-red-200 hover:border-red-600 text-red-600 hover:bg-red-50 rounded-sm cursor-pointer transition-all flex items-center space-x-1"
             >
@@ -1435,7 +1457,39 @@ export default function TasksPage() {
         </div>
       </div>
     </div>
-  )}
-</div>
+    )}
+
+    {/* Delete Confirmation Modal */}
+    <ConfirmDeleteModal
+      isOpen={deleteModalOpen}
+      onClose={() => {
+        setDeleteModalOpen(false);
+        setTaskToDelete(null);
+      }}
+      onConfirm={async () => {
+        if (taskToDelete) {
+          await deleteTask(taskToDelete.id);
+          showToast('Task deleted successfully.', 'info');
+          if (selectedTask?.id === taskToDelete.id) {
+            handleCloseModal();
+          }
+        }
+      }}
+      itemName={taskToDelete?.name || ''}
+      itemType="task"
+    />
+  </div>
 );
+}
+
+export default function TasksPage() {
+  return (
+    <Suspense fallback={
+      <div className="bg-white border border-[#6C7278]/30 py-16 text-center rounded-sm">
+        <p className="font-sans text-sm text-[#6C7278] italic">Loading Tasks Workspace...</p>
+      </div>
+    }>
+      <TasksContent />
+    </Suspense>
+  );
 }

@@ -2,6 +2,9 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
+import { useToast } from '@/context/ToastContext';
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { getLocalDateString } from '@/utils/dateUtils';
 import { 
   Inbox, 
   Link2, 
@@ -33,6 +36,12 @@ export default function InboxPage() {
     addLesson
   } = useDashboard();
 
+  const { showToast } = useToast();
+
+  // Delete confirmation modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{ id: string; title: string } | null>(null);
+
   // Form states
   const [captureType, setCaptureType] = useState<'text' | 'url' | 'snippet'>('text');
   const [inputTitle, setInputTitle] = useState('');
@@ -56,6 +65,32 @@ export default function InboxPage() {
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+
+  // Handle click outside dropdown and Escape key
+  useEffect(() => {
+    if (!activeDropdownId) return;
+
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.absolute.right-4.top-4')) {
+        setActiveDropdownId(null);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setActiveDropdownId(null);
+      }
+    };
+
+    window.addEventListener('click', handleOutsideClick);
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('click', handleOutsideClick);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeDropdownId]);
 
   // Scraper states
   const [isScraping, setIsScraping] = useState(false);
@@ -261,14 +296,19 @@ export default function InboxPage() {
       setConversionType('academy');
     } else if (zone === 'snooze') {
       await updateInboxItemStatus(itemId, 'snoozed');
+      showToast('Item snoozed until tomorrow.', 'info');
     } else if (zone === 'archive') {
       await updateInboxItemStatus(itemId, 'archived');
+      showToast('Item archived successfully.', 'info');
     } else if (zone === 'delete') {
-      await deleteInboxItem(itemId);
+      setItemToDelete({ id: item.id, title: item.title });
+      setDeleteModalOpen(true);
     } else if (zone === 'knowledge') {
       await updateInboxItemStatus(itemId, 'knowledge');
+      showToast('Item saved to Knowledge Base.', 'success');
     } else if (zone === 'unsorted') {
       await updateInboxItemStatus(itemId, 'unsorted');
+      showToast('Item moved to triage queue.', 'info');
     }
 
     handleDragEnd();
@@ -305,6 +345,7 @@ export default function InboxPage() {
       .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
 
     addInboxItem(captureType, finalTitle, finalUrl || undefined, finalContent || undefined, tagsArray, captureDestination);
+    showToast('Inbox item captured successfully.', 'success');
     
     // Reset Form
     setInputTitle('');
@@ -325,11 +366,16 @@ export default function InboxPage() {
       item.title, 
       item.content || item.url || 'Imported from Inbox triage.', 
       taskPriority,
-      new Date().toISOString()
+      getLocalDateString()
     );
 
     // Update status to task
     await updateInboxItemStatus(item.id, 'task', targetProjectId);
+
+    showToast('✓ Task created successfully', 'success', {
+      label: 'View Tasks',
+      href: '/tasks'
+    });
     
     // Reset triage modal states
     setConvertingItemId(null);
@@ -349,6 +395,11 @@ export default function InboxPage() {
 
     // Update status to academy
     await updateInboxItemStatus(item.id, 'academy');
+
+    showToast('✓ Academy lesson created successfully', 'success', {
+      label: 'View Academy',
+      href: '/academy'
+    });
 
     // Reset triage states
     setConvertingItemId(null);
@@ -395,7 +446,7 @@ export default function InboxPage() {
         <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
           THE TRIAGE CHANNEL
         </h2>
-        <p className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+        <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
           Inbox Quick Capture &bull; System Intake Pipeline
         </p>
       </header>
@@ -430,7 +481,7 @@ export default function InboxPage() {
            ========================================== */}
         <div className="space-y-8 self-start">
           <section className={`bg-white border border-[#6C7278] p-6 rounded-sm ${isSearchFocused || searchQuery.trim().length > 0 ? 'hidden lg:block' : ''}`}>
-            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
+            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
               Intel Capture System
             </span>
           <form onSubmit={handleCapture} className="space-y-4">
@@ -470,7 +521,7 @@ export default function InboxPage() {
 
             {/* Title / Description */}
             <div className="space-y-1.5">
-              <label className="block font-label text-[9px] text-[#6C7278] uppercase tracking-[0.15em]">
+              <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.15em]">
                 {captureType === 'url' ? 'Link Label (Optional)' : 'Capture Title'}
               </label>
               <input
@@ -487,16 +538,16 @@ export default function InboxPage() {
             {captureType === 'url' && (
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center">
-                  <label className="block font-label text-[9px] text-[#6C7278] uppercase tracking-[0.15em]">
+                  <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.15em]">
                     Resource URL
                   </label>
                   {isScraping && (
-                    <span className="font-label text-[8px] text-[#B8422E] animate-pulse uppercase tracking-wider font-semibold">
+                    <span className="font-label text-xs text-[#B8422E] animate-pulse uppercase tracking-wider font-semibold">
                       Scraping metadata...
                     </span>
                   )}
                   {scrapeError && !isScraping && (
-                    <span className="font-label text-[8px] text-[#6C7278] uppercase tracking-wider">
+                    <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">
                       {scrapeError}
                     </span>
                   )}
@@ -514,7 +565,7 @@ export default function InboxPage() {
 
             {/* Content Textarea */}
             <div className="space-y-1.5">
-              <label className="block font-label text-[9px] text-[#6C7278] uppercase tracking-[0.15em]">
+              <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.15em]">
                 {captureType === 'snippet' ? 'Code / Text Snippet' : 'Detailed Notes'}
               </label>
               <textarea
@@ -529,14 +580,14 @@ export default function InboxPage() {
             {/* Tags Input */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <label className="block font-label text-[9px] text-[#6C7278] uppercase tracking-[0.15em]">
+                <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.15em]">
                   Tags (comma separated)
                 </label>
                 <button
                   type="button"
                   onClick={generateGemmaTags}
                   disabled={isGeneratingTags || !inputTitle.trim()}
-                  className="font-label text-[8px] text-[#B8422E] hover:underline uppercase tracking-widest flex items-center space-x-1 disabled:opacity-40 disabled:no-underline cursor-pointer"
+                  className="font-label text-xs text-[#B8422E] hover:underline uppercase tracking-widest flex items-center space-x-1 disabled:opacity-40 disabled:no-underline cursor-pointer"
                 >
                   <Sparkles className="h-2 w-2" />
                   <span>{isGeneratingTags ? 'Generating...' : 'Gemma Tags'}</span>
@@ -558,7 +609,7 @@ export default function InboxPage() {
                       key={suggestion}
                       type="button"
                       onClick={() => handleSelectSuggestion(suggestion)}
-                      className="font-label text-[9px] px-1.5 py-0.5 bg-[#F7F5F2] border border-[#6C7278]/20 hover:border-[#B8422E] text-[#1A1C1E] rounded-sm transition-all cursor-pointer"
+                      className="font-label text-xs px-1.5 py-0.5 bg-[#F7F5F2] border border-[#6C7278]/20 hover:border-[#B8422E] text-[#1A1C1E] rounded-sm transition-all cursor-pointer"
                     >
                       #{suggestion}
                     </button>
@@ -567,7 +618,7 @@ export default function InboxPage() {
               )}
 
               {tagsApiStatus && (
-                <p className="font-label text-[8px] text-[#6C7278] uppercase mt-0.5 tracking-wider font-sans">
+                <p className="font-label text-xs text-[#6C7278] uppercase mt-0.5 tracking-wider font-sans">
                   {tagsApiStatus}
                 </p>
               )}
@@ -575,7 +626,7 @@ export default function InboxPage() {
 
             {/* Destination Selection */}
             <div className="space-y-1.5">
-              <label className="block font-label text-[9px] text-[#6C7278] uppercase tracking-[0.15em]">
+              <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.15em]">
                 Destination
               </label>
               <div className="flex border border-[#6C7278] font-label text-xs">
@@ -706,6 +757,7 @@ export default function InboxPage() {
                                     onClick={async () => {
                                       await updateInboxItemStatus(item.id, 'unsorted');
                                       setActiveDropdownId(null);
+                                      showToast('Item moved to triage queue.', 'info');
                                     }}
                                     className="w-full text-left px-3 py-2 hover:bg-[#F7F5F2] flex items-center space-x-2 text-[#1A1C1E] cursor-pointer"
                                   >
@@ -717,6 +769,7 @@ export default function InboxPage() {
                                     onClick={async () => {
                                       await updateInboxItemStatus(item.id, 'knowledge');
                                       setActiveDropdownId(null);
+                                      showToast('Item saved to Knowledge Base.', 'success');
                                     }}
                                     className="w-full text-left px-3 py-2 hover:bg-[#F7F5F2] flex items-center space-x-2 text-[#1A1C1E] cursor-pointer"
                                   >
@@ -729,6 +782,7 @@ export default function InboxPage() {
                                   onClick={async () => {
                                     await updateInboxItemStatus(item.id, 'snoozed');
                                     setActiveDropdownId(null);
+                                    showToast('Item snoozed until tomorrow.', 'info');
                                   }}
                                   className="w-full text-left px-3 py-2 hover:bg-[#F7F5F2] flex items-center space-x-2 text-[#1A1C1E] cursor-pointer"
                                 >
@@ -739,6 +793,7 @@ export default function InboxPage() {
                                   onClick={async () => {
                                     await updateInboxItemStatus(item.id, 'archived');
                                     setActiveDropdownId(null);
+                                    showToast('Item archived successfully.', 'info');
                                   }}
                                   className="w-full text-left px-3 py-2 hover:bg-[#F7F5F2] flex items-center space-x-2 text-[#1A1C1E] cursor-pointer"
                                 >
@@ -747,8 +802,9 @@ export default function InboxPage() {
                                 </button>
                                 <div className="border-t border-[#6C7278]/20"></div>
                                 <button
-                                  onClick={async () => {
-                                    await deleteInboxItem(item.id);
+                                  onClick={() => {
+                                    setItemToDelete({ id: item.id, title: item.title });
+                                    setDeleteModalOpen(true);
                                     setActiveDropdownId(null);
                                   }}
                                   className="w-full text-left px-3 py-2 hover:bg-[#F7F5F2] flex items-center space-x-2 text-[#B8422E] cursor-pointer"
@@ -778,12 +834,12 @@ export default function InboxPage() {
                                   />
                                 )}
                               </div>
-                              <span className="text-[10px] text-[#6C7278] font-label uppercase tracking-wide truncate max-w-[200px]">
+                              <span className="text-xs text-[#6C7278] font-label uppercase tracking-wide truncate max-w-[200px]">
                                 {item.url ? new URL(item.url.startsWith('http') ? item.url : 'https://' + item.url).hostname : 'link'}
                               </span>
                             </div>
                             {item.content && (
-                              <p className="text-[11px] text-[#6C7278] leading-relaxed line-clamp-2 font-sans">
+                              <p className="text-xs text-[#6C7278] leading-relaxed line-clamp-2 font-sans">
                                 {item.content}
                               </p>
                             )}
@@ -792,7 +848,7 @@ export default function InboxPage() {
                                 href={item.url}
                                 target="_blank"
                                 rel="noreferrer"
-                                className="inline-flex items-center space-x-1 font-label text-[9px] text-[#B8422E] uppercase tracking-wider hover:underline"
+                                className="inline-flex items-center space-x-1 font-label text-xs text-[#B8422E] uppercase tracking-wider hover:underline"
                               >
                                 <span>Visit Resource</span>
                                 <ExternalLink className="h-2.5 w-2.5" />
@@ -801,8 +857,8 @@ export default function InboxPage() {
                           </div>
                         ) : (
                           item.content && (
-                            <p className={`font-sans text-[11px] text-[#6C7278] leading-relaxed whitespace-pre-wrap ${
-                              item.type === 'snippet' ? 'font-mono bg-[#F7F5F2] p-2 border border-[#6C7278]/20 overflow-x-auto text-[10px]' : ''
+                            <p className={`font-sans text-xs text-[#6C7278] leading-relaxed whitespace-pre-wrap ${
+                              item.type === 'snippet' ? 'font-mono bg-[#F7F5F2] p-2 border border-[#6C7278]/20 overflow-x-auto text-xs' : ''
                             }`}>
                               {item.content}
                             </p>
@@ -815,7 +871,7 @@ export default function InboxPage() {
                             {item.tags.map((tag) => (
                               <span
                                 key={tag}
-                                className={`font-label text-[8px] px-1.5 py-0.5 rounded-sm uppercase tracking-wide ${getTagColorClass(tag)}`}
+                                className={`font-label text-xs px-1.5 py-0.5 rounded-sm uppercase tracking-wide ${getTagColorClass(tag)}`}
                               >
                                 {tag}
                               </span>
@@ -844,7 +900,7 @@ export default function InboxPage() {
                             {conversionType === 'task' ? (
                               <>
                                 <div className="space-y-1">
-                                  <label className="block text-[9px] uppercase text-[#6C7278]">Target Project</label>
+                                  <label className="block text-xs uppercase text-[#6C7278]">Target Project</label>
                                   <select
                                     value={targetProjectId}
                                     onChange={(e) => setTargetProjectId(e.target.value)}
@@ -857,7 +913,7 @@ export default function InboxPage() {
                                   </select>
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="block text-[9px] uppercase text-[#6C7278]">Priority Level</label>
+                                  <label className="block text-xs uppercase text-[#6C7278]">Priority Level</label>
                                   <select
                                     value={taskPriority}
                                     onChange={(e) => setTaskPriority(e.target.value as 'high' | 'medium' | 'low')}
@@ -871,7 +927,7 @@ export default function InboxPage() {
                                 <button
                                   onClick={() => handleConvertToTask(item)}
                                   disabled={!targetProjectId}
-                                  className="w-full bg-[#1A1C1E] hover:bg-[#B8422E] text-white py-2 uppercase text-[10px] tracking-widest disabled:opacity-50"
+                                  className="w-full bg-[#1A1C1E] hover:bg-[#B8422E] text-white py-2 uppercase text-xs tracking-widest disabled:opacity-50"
                                 >
                                   Confirm Task Convert
                                 </button>
@@ -879,7 +935,7 @@ export default function InboxPage() {
                             ) : (
                               <>
                                 <div className="space-y-1">
-                                  <label className="block text-[9px] uppercase text-[#6C7278]">Choose Course</label>
+                                  <label className="block text-xs uppercase text-[#6C7278]">Choose Course</label>
                                   <select
                                     value={targetCourseId}
                                     onChange={(e) => {
@@ -896,7 +952,7 @@ export default function InboxPage() {
                                 </div>
                                 {targetCourseId && (
                                   <div className="space-y-1">
-                                    <label className="block text-[9px] uppercase text-[#6C7278]">Target Module</label>
+                                    <label className="block text-xs uppercase text-[#6C7278]">Target Module</label>
                                     <select
                                       value={targetModuleId}
                                       onChange={(e) => setTargetModuleId(e.target.value)}
@@ -914,7 +970,7 @@ export default function InboxPage() {
                                 <button
                                   onClick={() => handleSendToAcademy(item)}
                                   disabled={!targetModuleId}
-                                  className="w-full bg-[#1A1C1E] hover:bg-[#B8422E] text-white py-2 uppercase text-[10px] tracking-widest disabled:opacity-50"
+                                  className="w-full bg-[#1A1C1E] hover:bg-[#B8422E] text-white py-2 uppercase text-xs tracking-widest disabled:opacity-50"
                                 >
                                   Confirm Academy Send
                                 </button>
@@ -987,7 +1043,7 @@ export default function InboxPage() {
                       }`}
                     >
                       <FolderPlus className="h-4 w-4 text-[#6C7278]" />
-                      <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Convert Task</span>
+                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Convert Task</span>
                     </div>
                     <div
                       onDragOver={(e) => handleDragOver(e, 'academy')}
@@ -998,7 +1054,7 @@ export default function InboxPage() {
                       }`}
                     >
                       <GraduationCap className="h-4 w-4 text-[#6C7278]" />
-                      <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Send Academy</span>
+                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Send Academy</span>
                     </div>
                     {draggedItem?.status === 'knowledge' ? (
                       <div
@@ -1010,7 +1066,7 @@ export default function InboxPage() {
                         }`}
                       >
                         <Inbox className="h-4 w-4 text-[#6C7278]" />
-                        <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Move to Queue</span>
+                        <span className="font-label text-xs uppercase tracking-wider font-semibold">Move to Queue</span>
                       </div>
                     ) : (
                       <div
@@ -1022,7 +1078,7 @@ export default function InboxPage() {
                         }`}
                       >
                         <BookOpen className="h-4 w-4 text-[#6C7278]" />
-                        <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Save Knowledge</span>
+                        <span className="font-label text-xs uppercase tracking-wider font-semibold">Save Knowledge</span>
                       </div>
                     )}
                     <div
@@ -1034,7 +1090,7 @@ export default function InboxPage() {
                       }`}
                     >
                       <Clock className="h-4 w-4 text-[#6C7278]" />
-                      <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Snooze 24h</span>
+                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Snooze 24h</span>
                     </div>
                     <div
                       onDragOver={(e) => handleDragOver(e, 'archive')}
@@ -1045,7 +1101,7 @@ export default function InboxPage() {
                       }`}
                     >
                       <Archive className="h-4 w-4 text-[#6C7278]" />
-                      <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Archive</span>
+                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Archive</span>
                     </div>
                     <div
                       onDragOver={(e) => handleDragOver(e, 'delete')}
@@ -1056,7 +1112,7 @@ export default function InboxPage() {
                       }`}
                     >
                       <Trash2 className="h-4 w-4" />
-                      <span className="font-label text-[9px] uppercase tracking-wider font-semibold">Delete</span>
+                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Delete</span>
                     </div>
                   </div>
                 )}
@@ -1065,7 +1121,7 @@ export default function InboxPage() {
                 {isSearching ? (
                   <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
                     <div className="flex justify-between items-center mb-2">
-                      <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
+                      <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
                         Search Results ({globalSearchResults.length})
                       </span>
                     </div>
@@ -1076,7 +1132,7 @@ export default function InboxPage() {
                     {activeTab === 'queue' && (
                       <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
+                          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
                             Pending Triage Queue ({unsortedItems.length})
                           </span>
                         </div>
@@ -1087,7 +1143,7 @@ export default function InboxPage() {
                     {activeTab === 'knowledge' && (
                       <div className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
                         <div className="flex justify-between items-center mb-2">
-                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block">
+                          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
                             Knowledge Base & Permanent Reference Vault ({knowledgeItems.length})
                           </span>
                         </div>
@@ -1099,7 +1155,7 @@ export default function InboxPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Snoozed Queue */}
                         <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
-                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
+                          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
                             Snoozed Queue ({snoozedItems.length})
                           </span>
                           <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -1108,21 +1164,21 @@ export default function InboxPage() {
                                 <span className="font-sans text-xs text-[#1A1C1E] truncate shrink-0 max-w-[150px]">{item.title}</span>
                                 <button
                                   onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
-                                  className="font-label text-[9px] text-[#B8422E] hover:underline uppercase tracking-wide cursor-pointer"
+                                  className="font-label text-xs text-[#B8422E] hover:underline uppercase tracking-wide cursor-pointer"
                                 >
                                   Unsnooze
                                 </button>
                               </div>
                             ))}
                             {filteredSnoozed.length === 0 && (
-                              <p className="font-sans text-[11px] text-[#6C7278] italic text-center py-4">No snoozed items.</p>
+                              <p className="font-sans text-xs text-[#6C7278] italic text-center py-4">No snoozed items.</p>
                             )}
                           </div>
                         </div>
 
                         {/* Archived Queue */}
                         <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
-                          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
+                          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
                             Archived Log ({archivedItems.length})
                           </span>
                           <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -1131,14 +1187,14 @@ export default function InboxPage() {
                                 <span className="font-sans text-xs text-[#6C7278] truncate shrink-0 max-w-[150px]">{item.title}</span>
                                 <button
                                   onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
-                                  className="font-label text-[9px] text-[#1A1C1E] hover:underline uppercase tracking-wide cursor-pointer"
+                                  className="font-label text-xs text-[#1A1C1E] hover:underline uppercase tracking-wide cursor-pointer"
                                 >
                                   Restore
                                 </button>
                               </div>
                             ))}
                             {filteredArchived.length === 0 && (
-                              <p className="font-sans text-[11px] text-[#6C7278] italic text-center py-4">Archive is empty.</p>
+                              <p className="font-sans text-xs text-[#6C7278] italic text-center py-4">Archive is empty.</p>
                             )}
                           </div>
                         </div>
@@ -1152,6 +1208,21 @@ export default function InboxPage() {
         </section>
 
       </div>
+      <ConfirmDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setItemToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (itemToDelete) {
+            await deleteInboxItem(itemToDelete.id);
+            showToast('Inbox item deleted forever.', 'info');
+          }
+        }}
+        itemName={itemToDelete?.title || ''}
+        itemType="inbox item"
+      />
     </div>
   );
 }

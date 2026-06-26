@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useToast } from '@/context/ToastContext';
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { Trash2, Check, Smile, Moon, Droplet } from 'lucide-react';
 
 export default function HabitsPage() {
@@ -15,6 +17,12 @@ export default function HabitsPage() {
     recordHabitValue,
     updateDailyLog
   } = useDashboard();
+
+  const { showToast } = useToast();
+
+  // Delete confirmation states
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [habitToDelete, setHabitToDelete] = useState<{ id: string; name: string } | null>(null);
 
   // Month navigation
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -44,10 +52,11 @@ export default function HabitsPage() {
   // ==========================================
   // HABIT CREATION HANDLER
   // ==========================================
-  const handleCreateHabit = (e: React.FormEvent) => {
+  const handleCreateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newHabitName.trim()) return;
-    addHabit(newHabitName, newHabitType, newHabitUnit || undefined, newHabitGoal);
+    await addHabit(newHabitName, newHabitType, newHabitUnit || undefined, newHabitGoal);
+    showToast('New habit created successfully.', 'success');
     setNewHabitName('');
     setNewHabitUnit('');
     setNewHabitGoal(1);
@@ -177,7 +186,7 @@ export default function HabitsPage() {
           <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
             THE HABIT ENGINE
           </h2>
-          <p className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+          <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
             Daily Tracker Matrix &bull; 90-Day Discipline Heatmap
           </p>
         </div>
@@ -185,14 +194,14 @@ export default function HabitsPage() {
 
       {/* 90-DAY HEATMAP SECTION */}
       <section className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
-        <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1 mb-2">
+        <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1 mb-2">
           Discipline Heatmap (Last 90 Days)
         </span>
         
         <div className="flex flex-col items-center md:items-start space-y-4">
           <div className="flex space-x-2 overflow-x-auto max-w-full pb-2">
             {/* Weekday indicator labels */}
-            <div className="grid grid-rows-7 gap-1 font-label text-[8px] text-[#6C7278] uppercase justify-center pr-2 pt-1 select-none">
+            <div className="grid grid-rows-7 gap-1 font-label text-xs text-[#6C7278] uppercase justify-center pr-2 pt-1 select-none">
               <div>S</div>
               <div>M</div>
               <div>T</div>
@@ -219,7 +228,7 @@ export default function HabitsPage() {
           </div>
 
           {/* Color Key legend */}
-          <div className="flex items-center space-x-2 font-label text-[9px] text-[#6C7278]">
+          <div className="flex items-center space-x-2 font-label text-xs text-[#6C7278]">
             <span>Less Discipline</span>
             <div className="h-3 w-3 bg-[#EAE8E4]"></div>
             <div className="h-3 w-3 bg-[#D8E2D9]"></div>
@@ -241,7 +250,7 @@ export default function HabitsPage() {
               {formattedMonth} MATRIX
             </h4>
             
-            <div className="flex space-x-2 font-label text-[10px]">
+            <div className="flex space-x-2 font-label text-xs">
               <button
                 onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
                 className="px-2 py-1 border border-[#6C7278] hover:bg-[#F7F5F2]"
@@ -267,8 +276,8 @@ export default function HabitsPage() {
                   </th>
                   {currentMonthDays.map((day) => (
                     <th key={day.day} className="p-2 text-center border-r border-[#6C7278]/40 min-w-[32px]">
-                      <span className="block text-[8px] text-[#6C7278] font-medium leading-none">{day.dayName}</span>
-                      <span className="block text-[11px] text-[#1A1C1E] font-bold mt-0.5">{day.day}</span>
+                      <span className="block text-xs text-[#6C7278] font-medium leading-none">{day.dayName}</span>
+                      <span className="block text-xs text-[#1A1C1E] font-bold mt-0.5">{day.day}</span>
                     </th>
                   ))}
                 </tr>
@@ -280,7 +289,10 @@ export default function HabitsPage() {
                     <td className="p-3 border-r border-[#6C7278] font-sans font-semibold text-[#1A1C1E] sticky left-0 bg-white z-10 flex justify-between items-center group">
                       <span className="truncate max-w-[100px]">{habit.name}</span>
                       <button
-                        onClick={() => deleteHabit(habit.id)}
+                        onClick={() => {
+                          setHabitToDelete({ id: habit.id, name: habit.name });
+                          setDeleteModalOpen(true);
+                        }}
                         className="opacity-0 group-hover:opacity-100 text-[#6C7278] hover:text-[#B8422E] p-0.5"
                         title="Delete habit"
                       >
@@ -413,13 +425,13 @@ export default function HabitsPage() {
 
         {/* HABIT CREATOR DRAWER */}
         <section className="bg-white border border-[#6C7278] p-6 rounded-sm self-start">
-          <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block mb-4 border-b border-[#6C7278]/25 pb-1">
+          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4 border-b border-[#6C7278]/25 pb-1">
             Habit Configurator
           </span>
 
           <form onSubmit={handleCreateHabit} className="space-y-4 font-label text-xs">
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Habit Name *</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Habit Name *</label>
               <input
                 type="text"
                 value={newHabitName}
@@ -431,7 +443,7 @@ export default function HabitsPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[9px] uppercase text-[#6C7278]">Tracker Type</label>
+              <label className="block text-xs uppercase text-[#6C7278]">Tracker Type</label>
               <select
                 value={newHabitType}
                 onChange={(e) => setNewHabitType(e.target.value as 'binary' | 'numeric')}
@@ -445,7 +457,7 @@ export default function HabitsPage() {
             {newHabitType === 'numeric' && (
               <>
                 <div className="space-y-1.5">
-                  <label className="block text-[9px] uppercase text-[#6C7278]">Measurement Unit</label>
+                  <label className="block text-xs uppercase text-[#6C7278]">Measurement Unit</label>
                   <input
                     type="text"
                     value={newHabitUnit}
@@ -455,7 +467,7 @@ export default function HabitsPage() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-[9px] uppercase text-[#6C7278]">Daily Volume Goal</label>
+                  <label className="block text-xs uppercase text-[#6C7278]">Daily Volume Goal</label>
                   <input
                     type="number"
                     step="any"
@@ -468,13 +480,29 @@ export default function HabitsPage() {
             )}
 
             {/* Terracotta Action Button */}
-            <button type="submit" className="w-full btn-tertiary uppercase text-[10px] tracking-wider font-bold mt-2">
+            <button type="submit" className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2">
               SAVE NEW HABIT
             </button>
           </form>
         </section>
 
       </div>
+      {/* Delete Confirmation Modal */}
+      <ConfirmDeleteModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setHabitToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (habitToDelete) {
+            await deleteHabit(habitToDelete.id);
+            showToast('Habit deleted successfully.', 'info');
+          }
+        }}
+        itemName={habitToDelete?.name || ''}
+        itemType="habit"
+      />
     </div>
   );
 }

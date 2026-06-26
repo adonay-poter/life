@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { Search, Calendar, ChevronRight } from 'lucide-react';
@@ -29,13 +29,72 @@ export default function JournalPage() {
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Sync inputs on date change
-  React.useEffect(() => {
-    let active = true;
-    const entry = journalEntries.find((j) => j.date === selectedDateStr);
+  // Auto-save and dirty tracking states
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
+
+  const prevDateRef = useRef(selectedDateStr);
+  const formValuesRef = useRef({
+    mIntention1,
+    mIntention2,
+    mIntention3,
+    eLearned1,
+    eLearned2,
+    eLearned3,
+    eBetter1,
+    eBetter2,
+    eBetter3,
+    freeText,
+  });
+
+  // Keep formValuesRef synced
+  useEffect(() => {
+    formValuesRef.current = {
+      mIntention1,
+      mIntention2,
+      mIntention3,
+      eLearned1,
+      eLearned2,
+      eLearned3,
+      eBetter1,
+      eBetter2,
+      eBetter3,
+      freeText,
+    };
+  }, [
+    mIntention1,
+    mIntention2,
+    mIntention3,
+    eLearned1,
+    eLearned2,
+    eLearned3,
+    eBetter1,
+    eBetter2,
+    eBetter3,
+    freeText,
+  ]);
+
+  // Helper to save a specific date entry
+  const saveEntryForDate = (dateStr: string, values: typeof formValuesRef.current) => {
+    const morning = [values.mIntention1, values.mIntention2, values.mIntention3].filter((s) => s.trim().length > 0);
+    const learned = [values.eLearned1, values.eLearned2, values.eLearned3].filter((s) => s.trim().length > 0);
+    const better = [values.eBetter1, values.eBetter2, values.eBetter3].filter((s) => s.trim().length > 0);
+    updateJournalEntry(dateStr, morning, learned, better, values.freeText);
+  };
+
+  // Load data and handle date transition saving
+  useEffect(() => {
+    const prevDate = prevDateRef.current;
     
-    requestAnimationFrame(() => {
-      if (!active) return;
+    // 1. If switching dates and form is dirty, flush previous date's changes
+    if (prevDate && prevDate !== selectedDateStr && saveStatus === 'dirty') {
+      saveEntryForDate(prevDate, formValuesRef.current);
+    }
+
+    // 2. Load the entry for the selected date
+    const entry = journalEntries.find((j) => j.date === selectedDateStr);
+    const dateChanged = prevDate !== selectedDateStr;
+
+    if (dateChanged || saveStatus === 'saved') {
       if (entry) {
         setMIntention1(entry.morning_intentions[0] || '');
         setMIntention2(entry.morning_intentions[1] || '');
@@ -51,7 +110,6 @@ export default function JournalPage() {
 
         setFreeText(entry.free_text || '');
       } else {
-        // Clear for new entry
         setMIntention1('');
         setMIntention2('');
         setMIntention3('');
@@ -63,24 +121,76 @@ export default function JournalPage() {
         setEBetter3('');
         setFreeText('');
       }
-    });
+      setSaveStatus('saved');
+    }
 
-    return () => {
-      active = false;
-    };
+    prevDateRef.current = selectedDateStr;
   }, [selectedDateStr, journalEntries]);
+
+  // Debounced auto-save effect
+  useEffect(() => {
+    if (saveStatus !== 'dirty') return;
+
+    const timer = setTimeout(async () => {
+      setSaveStatus('saving');
+      const values = formValuesRef.current;
+      saveEntryForDate(selectedDateStr, values);
+      setSaveStatus('saved');
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [
+    saveStatus,
+    mIntention1,
+    mIntention2,
+    mIntention3,
+    eLearned1,
+    eLearned2,
+    eLearned3,
+    eBetter1,
+    eBetter2,
+    eBetter3,
+    freeText,
+    selectedDateStr
+  ]);
+
+  // Flush on unmount if dirty
+  useEffect(() => {
+    return () => {
+      if (saveStatus === 'dirty') {
+        saveEntryForDate(prevDateRef.current, formValuesRef.current);
+      }
+    };
+  }, [saveStatus]);
+
+  // Warning before unload if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (saveStatus === 'dirty') {
+        e.preventDefault();
+        e.returnValue = 'You have unsaved changes in your journal. Are you sure you want to leave?';
+        return e.returnValue;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [saveStatus]);
 
   // ==========================================
   // SAVE JOURNAL ENTRY
   // ==========================================
   const handleSaveJournal = (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setSaveStatus('saving');
     const morning = [mIntention1, mIntention2, mIntention3].filter((s) => s.trim().length > 0);
     const learned = [eLearned1, eLearned2, eLearned3].filter((s) => s.trim().length > 0);
     const better = [eBetter1, eBetter2, eBetter3].filter((s) => s.trim().length > 0);
 
     updateJournalEntry(selectedDateStr, morning, learned, better, freeText);
+    setSaveStatus('saved');
   };
 
   // ==========================================
@@ -113,7 +223,7 @@ export default function JournalPage() {
           <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
             THE CHRONICLES
           </h2>
-          <p className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+          <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
             Morning Intentions &bull; Evening Reflections &bull; Journal
           </p>
         </div>
@@ -129,7 +239,7 @@ export default function JournalPage() {
             
             {/* Header select date bar */}
             <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-3">
-              <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] font-semibold">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] font-semibold">
                 Journal Entry Editor
               </span>
 
@@ -148,28 +258,28 @@ export default function JournalPage() {
             <div className="space-y-3">
               <div className="flex items-baseline space-x-2">
                 <span className="font-display text-lg font-bold text-[#1A1C1E]">I. Morning Intentions</span>
-                <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-wider">&mdash; What would make today great?</span>
+                <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; What would make today great?</span>
               </div>
 
               <div className="space-y-2 font-label text-xs">
                 <input
                   type="text"
                   value={mIntention1}
-                  onChange={(e) => setMIntention1(e.target.value)}
+                  onChange={(e) => { setMIntention1(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="1. e.g. Execute clean SQL migrations successfully"
                   className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                 />
                 <input
                   type="text"
                   value={mIntention2}
-                  onChange={(e) => setMIntention2(e.target.value)}
+                  onChange={(e) => { setMIntention2(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="2. e.g. Interval running outdoors 35 minutes"
                   className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                 />
                 <input
                   type="text"
                   value={mIntention3}
-                  onChange={(e) => setMIntention3(e.target.value)}
+                  onChange={(e) => { setMIntention3(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="3. e.g. Read draft of design system standard"
                   className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                 />
@@ -183,28 +293,28 @@ export default function JournalPage() {
               <div className="space-y-3">
                 <div className="flex items-baseline space-x-2">
                   <span className="font-display text-lg font-bold text-[#1A1C1E]">II. Evening Lessons</span>
-                  <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-wider">&mdash; What did I learn today?</span>
+                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; What did I learn today?</span>
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
                   <input
                     type="text"
                     value={eLearned1}
-                    onChange={(e) => setELearned1(e.target.value)}
+                    onChange={(e) => { setELearned1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Next.js fonts load as local stylesheet resources"
                     className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                   />
                   <input
                     type="text"
                     value={eLearned2}
-                    onChange={(e) => setELearned2(e.target.value)}
+                    onChange={(e) => { setELearned2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Flat designs require clean negative spaces to feel premium"
                     className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                   />
                   <input
                     type="text"
                     value={eLearned3}
-                    onChange={(e) => setELearned3(e.target.value)}
+                    onChange={(e) => { setELearned3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Leitner card deck reviews work best daily"
                     className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                   />
@@ -215,28 +325,28 @@ export default function JournalPage() {
               <div className="space-y-3 pt-2">
                 <div className="flex items-baseline space-x-2">
                   <span className="font-display text-md font-bold text-[#1A1C1E]">III. Refinements</span>
-                  <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-wider">&mdash; What could have been better?</span>
+                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; What could have been better?</span>
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
                   <input
                     type="text"
                     value={eBetter1}
-                    onChange={(e) => setEBetter1(e.target.value)}
+                    onChange={(e) => { setEBetter1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Avoid starting tasks past 9 PM"
                     className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                   />
                   <input
                     type="text"
                     value={eBetter2}
-                    onChange={(e) => setEBetter2(e.target.value)}
+                    onChange={(e) => { setEBetter2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Set reminders for hydration goals"
                     className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                   />
                   <input
                     type="text"
                     value={eBetter3}
-                    onChange={(e) => setEBetter3(e.target.value)}
+                    onChange={(e) => { setEBetter3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Keep card answers shorter for Leitner system"
                     className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
                   />
@@ -249,11 +359,11 @@ export default function JournalPage() {
             <div className="space-y-3 pt-4 border-t border-[#6C7278]/25">
               <div className="flex items-baseline space-x-2">
                 <span className="font-display text-lg font-bold text-[#1A1C1E]">IV. Daily Log</span>
-                <span className="font-label text-[9px] text-[#6C7278] uppercase tracking-wider">&mdash; Free thoughts and reflections</span>
+                <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; Free thoughts and reflections</span>
               </div>
               <textarea
                 value={freeText}
-                onChange={(e) => setFreeText(e.target.value)}
+                onChange={(e) => { setFreeText(e.target.value); setSaveStatus('dirty'); }}
                 rows={5}
                 placeholder="Write freely here..."
                 className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-4 py-3 text-xs text-[#1A1C1E] focus:outline-none focus:border-[#B8422E] font-sans resize-none leading-relaxed"
@@ -261,9 +371,20 @@ export default function JournalPage() {
             </div>
 
             {/* The single primary Terracotta red Reserved action button */}
-            <button type="submit" className="w-full btn-tertiary uppercase text-xs tracking-widest font-bold pt-3 pb-3">
-              SAVE CHRONICLE ENTRY
-            </button>
+            <div className="flex items-center justify-between gap-4">
+              <span className="font-label text-xs uppercase tracking-wider text-[#6C7278]">
+                {saveStatus === 'saved' && '• Saved'}
+                {saveStatus === 'saving' && '• Saving...'}
+                {saveStatus === 'dirty' && '• Unsaved changes'}
+              </span>
+              <button 
+                type="submit" 
+                disabled={saveStatus === 'saving'}
+                className="flex-1 btn-tertiary uppercase text-xs tracking-widest font-bold pt-3 pb-3 cursor-pointer disabled:opacity-50"
+              >
+                {saveStatus === 'saving' ? 'SAVING...' : 'SAVE CHRONICLE ENTRY'}
+              </button>
+            </div>
 
           </form>
         </section>
@@ -273,7 +394,7 @@ export default function JournalPage() {
            ========================================== */}
         <section className="bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between max-h-[700px]">
           <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
-            <span className="font-label text-[10px] text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1">
+            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1">
               Historical Timeline
             </span>
 
@@ -308,11 +429,11 @@ export default function JournalPage() {
                     }`}
                   >
                     <div>
-                      <span className="font-label text-[10px] font-bold text-[#1A1C1E] block">
+                      <span className="font-label text-xs font-bold text-[#1A1C1E] block">
                         {formattedLogDate.toUpperCase()}
                       </span>
                       {entry.morning_intentions[0] && (
-                        <span className="font-sans text-[11px] text-[#6C7278] line-clamp-1 mt-1 italic">
+                        <span className="font-sans text-xs text-[#6C7278] line-clamp-1 mt-1 italic">
                           &ldquo;{entry.morning_intentions[0]}&rdquo;
                         </span>
                       )}

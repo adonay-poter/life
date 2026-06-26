@@ -24,6 +24,12 @@
   --radius-sm: 2px;
   --radius-md: 4px;
   --radius-lg: 8px;
+
+  /* Global slightly larger typography scale for readability */
+  --text-xs: 0.8rem;      /* Default: 0.75rem (12px) -> New: 12.8px */
+  --text-sm: 0.925rem;    /* Default: 0.875rem (14px) -> New: 14.8px */
+  --text-base: 1.05rem;   /* Default: 1rem (16px) -> New: 16.8px */
+  --text-lg: 1.15rem;     /* Default: 1.125rem (18px) -> New: 18.4px */
 }
 
 /* Custom scrollbar matching the Heritage aesthetic */
@@ -60,17 +66,28 @@ body {
   border: 1px solid var(--secondary);
 }
 
-/* Accent highlight button */
+/* Accent highlight button - slightly larger & higher contrast */
 .btn-tertiary {
   background-color: var(--tertiary);
   color: #FFFFFF;
   border-radius: 4px;
-  padding: 8px 16px;
+  padding: 10px 20px;
   font-family: var(--font-label);
-  font-weight: 500;
+  font-weight: 600;
+  font-size: var(--text-xs);
   letter-spacing: 0.05em;
   transition: opacity 0.2s ease;
 }
 .btn-tertiary:hover {
   opacity: 0.9;
+}
+
+/* Make form elements sitewide slightly larger for easier interaction */
+form input[type="text"],
+form input[type="date"],
+form select,
+form textarea {
+  padding-top: 0.5rem !important;
+  padding-bottom: 0.5rem !important;
+  font-size: var(--text-sm) !important;
 }
