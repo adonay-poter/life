@@ -465,7 +465,6 @@ function TasksContent() {
     { name: 'Backlog', status: 'backlog' },
     { name: 'Todo Queue', status: 'todo' },
     { name: 'In Progress', status: 'in_progress' },
-    { name: 'Blocked', status: 'blocked' },
     { name: 'Done Log', status: 'done' }
   ];
 
@@ -786,7 +785,7 @@ function TasksContent() {
             })}
           </div>
 
-          <div className="flex flex-col md:grid md:grid-cols-5 gap-4 pb-4">
+          <div className="flex flex-col md:grid md:grid-cols-4 gap-4 pb-4">
             {kanbanColumns.map((col) => {
               // Filter only parent tasks (or orphans), subtasks render inside them
               const columnTasks = filteredTasks.filter((t) => t.status === col.status && !t.parent_task_id);
@@ -954,7 +953,6 @@ function TasksContent() {
                               <option value="backlog">Backlog</option>
                               <option value="todo">Todo</option>
                               <option value="in_progress">In Progress</option>
-                              <option value="blocked">Blocked</option>
                               <option value="done">Done</option>
                             </select>
                           </div>
@@ -1441,7 +1439,6 @@ function TasksContent() {
                 <option value="backlog">Backlog</option>
                 <option value="todo">Todo Queue</option>
                 <option value="in_progress">In Progress</option>
-                <option value="blocked">Blocked</option>
                 <option value="done">Done Log</option>
               </select>
             </div>

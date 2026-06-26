@@ -264,7 +264,6 @@ function ProjectDetailContent() {
     { name: 'Backlog', status: 'backlog' },
     { name: 'Todo', status: 'todo' },
     { name: 'In Progress', status: 'in_progress' },
-    { name: 'Blocked', status: 'blocked' },
     { name: 'Done', status: 'done' }
   ];
 
@@ -612,7 +611,7 @@ function ProjectDetailContent() {
       )}
 
       {/* Task Kanban board */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {kanbanColumns.map((col) => {
           const colTasks = projTasks.filter((t) => t.status === col.status && !t.parent_task_id);
           return (
