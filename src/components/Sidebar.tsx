@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import NotificationCenter from './NotificationCenter';
 import {
   LayoutDashboard,
   Inbox,
@@ -160,13 +161,16 @@ export default function Sidebar() {
             </h1>
           )}
 
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-[#6C7278] hover:text-[#1A1C1E] p-1 transition-all rounded-sm hover:bg-[#F7F5F2] cursor-pointer"
-            title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-          >
-            {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-          </button>
+          <div className="flex items-center space-x-1">
+            {!isCollapsed && <NotificationCenter />}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="text-[#6C7278] hover:text-[#1A1C1E] p-1 transition-all rounded-sm hover:bg-[#F7F5F2] cursor-pointer"
+              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+            >
+              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Navigation Menu */}

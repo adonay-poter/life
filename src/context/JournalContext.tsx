@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useToast } from './ToastContext';
 
 export interface JournalEntry {
   date: string; // YYYY-MM-DD
@@ -54,6 +55,7 @@ const MOCK_JOURNAL_ENTRIES: JournalEntry[] = [
 ];
 
 export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { showToast } = useToast();
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
@@ -72,7 +74,8 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
           setJournalEntries(local ? JSON.parse(local) : MOCK_JOURNAL_ENTRIES);
 
           if (!local && isOnline) {
-            await supabase.from('journal_entries').upsert(MOCK_JOURNAL_ENTRIES);
+            const { error } = await supabase.from('journal_entries').upsert(MOCK_JOURNAL_ENTRIES);
+        if (error) throw error;
           }
         }
       } catch (err) {
@@ -116,7 +119,8 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_journal', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('journal_entries').upsert(newEntry);
+      const { error } = await supabase.from('journal_entries').upsert(newEntry);
+        if (error) throw error;
     }
   };
 
@@ -126,7 +130,8 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_journal', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('journal_entries').delete().eq('date', date);
+      const { error } = await supabase.from('journal_entries').delete().eq('date', date);
+        if (error) throw error;
     }
   };
 

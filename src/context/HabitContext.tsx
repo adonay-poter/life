@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useToast } from './ToastContext';
 
 export interface Habit {
   id: string;
@@ -88,6 +89,7 @@ const MOCK_DAILY_LOGS: DailyLog[] = [
 ];
 
 export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { showToast } = useToast();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [habitRecords, setHabitRecords] = useState<HabitRecord[]>([]);
   const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);
@@ -166,7 +168,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_habits', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('habits').insert(newHabit);
+      const { error } = await supabase.from('habits').insert(newHabit);
+        if (error) throw error;
     }
   };
 
@@ -179,7 +182,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_habit_records', JSON.stringify(updatedRecords));
 
     if (isOnline) {
-      await supabase.from('habits').delete().eq('id', id);
+      const { error } = await supabase.from('habits').delete().eq('id', id);
+        if (error) throw error;
     }
   };
 
@@ -195,7 +199,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_habits', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('habits').update({ is_archived: isArchived }).eq('id', id);
+      const { error } = await supabase.from('habits').update({ is_archived: isArchived }).eq('id', id);
+        if (error) throw error;
     }
   };
 
@@ -222,7 +227,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_habit_records', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('habit_records').upsert(newRecord);
+      const { error } = await supabase.from('habit_records').upsert(newRecord);
+        if (error) throw error;
     }
   };
 
@@ -248,7 +254,8 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_daily_logs', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('daily_logs').upsert(newLog);
+      const { error } = await supabase.from('daily_logs').upsert(newLog);
+        if (error) throw error;
     }
   };
 

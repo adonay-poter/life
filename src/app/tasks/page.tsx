@@ -213,7 +213,11 @@ function TasksContent() {
   };
 
   const handleSaveTaskEdit = async () => {
-    if (!activeTask || !editTaskName.trim()) return;
+    if (!activeTask) return;
+    if (!editTaskName.trim()) {
+      showToast('Task name cannot be empty.', 'error');
+      return;
+    }
     
     await updateTask(activeTask.id, {
       name: editTaskName,
@@ -265,7 +269,10 @@ function TasksContent() {
   // ==========================================
   const handleAddTaskSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTaskName.trim()) return;
+    if (!newTaskName.trim()) {
+      showToast('Task name cannot be empty.', 'error');
+      return;
+    }
     
     addTask(
       newTaskProjId || undefined,
@@ -866,6 +873,7 @@ function TasksContent() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 togglePinTask(task.id);
+                                showToast(`Task ${task.is_pinned ? 'unpinned' : 'pinned to focus'}.`, 'info');
                               }}
                               className={`text-xs shrink-0 ml-1.5 cursor-pointer ${task.is_pinned ? 'text-[#B8422E]' : 'text-[#6C7278] opacity-0 group-hover:opacity-100'}`}
                             >
@@ -1220,6 +1228,7 @@ function TasksContent() {
                         onClick={(e) => {
                           e.stopPropagation();
                           togglePinTask(task.id);
+                          showToast(`Task ${task.is_pinned ? 'unpinned' : 'pinned to focus'}.`, 'info');
                         }}
                         className={`text-xs cursor-pointer p-1 ${task.is_pinned ? 'text-[#B8422E]' : 'text-stone-300 hover:text-[#6C7278]'}`}
                       >
@@ -1565,7 +1574,10 @@ function TasksContent() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => updateTaskPomodoro(activeTask.id, (activeTask.pomodoro_sessions || 0) + 1)}
+                  onClick={() => {
+                    updateTaskPomodoro(activeTask.id, (activeTask.pomodoro_sessions || 0) + 1);
+                    showToast('Pomodoro session logged.', 'info');
+                  }}
                   className="bg-white border border-[#6C7278]/40 hover:bg-[#F7F5F2] hover:border-[#1A1C1E] font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
                 >
                   <span>+1 Session</span>
@@ -1580,7 +1592,10 @@ function TasksContent() {
           <div className="flex items-center space-x-2">
             <button
               type="button"
-              onClick={() => togglePinTask(activeTask.id)}
+              onClick={() => {
+                togglePinTask(activeTask.id);
+                showToast(`Task ${activeTask.is_pinned ? 'unpinned' : 'pinned to focus'}.`, 'info');
+              }}
               className={`px-3 py-1.5 border rounded-sm cursor-pointer flex items-center space-x-1 transition-all ${
                 activeTask.is_pinned 
                   ? 'bg-[#B8422E]/10 border-[#B8422E] text-[#B8422E]' 

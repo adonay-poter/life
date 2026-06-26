@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import NotificationCenter from './NotificationCenter';
 import {
   LayoutDashboard,
   Inbox,
@@ -102,6 +103,8 @@ export default function MobileNav() {
           <div className="bg-[#1A1C1E] text-white px-2 py-0.5 rounded-sm font-label text-xs font-medium tracking-wider">
             {lifeScore}%
           </div>
+
+          <NotificationCenter />
         </div>
       </header>
 

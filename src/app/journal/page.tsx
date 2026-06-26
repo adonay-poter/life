@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useToast } from '@/context/ToastContext';
 import { Search, Calendar, ChevronRight } from 'lucide-react';
 
 export default function JournalPage() {
   const { journalEntries, updateJournalEntry } = useDashboard();
+  const { showToast } = useToast();
 
   // Selected date to edit (YYYY-MM-DD)
   const [selectedDateStr, setSelectedDateStr] = useState(getLocalDateString());
@@ -31,6 +33,7 @@ export default function JournalPage() {
 
   // Auto-save and dirty tracking states
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
+  const [hasAutoSaved, setHasAutoSaved] = useState(false);
 
   const prevDateRef = useRef(selectedDateStr);
   const formValuesRef = useRef({
@@ -95,6 +98,7 @@ export default function JournalPage() {
     const dateChanged = prevDate !== selectedDateStr;
 
     if (dateChanged || saveStatus === 'saved') {
+      if (dateChanged) setHasAutoSaved(false);
       if (entry) {
         setMIntention1(entry.morning_intentions[0] || '');
         setMIntention2(entry.morning_intentions[1] || '');
@@ -136,6 +140,10 @@ export default function JournalPage() {
       const values = formValuesRef.current;
       saveEntryForDate(selectedDateStr, values);
       setSaveStatus('saved');
+      if (!hasAutoSaved) {
+        showToast('Journal auto-saved.', 'success');
+        setHasAutoSaved(true);
+      }
     }, 2000);
 
     return () => clearTimeout(timer);
@@ -151,7 +159,9 @@ export default function JournalPage() {
     eBetter2,
     eBetter3,
     freeText,
-    selectedDateStr
+    selectedDateStr,
+    hasAutoSaved,
+    showToast
   ]);
 
   // Flush on unmount if dirty
@@ -191,6 +201,8 @@ export default function JournalPage() {
 
     updateJournalEntry(selectedDateStr, morning, learned, better, freeText);
     setSaveStatus('saved');
+    showToast('Journal entry saved.', 'success');
+    setHasAutoSaved(true);
   };
 
   // ==========================================

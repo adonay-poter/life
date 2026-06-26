@@ -103,7 +103,10 @@ export default function HabitsPage() {
   // ==========================================
   const handleCreateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newHabitName.trim()) return;
+    if (!newHabitName.trim()) {
+      showToast('Habit name cannot be empty.', 'error');
+      return;
+    }
     await addHabit(newHabitName, newHabitType, newHabitUnit || undefined, newHabitGoal, newHabitCategory, newHabitFrequency);
     showToast('New habit created successfully.', 'success');
     setNewHabitName('');
@@ -204,6 +207,7 @@ export default function HabitsPage() {
     if (nextVal > 0) {
       setAnimatingCell(`${habitId}-${dateStr}`);
       setTimeout(() => setAnimatingCell(null), 250);
+      showToast('Habit recorded ✓', 'success');
     }
     recordHabitValue(habitId, dateStr, nextVal);
   };
@@ -223,6 +227,7 @@ export default function HabitsPage() {
     const sleep = existingLog ? existingLog.sleep_hours : 0;
     const water = existingLog ? existingLog.water_intake : 0;
     updateDailyLog(dateStr, moodVal, sleep, water);
+    showToast('Wellness log saved.', 'success');
   };
 
   const handleHealthLogChange = (dateStr: string, field: 'sleep' | 'water', valStr: string) => {
@@ -447,6 +452,7 @@ export default function HabitsPage() {
                               type="text"
                               value={val || ''}
                               onChange={(e) => handleNumericChange(habit.id, day.dateStr, e.target.value)}
+                              onBlur={() => showToast('Value updated.', 'info')}
                               placeholder="-"
                               className="w-10 bg-transparent text-center border-b border-transparent focus:border-[#B8422E] focus:outline-none font-sans text-xs text-[#1A1C1E]"
                             />
@@ -512,6 +518,7 @@ export default function HabitsPage() {
                           type="text"
                           value={hours || ''}
                           onChange={(e) => handleHealthLogChange(day.dateStr, 'sleep', e.target.value)}
+                          onBlur={() => showToast('Wellness log saved.', 'success')}
                           placeholder="-"
                           className="w-10 bg-transparent text-center border-b border-transparent focus:border-[#B8422E] focus:outline-none font-sans text-xs text-[#1A1C1E]"
                         />
@@ -537,6 +544,7 @@ export default function HabitsPage() {
                           type="text"
                           value={water || ''}
                           onChange={(e) => handleHealthLogChange(day.dateStr, 'water', e.target.value)}
+                          onBlur={() => showToast('Wellness log saved.', 'success')}
                           placeholder="-"
                           className="w-10 bg-transparent text-center border-b border-transparent focus:border-[#B8422E] focus:outline-none font-sans text-xs text-[#1A1C1E]"
                         />

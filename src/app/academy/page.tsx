@@ -152,23 +152,35 @@ function AcademyContent() {
   };
 
   const handleAddModule = (courseId: string) => {
-    if (!newModuleName.trim()) return;
+    if (!newModuleName.trim()) {
+      showToast('Module name cannot be empty.', 'error');
+      return;
+    }
     const currentModules = courseModules.filter((m) => m.course_id === courseId);
     addModule(courseId, newModuleName, currentModules.length + 1);
+    showToast('Module added successfully.', 'success');
     setNewModuleName('');
   };
 
   const handleAddLesson = (moduleId: string) => {
-    if (!newLessonName.trim()) return;
+    if (!newLessonName.trim()) {
+      showToast('Lesson name cannot be empty.', 'error');
+      return;
+    }
     addLesson(moduleId, newLessonName, newLessonLink || undefined);
+    showToast('Lesson added successfully.', 'success');
     setNewLessonName('');
     setNewLessonLink('');
   };
 
   const handleAddFlashcardSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fcQuestion.trim() || !fcAnswer.trim() || !selectedCourseId || !selectedModuleId) return;
+    if (!fcQuestion.trim() || !fcAnswer.trim() || !selectedCourseId || !selectedModuleId) {
+      showToast('Please fill out all required flashcard fields.', 'error');
+      return;
+    }
     addFlashcard(selectedCourseId, selectedModuleId, fcQuestion, fcAnswer);
+    showToast('Flashcard saved successfully.', 'success');
     setFcQuestion('');
     setFcAnswer('');
   };

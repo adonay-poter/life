@@ -1163,7 +1163,10 @@ export default function InboxPage() {
                               <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
                                 <span className="font-sans text-xs text-[#1A1C1E] truncate shrink-0 max-w-[150px]">{item.title}</span>
                                 <button
-                                  onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
+                                  onClick={async () => {
+                                    await updateInboxItemStatus(item.id, 'unsorted');
+                                    showToast('Item unsnoozed and returned to triage queue.', 'success');
+                                  }}
                                   className="font-label text-xs text-[#B8422E] hover:underline uppercase tracking-wide cursor-pointer"
                                 >
                                   Unsnooze
@@ -1186,7 +1189,10 @@ export default function InboxPage() {
                               <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
                                 <span className="font-sans text-xs text-[#6C7278] truncate shrink-0 max-w-[150px]">{item.title}</span>
                                 <button
-                                  onClick={() => updateInboxItemStatus(item.id, 'unsorted')}
+                                  onClick={async () => {
+                                    await updateInboxItemStatus(item.id, 'unsorted');
+                                    showToast('Item restored from archive to triage queue.', 'success');
+                                  }}
                                   className="font-label text-xs text-[#1A1C1E] hover:underline uppercase tracking-wide cursor-pointer"
                                 >
                                   Restore

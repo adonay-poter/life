@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useToast } from './ToastContext';
 
 export interface Project {
   id: string;
@@ -100,6 +101,7 @@ const MOCK_TASKS: Task[] = [
 ];
 
 export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { showToast } = useToast();
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -182,7 +184,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_projects', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('projects').insert(newProject);
+      const { error } = await supabase.from('projects').insert(newProject);
+        if (error) throw error;
     }
   };
 
@@ -198,7 +201,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_projects', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('projects').update(updates).eq('id', projectId);
+      const { error } = await supabase.from('projects').update(updates).eq('id', projectId);
+        if (error) throw error;
     }
   };
 
@@ -212,7 +216,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_tasks', JSON.stringify(updatedTasks));
 
     if (isOnline) {
-      await supabase.from('projects').delete().eq('id', id);
+      const { error } = await supabase.from('projects').delete().eq('id', id);
+        if (error) throw error;
     }
   };
 
@@ -228,7 +233,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_projects', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('projects').update({ is_archived: isArchived }).eq('id', id);
+      const { error } = await supabase.from('projects').update({ is_archived: isArchived }).eq('id', id);
+        if (error) throw error;
     }
   };
 
@@ -265,7 +271,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_tasks', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('tasks').insert(newTask);
+      const { error } = await supabase.from('tasks').insert(newTask);
+        if (error) throw error;
     }
   };
 
@@ -281,7 +288,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_tasks', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('tasks').update(updates).eq('id', taskId);
+      const { error } = await supabase.from('tasks').update(updates).eq('id', taskId);
+        if (error) throw error;
     }
   };
 
@@ -325,13 +333,14 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (isOnline) {
       const updatedItem = updatedTasks.find((t) => t.id === taskId);
       if (updatedItem) {
-        await supabase
+        const { error } = await supabase
           .from('tasks')
           .update({
             status: updatedItem.status,
             due_date: updatedItem.due_date
           })
           .eq('id', taskId);
+        if (error) throw error;
       }
     }
   };
@@ -348,7 +357,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_tasks', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('tasks').update({ pomodoro_sessions: count }).eq('id', taskId);
+      const { error } = await supabase.from('tasks').update({ pomodoro_sessions: count }).eq('id', taskId);
+        if (error) throw error;
     }
   };
 
@@ -366,7 +376,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (isOnline) {
       const target = updated.find((t) => t.id === taskId);
       if (target) {
-        await supabase.from('tasks').update({ is_pinned: target.is_pinned }).eq('id', taskId);
+        const { error } = await supabase.from('tasks').update({ is_pinned: target.is_pinned }).eq('id', taskId);
+        if (error) throw error;
       }
     }
   };
@@ -377,7 +388,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     localStorage.setItem('heritage_tasks', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('tasks').delete().eq('id', taskId);
+      const { error } = await supabase.from('tasks').delete().eq('id', taskId);
+        if (error) throw error;
     }
   };
 

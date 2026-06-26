@@ -98,7 +98,10 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editName.trim()) return;
+    if (!editName.trim()) {
+      showToast('Project name cannot be empty.', 'error');
+      return;
+    }
 
     await updateProject(project.id, {
       name: editName,
@@ -118,7 +121,10 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
 
   const handleQuickTaskSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!quickTaskName.trim()) return;
+    if (!quickTaskName.trim()) {
+      showToast('Task name cannot be empty.', 'error');
+      return;
+    }
 
     await addTask(
       project.id,
@@ -588,7 +594,7 @@ function ProjectsContent() {
   const [newProjName, setNewProjName] = useState('');
   const [newProjDesc, setNewProjDesc] = useState('');
   const [newProjClient, setNewProjClient] = useState('');
-  const [newProjGain, setNewProjNameGain] = useState('');
+  const [newProjGain, setNewProjGain] = useState('');
   const [newProjStartDate, setNewProjStartDate] = useState('');
   const [newProjDeadline, setNewProjDeadline] = useState('');
   const [newProjStatus, setNewProjStatus] = useState<Project['status']>('active');
@@ -616,7 +622,10 @@ function ProjectsContent() {
 
   const handleAddProjSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjName.trim()) return;
+    if (!newProjName.trim()) {
+      showToast('Project name cannot be empty.', 'error');
+      return;
+    }
     
     addProject(
       newProjArea,
@@ -636,7 +645,7 @@ function ProjectsContent() {
     setNewProjName('');
     setNewProjDesc('');
     setNewProjClient('');
-    setNewProjNameGain('');
+    setNewProjGain('');
     setNewProjStartDate('');
     setNewProjDeadline('');
     setNewProjStatus('active');
@@ -799,8 +808,8 @@ function ProjectsContent() {
                 <label className="block text-xs uppercase text-[#6C7278]">Project Payload / Gain</label>
                 <input
                   type="text"
-                  value={newProjClient}
-                  onChange={(e) => setNewProjNameGain(e.target.value)}
+                  value={newProjGain}
+                  onChange={(e) => setNewProjGain(e.target.value)}
                   placeholder="e.g. 15% efficiency boost"
                   className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1.5 focus:outline-none font-sans"
                 />

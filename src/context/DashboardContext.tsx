@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useToast } from './ToastContext';
 import { useSystem, SystemProvider } from './SystemContext';
 import { useInbox, InboxProvider, InboxItem } from './InboxContext';
 import { useTaskProject, TaskProjectProvider, Task, Project } from './TaskProjectContext';
@@ -115,54 +116,68 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
 
   const loading = inbox.loading || taskProject.loading || academy.loading || habit.loading || journal.loading;
 
+  const { showToast } = useToast();
+
+  const withErrorHandling = <T extends (...args: any[]) => Promise<any>>(fn: T | undefined) => {
+    if (!fn) return undefined;
+    return async (...args: Parameters<T>) => {
+      try {
+        return await fn(...args);
+      } catch (err: any) {
+        console.error('Context mutation error:', err);
+        showToast(err.message || 'An error occurred while saving data.', 'error');
+      }
+    };
+  };
+
   const value: DashboardContextProps = {
     loading,
     isOnline: system.isOnline,
     syncPending: system.syncPending,
     
     inboxItems: inbox.inboxItems,
-    addInboxItem: inbox.addInboxItem,
-    updateInboxItemStatus: inbox.updateInboxItemStatus,
-    deleteInboxItem: inbox.deleteInboxItem,
+    addInboxItem: withErrorHandling(inbox.addInboxItem) as any,
+    updateInboxItemStatus: withErrorHandling(inbox.updateInboxItemStatus) as any,
+    deleteInboxItem: withErrorHandling(inbox.deleteInboxItem) as any,
 
     projects: taskProject.projects,
     tasks: taskProject.tasks,
-    addProject: taskProject.addProject,
-    updateProject: taskProject.updateProject,
-    deleteProject: taskProject.deleteProject,
-    archiveProject: taskProject.archiveProject,
-    addTask: taskProject.addTask,
-    updateTask: taskProject.updateTask,
-    updateTaskStatus: taskProject.updateTaskStatus,
-    updateTaskPomodoro: taskProject.updateTaskPomodoro,
-    togglePinTask: taskProject.togglePinTask,
-    deleteTask: taskProject.deleteTask,
+    addProject: withErrorHandling(taskProject.addProject) as any,
+    updateProject: withErrorHandling(taskProject.updateProject) as any,
+    deleteProject: withErrorHandling(taskProject.deleteProject) as any,
+    archiveProject: withErrorHandling(taskProject.archiveProject) as any,
+    addTask: withErrorHandling(taskProject.addTask) as any,
+    updateTask: withErrorHandling(taskProject.updateTask) as any,
+    updateTaskStatus: withErrorHandling(taskProject.updateTaskStatus) as any,
+    updateTaskPomodoro: withErrorHandling(taskProject.updateTaskPomodoro) as any,
+    togglePinTask: withErrorHandling(taskProject.togglePinTask) as any,
+    deleteTask: withErrorHandling(taskProject.deleteTask) as any,
 
     courses: academy.courses,
     courseModules: academy.courseModules,
     lessons: academy.lessons,
     flashcards: academy.flashcards,
-    addCourse: academy.addCourse,
-    deleteCourse: academy.deleteCourse,
-    addModule: academy.addModule,
-    updateModuleNotes: academy.updateModuleNotes,
-    addLesson: academy.addLesson,
-    toggleLessonCompleted: academy.toggleLessonCompleted,
-    addFlashcard: academy.addFlashcard,
-    reviewFlashcard: academy.reviewFlashcard,
+    addCourse: withErrorHandling(academy.addCourse) as any,
+    deleteCourse: withErrorHandling(academy.deleteCourse) as any,
+    addModule: withErrorHandling(academy.addModule) as any,
+    updateModuleNotes: withErrorHandling(academy.updateModuleNotes) as any,
+    addLesson: withErrorHandling(academy.addLesson) as any,
+    toggleLessonCompleted: withErrorHandling(academy.toggleLessonCompleted) as any,
+    addFlashcard: withErrorHandling(academy.addFlashcard) as any,
+    reviewFlashcard: withErrorHandling(academy.reviewFlashcard) as any,
 
     habits: habit.habits,
     habitRecords: habit.habitRecords,
     dailyLogs: habit.dailyLogs,
-    addHabit: habit.addHabit,
-    deleteHabit: habit.deleteHabit,
-    archiveHabit: habit.archiveHabit,
-    recordHabitValue: habit.recordHabitValue,
-    updateDailyLog: habit.updateDailyLog,
+    addHabit: withErrorHandling(habit.addHabit) as any,
+    deleteHabit: withErrorHandling(habit.deleteHabit) as any,
+    archiveHabit: withErrorHandling(habit.archiveHabit) as any,
+    recordHabitValue: withErrorHandling(habit.recordHabitValue) as any,
+    updateDailyLog: withErrorHandling(habit.updateDailyLog) as any,
 
     journalEntries: journal.journalEntries,
-    updateJournalEntry: journal.updateJournalEntry,
-    deleteJournalEntry: journal.deleteJournalEntry
+    updateJournalEntry: withErrorHandling(journal.updateJournalEntry) as any,
+    deleteJournalEntry: withErrorHandling(journal.deleteJournalEntry) as any
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;

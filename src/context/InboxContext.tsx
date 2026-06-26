@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useSystem } from './SystemContext';
+import { useToast } from './ToastContext';
 
 export interface InboxItem {
   id: string;
@@ -51,6 +52,7 @@ const MOCK_INBOX: InboxItem[] = [
 ];
 
 export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { showToast } = useToast();
   const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
@@ -68,7 +70,8 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           const local = localStorage.getItem('heritage_inbox');
           loadedItems = local ? JSON.parse(local) : MOCK_INBOX;
           if (!local && isOnline) {
-            await supabase.from('inbox_items').upsert(MOCK_INBOX);
+            const { error } = await supabase.from('inbox_items').upsert(MOCK_INBOX);
+        if (error) throw error;
           }
         }
       } catch (err) {
@@ -137,7 +140,8 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_inbox', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('inbox_items').insert(newItem);
+      const { error } = await supabase.from('inbox_items').insert(newItem);
+        if (error) throw error;
     }
   };
 
@@ -162,7 +166,8 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const dbUpdates: Record<string, unknown> = { status };
       if (projectId) dbUpdates.project_id = projectId;
       dbUpdates.snoozed_until = status === 'snoozed' ? tomorrow : null;
-      await supabase.from('inbox_items').update(dbUpdates).eq('id', id);
+      const { error } = await supabase.from('inbox_items').update(dbUpdates).eq('id', id);
+        if (error) throw error;
     }
   };
 
@@ -172,7 +177,8 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     localStorage.setItem('heritage_inbox', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('inbox_items').delete().eq('id', id);
+      const { error } = await supabase.from('inbox_items').delete().eq('id', id);
+        if (error) throw error;
     }
   };
 

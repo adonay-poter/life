@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useToast } from './ToastContext';
 
 export interface Course {
   id: string;
@@ -85,6 +86,7 @@ const MOCK_FLASHCARDS: Flashcard[] = [
 ];
 
 export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { showToast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -168,7 +170,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_courses', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('courses').insert(newCourse);
+      const { error } = await supabase.from('courses').insert(newCourse);
+        if (error) throw error;
     }
   };
 
@@ -178,7 +181,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_courses', JSON.stringify(updatedC));
 
     if (isOnline) {
-      await supabase.from('courses').delete().eq('id', id);
+      const { error } = await supabase.from('courses').delete().eq('id', id);
+        if (error) throw error;
     }
   };
 
@@ -196,7 +200,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_modules', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('course_modules').insert(newModule);
+      const { error } = await supabase.from('course_modules').insert(newModule);
+        if (error) throw error;
     }
   };
 
@@ -212,7 +217,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_modules', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('course_modules').update({ notes }).eq('id', moduleId);
+      const { error } = await supabase.from('course_modules').update({ notes }).eq('id', moduleId);
+        if (error) throw error;
     }
   };
 
@@ -231,7 +237,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_lessons', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('lessons').insert(newLesson);
+      const { error } = await supabase.from('lessons').insert(newLesson);
+        if (error) throw error;
     }
   };
 
@@ -247,7 +254,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_lessons', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('lessons').update({ completed }).eq('id', lessonId);
+      const { error } = await supabase.from('lessons').update({ completed }).eq('id', lessonId);
+        if (error) throw error;
     }
   };
 
@@ -268,7 +276,8 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.setItem('heritage_flashcards', JSON.stringify(updated));
 
     if (isOnline) {
-      await supabase.from('flashcards').insert(newCard);
+      const { error } = await supabase.from('flashcards').insert(newCard);
+        if (error) throw error;
     }
   };
 
@@ -296,13 +305,14 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (isOnline) {
       const card = updated.find((fc) => fc.id === flashcardId);
       if (card) {
-        await supabase
+        const { error } = await supabase
           .from('flashcards')
           .update({
             box: card.box,
             next_review_date: card.next_review_date
           })
           .eq('id', flashcardId);
+        if (error) throw error;
       }
     }
   };

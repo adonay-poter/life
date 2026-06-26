@@ -69,6 +69,7 @@ export default function DashboardHome() {
     const updated = { ...widgetsVisibility, [key]: !widgetsVisibility[key] };
     setWidgetsVisibility(updated);
     localStorage.setItem('dashboard_widgets_visibility', JSON.stringify(updated));
+    showToast(`Widget ${updated[key] ? 'shown' : 'hidden'}`, 'info');
   };
 
   // ==========================================
@@ -151,9 +152,9 @@ export default function DashboardHome() {
     setIsLoggingReflection(true);
     await updateJournalEntry(
       todayStr,
-      [], // morning
-      [], // learned
-      [], // better
+      todayJournal?.morning_intentions || [], // morning
+      todayJournal?.evening_reflections_learned || [], // learned
+      todayJournal?.evening_reflections_better || [], // better
       quickReflection
     );
     showToast('Reflection logged to journal.', 'success');
@@ -439,8 +440,14 @@ export default function DashboardHome() {
                         className="flex items-start space-x-3 p-3 bg-[#F7F5F2] border border-[#6C7278]/20 rounded-sm group transition-all"
                       >
                         <button
-                          onClick={() => updateTaskStatus(task.id, 'done')}
-                          className="text-[#6C7278] hover:text-[#B8422E] shrink-0 mt-0.5"
+                          onClick={() => {
+                            updateTaskStatus(task.id, 'done');
+                            showToast('Task marked complete.', 'success', {
+                              label: 'Undo',
+                              onClick: () => updateTaskStatus(task.id, 'todo')
+                            });
+                          }}
+                          className="text-[#6C7278] hover:text-[#B8422E] shrink-0 mt-0.5 cursor-pointer"
                         >
                           <Square className="h-4.5 w-4.5" />
                         </button>
@@ -485,8 +492,11 @@ export default function DashboardHome() {
                         </div>
 
                         <button
-                          onClick={() => togglePinTask(task.id)}
-                          className="opacity-0 group-hover:opacity-100 text-[#6C7278] hover:text-[#B8422E] transition-all"
+                          onClick={() => {
+                            togglePinTask(task.id);
+                            showToast('Task unpinned.', 'info');
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-[#6C7278] hover:text-[#B8422E] transition-all cursor-pointer"
                         >
                           <PinOff className="h-3.5 w-3.5" />
                         </button>

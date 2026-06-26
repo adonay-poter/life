@@ -99,6 +99,12 @@ export default function PomodoroFloating() {
     }
   };
 
+  const showDesktopNotification = (title: string, body: string) => {
+    if ('Notification' in window && Notification.permission === 'granted' && document.visibilityState !== 'visible') {
+      new Notification(title, { body, icon: '/favicon.ico' });
+    }
+  };
+
   // Timer Tick Logic
   useEffect(() => {
     if (isRunning) {
@@ -112,17 +118,21 @@ export default function PomodoroFloating() {
             // Session Complete Logic
             if (!isBreak) {
               // Work session finished
+              let taskName = 'Task';
               if (activeTaskId) {
                 const task = tasks.find((t) => t.id === activeTaskId);
                 if (task) {
+                  taskName = task.name;
                   updateTaskPomodoro(activeTaskId, (task.pomodoro_sessions || 0) + 1);
                 }
               }
+              showDesktopNotification("Focus Session Complete ✓", `25 minutes on '${taskName}'. Time for a break!`);
               // Switch to break
               setIsBreak(true);
               return 300; // 5 min break
             } else {
               // Break session finished
+              showDesktopNotification("Break Over", "Ready for the next session?");
               setIsBreak(false);
               return 1500; // 25 min work
             }
@@ -139,7 +149,12 @@ export default function PomodoroFloating() {
     };
   }, [isRunning, isBreak, activeTaskId, tasks, updateTaskPomodoro]);
 
-  const toggleTimer = () => setIsRunning(!isRunning);
+  const toggleTimer = () => {
+    if (!isRunning && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+    setIsRunning(!isRunning);
+  };
   
   const resetTimer = () => {
     setIsRunning(false);
