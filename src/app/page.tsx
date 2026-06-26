@@ -355,7 +355,7 @@ export default function DashboardHome() {
             COLUMN 1: THE MACRO METRIC
            ========================================== */}
         {widgetsVisibility.macroMetrics ? (
-          <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-between space-y-8 rounded-sm">
+          <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-start space-y-8 rounded-sm">
             <div>
               <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
                 Composite Integrity
@@ -420,7 +420,7 @@ export default function DashboardHome() {
             COLUMN 2: TODAY FOCUS & INLINE QUICK ADD
            ========================================== */}
         {widgetsVisibility.focusEngine ? (
-          <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-between space-y-6 rounded-sm">
+          <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-start space-y-6 rounded-sm">
             <div>
               <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
                 Focus Engine
@@ -429,7 +429,7 @@ export default function DashboardHome() {
                 Today Focus
               </h3>
               
-              <div className="mt-4 space-y-3.5 max-h-[200px] overflow-y-auto pr-1">
+              <div className="mt-4 space-y-3.5 pr-1">
                 {todayTasks.length > 0 ? (
                   todayTasks.map((task) => {
                     const parentProject = projects.find((p) => p.id === task.project_id);
@@ -593,10 +593,10 @@ export default function DashboardHome() {
         {/* ==========================================
             COLUMN 3: SECTORS & REFLECTIONS
            ========================================== */}
-        <div className="space-y-8 flex flex-col justify-between">
+        <div className="space-y-8 flex flex-col justify-start">
           {/* Projects & Academy Progress Widget */}
           {widgetsVisibility.sectorsSkills ? (
-            <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-between space-y-6 rounded-sm flex-1">
+            <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-start space-y-6 rounded-sm flex-1">
               <div>
                 <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
                   Sectors & Skills

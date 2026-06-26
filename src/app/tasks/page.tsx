@@ -17,7 +17,10 @@ import {
   AlertCircle,
   Tag,
   Check,
-  X
+  X,
+  Play,
+  FolderKanban,
+  SlidersHorizontal
 } from 'lucide-react';
 
 function TasksContent() {
@@ -50,7 +53,32 @@ function TasksContent() {
   const initialTab = searchParams ? (searchParams.get('tab') as 'kanban' | 'calendar' | 'today') : null;
 
   // Tab State
-  const [activeTab, setActiveTab] = useState<'kanban' | 'calendar' | 'today'>(initialTab || 'kanban');
+  const [activeTab, setActiveTab] = useState<'kanban' | 'calendar' | 'today'>('kanban');
+
+  // Category & Priority & Project Filter State
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<string>('All');
+  const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('All');
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  // Load from localStorage on mount (hydration safe)
+  useEffect(() => {
+    const storedTab = localStorage.getItem('tasks_active_tab');
+    if (storedTab) {
+      const tabParam = searchParams ? searchParams.get('tab') : null;
+      if (!tabParam) {
+        setActiveTab(storedTab as any);
+      }
+    }
+    const storedCat = localStorage.getItem('tasks_filter_category');
+    if (storedCat) setSelectedCategory(storedCat);
+    const storedPriority = localStorage.getItem('tasks_filter_priority');
+    if (storedPriority) setSelectedPriorityFilter(storedPriority);
+    const storedProj = localStorage.getItem('tasks_filter_project');
+    if (storedProj) setSelectedProjectFilter(storedProj);
+    
+    setIsLoaded(true);
+  }, [searchParams]);
 
   // Sync tab with search parameters on deep links
   useEffect(() => {
@@ -60,8 +88,66 @@ function TasksContent() {
     }
   }, [searchParams]);
 
-  // Category Filter State
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  // Persist to localStorage
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('tasks_active_tab', activeTab);
+  }, [activeTab, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('tasks_filter_category', selectedCategory);
+  }, [selectedCategory, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('tasks_filter_priority', selectedPriorityFilter);
+  }, [selectedPriorityFilter, isLoaded]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    localStorage.setItem('tasks_filter_project', selectedProjectFilter);
+  }, [selectedProjectFilter, isLoaded]);
+
+  // Pomodoro timer focus session triggers
+  const handleStartFocusSession = (taskId: string) => {
+    localStorage.setItem('pomodoro_activeTaskId', taskId);
+    localStorage.setItem('pomodoro_isRunning', 'true');
+    localStorage.setItem('pomodoro_timeRemaining', '1500'); // 25 mins
+    localStorage.setItem('pomodoro_isBreak', 'false');
+    window.dispatchEvent(new Event('pomodoro_sync'));
+    showToast('Focus session started for task.', 'success');
+  };
+
+  // Undoable status updates
+  const handleUpdateTaskStatusWithUndo = async (taskId: string, newStatus: Task['status']) => {
+    const taskObj = tasks.find((t) => t.id === taskId);
+    if (!taskObj) return;
+
+    const oldStatus = taskObj.status;
+    const oldDueDate = taskObj.due_date;
+    
+    await updateTaskStatus(taskId, newStatus);
+    
+    if (newStatus === 'done' && taskObj.recurring !== 'none') {
+      setTimeout(() => {
+        showToast(`Recurring task advanced to next occurrence.`, 'success', {
+          label: 'Undo',
+          onClick: async () => {
+            await updateTask(taskId, { status: oldStatus, due_date: oldDueDate });
+          }
+        });
+      }, 100);
+    } else {
+      const statusLabel = newStatus.replace('_', ' ');
+      showToast(`Task status updated to ${statusLabel}.`, 'success', {
+        label: 'Undo',
+        onClick: async () => {
+          await updateTaskStatus(taskId, oldStatus);
+        }
+      });
+    }
+  };
 
   // Kanban column active state for mobile view
   const [activeKanbanColumn, setActiveKanbanColumn] = useState<Task['status']>('todo');
@@ -252,7 +338,7 @@ function TasksContent() {
     setDraggedOverColumn(null);
     const id = e.dataTransfer.getData('text/plain') || draggedTaskId;
     if (id) {
-      await updateTaskStatus(id, status);
+      await handleUpdateTaskStatusWithUndo(id, status);
     }
     setDraggedTaskId(null);
   };
@@ -291,8 +377,10 @@ function TasksContent() {
   // FILTERING LOGIC
   // ==========================================
   const filteredTasks = tasks.filter((t) => {
-    if (selectedCategory === 'All') return true;
-    return t.category === selectedCategory;
+    if (selectedCategory !== 'All' && t.category !== selectedCategory) return false;
+    if (selectedPriorityFilter !== 'All' && t.priority !== selectedPriorityFilter) return false;
+    if (selectedProjectFilter !== 'All' && t.project_id !== selectedProjectFilter) return false;
+    return true;
   });
 
   const renderCalendarGrid = () => {
@@ -312,15 +400,31 @@ function TasksContent() {
         return t.due_date && getLocalDateString(new Date(t.due_date)) === cellDateStr;
       });
 
+      const handleCellClick = (e: React.MouseEvent) => {
+        if (e.target === e.currentTarget) {
+          setNewTaskDueDate(cellDateStr);
+          setShowAddTask(true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          showToast(`Task date pre-set to ${cellDateStr}.`, 'info');
+        }
+      };
+
       dayCells.push(
-        <div key={`day-${day}`} className="bg-white border border-[#6C7278]/30 min-h-[70px] md:min-h-[100px] p-2 flex flex-col justify-between rounded-sm">
-          <span className="font-label text-xs font-bold text-[#6C7278]">{day}</span>
+        <div 
+          key={`day-${day}`} 
+          onClick={handleCellClick}
+          className="bg-white border border-[#6C7278]/30 min-h-[70px] md:min-h-[100px] p-2 flex flex-col justify-between rounded-sm cursor-pointer hover:bg-[#F7F5F2]/45"
+        >
+          <span className="font-label text-xs font-bold text-[#6C7278] pointer-events-none">{day}</span>
           <div className="space-y-1 mt-1 flex-1 overflow-y-auto max-h-[60px]">
             {dayTasks.map((t) => (
               <div
                 key={t.id}
-                onClick={() => updateTaskStatus(t.id, t.status === 'done' ? 'todo' : 'done')}
-                className={`text-xs px-1 py-0.5 font-sans truncate cursor-pointer border rounded-[2px] ${
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleUpdateTaskStatusWithUndo(t.id, t.status === 'done' ? 'todo' : 'done');
+                }}
+                className={`text-[9px] px-1 py-0.5 font-sans truncate cursor-pointer border rounded-[2px] ${
                   t.status === 'done'
                     ? 'bg-[#6C7278]/10 text-[#6C7278] line-through border-transparent'
                     : 'bg-[#B8422E]/10 text-[#B8422E] border-[#B8422E]/20'
@@ -373,6 +477,13 @@ function TasksContent() {
     return isDueToday || isOverdue || t.is_pinned;
   });
 
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  const sortedTodayTasks = [...todayTasks].sort((a, b) => {
+    if (a.is_pinned && !b.is_pinned) return -1;
+    if (!a.is_pinned && b.is_pinned) return 1;
+    return priorityOrder[a.priority] - priorityOrder[b.priority];
+  });
+
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -419,37 +530,65 @@ function TasksContent() {
       </header>
 
       {/* Global Toolbar: Filters & Quick Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4 bg-white border border-[#6C7278]/25 p-4 rounded-sm">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 font-label text-xs">
-          <div className="flex items-center space-x-2">
-            <Tag className="h-4 w-4 text-[#6C7278]" />
-            <span className="uppercase tracking-wider text-[#6C7278]">Category Filter:</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {['All', 'Work', 'Personal', 'Urgent', 'Learning', 'Other'].map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 border transition-all text-xs uppercase font-bold rounded-sm cursor-pointer ${
-                  selectedCategory === cat
-                    ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]'
-                    : 'bg-white text-[#1A1C1E] border-[#6C7278]/30 hover:bg-[#F7F5F2]'
-                }`}
+      <div className="flex flex-col gap-4 bg-white border border-[#6C7278]/25 p-4 rounded-sm">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-label text-xs">
+          <div className="flex flex-wrap items-center gap-4">
+            {/* Category Filter */}
+            <div className="flex items-center space-x-2">
+              <Tag className="h-4 w-4 text-[#6C7278]" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="bg-[#F7F5F2] border border-[#6C7278]/30 px-2.5 py-1 focus:outline-none text-[11px] font-bold uppercase rounded-sm cursor-pointer"
               >
-                {cat}
-              </button>
-            ))}
-          </div>
-        </div>
+                <option value="All">All Categories</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Urgent">Urgent</option>
+                <option value="Learning">Learning</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
 
-        <button
-          onClick={() => setShowAddTask(!showAddTask)}
-          className="btn-tertiary flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
-        >
-          <Plus className="h-4 w-4" />
-          <span>CREATE NEW TASK</span>
-        </button>
+            {/* Priority Filter */}
+            <div className="flex items-center space-x-2">
+              <SlidersHorizontal className="h-4 w-4 text-[#6C7278]" />
+              <select
+                value={selectedPriorityFilter}
+                onChange={(e) => setSelectedPriorityFilter(e.target.value)}
+                className="bg-[#F7F5F2] border border-[#6C7278]/30 px-2.5 py-1 focus:outline-none text-[11px] font-bold uppercase rounded-sm cursor-pointer"
+              >
+                <option value="All">All Priorities</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+
+            {/* Project Filter */}
+            <div className="flex items-center space-x-2">
+              <FolderKanban className="h-4 w-4 text-[#6C7278]" />
+              <select
+                value={selectedProjectFilter}
+                onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                className="bg-[#F7F5F2] border border-[#6C7278]/30 px-2.5 py-1 focus:outline-none text-[11px] font-bold uppercase rounded-sm cursor-pointer"
+              >
+                <option value="All">All Projects</option>
+                {projects.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowAddTask(!showAddTask)}
+            className="btn-tertiary flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer self-start md:self-auto"
+          >
+            <Plus className="h-4 w-4" />
+            <span>CREATE NEW TASK</span>
+          </button>
+        </div>
       </div>
 
       {/* Inline Add Task Drawer */}
@@ -704,9 +843,24 @@ function TasksContent() {
 
                           {/* Task name */}
                           <div className="flex justify-between items-start">
-                            <h6 className="font-sans text-sm font-semibold text-[#1A1C1E] leading-snug">
-                              {task.name}
-                            </h6>
+                            <div className="flex items-center space-x-2">
+                              {task.status !== 'done' && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStartFocusSession(task.id);
+                                  }}
+                                  className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer"
+                                  title="Start Focus Session"
+                                >
+                                  <Play className="h-3.5 w-3.5 fill-current" />
+                                </button>
+                              )}
+                              <h6 className="font-sans text-sm font-semibold text-[#1A1C1E] leading-snug">
+                                {task.name}
+                              </h6>
+                            </div>
                             
                             <button
                               type="button"
@@ -751,7 +905,7 @@ function TasksContent() {
                                       onClick={(e) => e.stopPropagation()}
                                       onChange={(e) => {
                                         e.stopPropagation();
-                                        updateTaskStatus(sub.id, sub.status === 'done' ? 'todo' : 'done');
+                                        handleUpdateTaskStatusWithUndo(sub.id, sub.status === 'done' ? 'todo' : 'done');
                                       }}
                                       className="h-3.5 w-3.5 accent-[#B8422E] cursor-pointer"
                                     />
@@ -786,16 +940,16 @@ function TasksContent() {
                           </div>
 
                           {/* Mobile Card Move Actions Dropdown */}
-                          <div className="mt-2.5 pt-2 border-t border-[#6C7278]/15 flex items-center justify-between md:hidden font-label text-xs">
+                          <div className="mt-2.5 pt-2 border-t border-[#6C7278]/15 flex items-center justify-between md:hidden font-label text-[9px]">
                             <span className="text-[#6C7278] uppercase font-bold">Move status:</span>
                             <select
                               value={task.status}
                               onClick={(e) => e.stopPropagation()}
                               onChange={(e) => {
                                 e.stopPropagation();
-                                updateTaskStatus(task.id, e.target.value as Task['status']);
+                                handleUpdateTaskStatusWithUndo(task.id, e.target.value as Task['status']);
                               }}
-                              className="bg-[#F7F5F2] border border-[#6C7278] px-1.5 py-0.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px]"
+                              className="bg-[#F7F5F2] border border-[#6C7278] px-1.5 py-0.5 text-[10px] text-[#1A1C1E] focus:outline-none font-sans rounded-[2px]"
                             >
                               <option value="backlog">Backlog</option>
                               <option value="todo">Todo</option>
@@ -941,10 +1095,23 @@ function TasksContent() {
                               onClick={(e) => e.stopPropagation()}
                               onChange={(e) => {
                                 e.stopPropagation();
-                                updateTaskStatus(task.id, task.status === 'done' ? 'todo' : 'done');
+                                handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done');
                               }}
                               className="h-4.5 w-4.5 accent-[#B8422E] shrink-0 cursor-pointer"
                             />
+                            {task.status !== 'done' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStartFocusSession(task.id);
+                                }}
+                                className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer"
+                                title="Start Focus Session"
+                              >
+                                <Play className="h-4.5 w-4.5 fill-current" />
+                              </button>
+                            )}
                             <div className="min-w-0">
                               <span className={`font-sans text-sm font-semibold text-[#1A1C1E] block truncate ${task.status === 'done' ? 'line-through text-[#6C7278]' : ''}`}>
                                 {task.name}
@@ -988,8 +1155,8 @@ function TasksContent() {
           </span>
 
           <div className="space-y-3.5">
-            {todayTasks.length > 0 ? (
-              todayTasks.map((task) => {
+            {sortedTodayTasks.length > 0 ? (
+              sortedTodayTasks.map((task) => {
                 const parentProject = projects.find((p) => p.id === task.project_id);
                 return (
                   <div
@@ -1004,10 +1171,23 @@ function TasksContent() {
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                           e.stopPropagation();
-                          updateTaskStatus(task.id, task.status === 'done' ? 'todo' : 'done');
+                          handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done');
                         }}
                         className="h-4.5 w-4.5 accent-[#B8422E] shrink-0 cursor-pointer"
                       />
+                      {task.status !== 'done' && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartFocusSession(task.id);
+                          }}
+                          className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer"
+                          title="Start Focus Session"
+                        >
+                          <Play className="h-4.5 w-4.5 fill-current" />
+                        </button>
+                      )}
                       <div>
                         <span className={`font-sans text-sm font-semibold text-[#1A1C1E] ${task.status === 'done' ? 'line-through text-[#6C7278]' : ''}`}>
                           {task.name}
@@ -1177,7 +1357,7 @@ function TasksContent() {
                                 <input
                                   type="checkbox"
                                   checked={sub.status === 'done'}
-                                  onChange={() => updateTaskStatus(sub.id, sub.status === 'done' ? 'todo' : 'done')}
+                                  onChange={() => handleUpdateTaskStatusWithUndo(sub.id, sub.status === 'done' ? 'todo' : 'done')}
                                   className="h-4 w-4 accent-[#B8422E] shrink-0 cursor-pointer"
                                 />
                                 <span className={`text-sm text-[#1A1C1E] font-medium truncate ${sub.status === 'done' ? 'line-through text-[#6C7278]' : ''}`}>
@@ -1255,7 +1435,7 @@ function TasksContent() {
               </label>
               <select
                 value={activeTask.status}
-                onChange={(e) => updateTaskStatus(activeTask.id, e.target.value as Task['status'])}
+                onChange={(e) => handleUpdateTaskStatusWithUndo(activeTask.id, e.target.value as Task['status'])}
                 className="w-full bg-white border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px]"
               >
                 <option value="backlog">Backlog</option>

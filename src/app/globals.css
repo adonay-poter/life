@@ -91,3 +91,14 @@ form textarea {
   padding-bottom: 0.5rem !important;
   font-size: var(--text-sm) !important;
 }
+
+@keyframes pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+  100% { transform: scale(1); }
+}
+
+.animate-pop {
+  animation: pop 0.25s ease-out;
+}
+

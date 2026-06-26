@@ -21,8 +21,10 @@ import {
   ChevronUp,
   Circle,
   CheckCircle2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Archive
 } from 'lucide-react';
+import Link from 'next/link';
 
 const PROJECT_COLORS = [
   { name: 'Terracotta', value: '#B8422E' },
@@ -44,7 +46,7 @@ interface ProjectCardProps {
 }
 
 function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardProps) {
-  const { updateProject, addTask, updateTaskStatus } = useDashboard();
+  const { updateProject, archiveProject, addTask, updateTaskStatus } = useDashboard();
   const { showToast } = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -55,6 +57,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
   const [editDesc, setEditDesc] = useState(project.description || '');
   const [editClient, setEditClient] = useState(project.client || '');
   const [editGain, setEditGain] = useState(project.gain || '');
+  const [editStartDate, setEditStartDate] = useState(project.start_date ? project.start_date.split('T')[0] : '');
   const [editDeadline, setEditDeadline] = useState(project.deadline ? project.deadline.split('T')[0] : '');
   const [editStatus, setEditStatus] = useState<Project['status']>(project.status || 'active');
   const [editArea, setEditArea] = useState<Project['area']>(project.area);
@@ -103,6 +106,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
       client: editClient || undefined,
       gain: editGain || undefined,
       deadline: editDeadline || undefined,
+      start_date: editStartDate || undefined,
       status: editStatus,
       area: editArea,
       color: editColor
@@ -254,14 +258,25 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
               className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1 focus:outline-none font-sans"
             />
           </div>
-          <div className="space-y-1">
-            <label className="block text-xs uppercase text-[#6C7278]">Deadline</label>
-            <input
-              type="date"
-              value={editDeadline}
-              onChange={(e) => setEditDeadline(e.target.value)}
-              className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1 focus:outline-none font-sans"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="block text-xs uppercase text-[#6C7278]">Start Date</label>
+              <input
+                type="date"
+                value={editStartDate}
+                onChange={(e) => setEditStartDate(e.target.value)}
+                className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1 focus:outline-none font-sans"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-xs uppercase text-[#6C7278]">Deadline</label>
+              <input
+                type="date"
+                value={editDeadline}
+                onChange={(e) => setEditDeadline(e.target.value)}
+                className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1 focus:outline-none font-sans"
+              />
+            </div>
           </div>
           <div className="space-y-1">
             <label className="block text-xs uppercase text-[#6C7278]">Description</label>
@@ -288,7 +303,19 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                 <span className={`font-label text-xs border px-2 py-0.5 uppercase tracking-wider font-bold rounded-sm ${getStatusBadgeStyle(project.status)}`}>
                   {project.status || 'active'}
                 </span>
-                <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex space-x-2 transition-opacity">
+                <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center space-x-2 transition-opacity">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const nextArchived = !project.is_archived;
+                      await archiveProject(project.id, nextArchived);
+                      showToast(nextArchived ? 'Project archived successfully.' : 'Project unarchived successfully.', 'success');
+                    }}
+                    className={`hover:text-[#B8422E] cursor-pointer p-0.5 ${project.is_archived ? 'text-[#B8422E]' : 'text-[#6C7278]'}`}
+                    title={project.is_archived ? 'Unarchive Project' : 'Archive Project'}
+                  >
+                    <Archive className="h-3.5 w-3.5" />
+                  </button>
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
@@ -308,9 +335,11 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
             </div>
 
             {/* Project Name */}
-            <h4 className="font-display text-xl font-bold text-[#1A1C1E] leading-tight">
-              {project.name}
-            </h4>
+            <Link href={`/projects/${project.id}`}>
+              <h4 className="font-display text-xl font-bold text-[#1A1C1E] leading-tight hover:text-[#B8422E] cursor-pointer transition-colors">
+                {project.name}
+              </h4>
+            </Link>
 
             {/* Description */}
             {project.description && (
@@ -339,14 +368,18 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
               )}
             </div>
 
-            {/* Deadline view */}
-            {project.deadline && (
+            {/* Timeline view */}
+            {(project.start_date || project.deadline) && (
               <div className={`flex items-center space-x-1.5 font-label text-xs pt-1 ${
                 isOverdue ? 'font-bold' : 'text-[#6C7278]'
               }`} style={{ color: isOverdue ? (project.color || '#B8422E') : undefined }}>
                 <Calendar className="h-3.5 w-3.5 shrink-0" />
-                <div className="flex items-center space-x-1.5">
-                  <span>Deadline: {new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span>
+                    Timeline: {project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'None'}
+                    {' '}&rarr;{' '}
+                    {project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No Deadline'}
+                  </span>
                   {isOverdue && (
                     <span className="flex items-center space-x-0.5 text-xs bg-[#FFEBEE] border border-[#FFCDD2] px-1 font-bold" style={{ color: '#B8422E' }}>
                       <AlertCircle className="h-2.5 w-2.5" />
@@ -548,6 +581,7 @@ function ProjectsContent() {
 
   // Form toggles
   const [showAddProject, setShowAddProject] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
 
   // New Project Form state
   const [newProjArea, setNewProjArea] = useState<Project['area']>('Business');
@@ -555,6 +589,7 @@ function ProjectsContent() {
   const [newProjDesc, setNewProjDesc] = useState('');
   const [newProjClient, setNewProjClient] = useState('');
   const [newProjGain, setNewProjNameGain] = useState('');
+  const [newProjStartDate, setNewProjStartDate] = useState('');
   const [newProjDeadline, setNewProjDeadline] = useState('');
   const [newProjStatus, setNewProjStatus] = useState<Project['status']>('active');
   const [newProjColor, setNewProjColor] = useState('#B8422E');
@@ -591,7 +626,8 @@ function ProjectsContent() {
       newProjClient || undefined,
       newProjGain || undefined,
       newProjDeadline || undefined,
-      newProjStatus
+      newProjStatus,
+      newProjStartDate || undefined
     );
 
     showToast('Project initiated successfully.', 'success');
@@ -601,6 +637,7 @@ function ProjectsContent() {
     setNewProjDesc('');
     setNewProjClient('');
     setNewProjNameGain('');
+    setNewProjStartDate('');
     setNewProjDeadline('');
     setNewProjStatus('active');
     setNewProjColor('#B8422E');
@@ -612,14 +649,16 @@ function ProjectsContent() {
     setDeleteModalOpen(true);
   };
 
-  // Filter projects by Area
+  // Filter projects by Area and Archival status
   const filteredProjects = projects.filter((p) => {
+    const isArchived = p.is_archived || false;
+    if (showArchived !== isArchived) return false;
     if (selectedAreaFilter === 'All') return true;
     return p.area === selectedAreaFilter;
   });
 
   const getSectorCount = (area: string) => {
-    return projects.filter((p) => p.area === area).length;
+    return projects.filter((p) => p.area === area && (p.is_archived || false) === showArchived).length;
   };
 
   return (
@@ -660,7 +699,7 @@ function ProjectsContent() {
                   <span className={`text-xs px-1.5 py-0.2 rounded-full ${
                     selectedAreaFilter === area ? 'bg-[#B8422E] text-white' : 'bg-[#6C7278]/15 text-[#6C7278]'
                   }`}>
-                    {area === 'All' ? projects.length : getSectorCount(area)}
+                    {area === 'All' ? projects.filter((p) => (p.is_archived || false) === showArchived).length : getSectorCount(area)}
                   </span>
                 </button>
               ))}
@@ -767,14 +806,25 @@ function ProjectsContent() {
                 />
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-xs uppercase text-[#6C7278]">Target Deadline</label>
-                <input
-                  type="date"
-                  value={newProjDeadline}
-                  onChange={(e) => setNewProjDeadline(e.target.value)}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1.5 focus:outline-none font-sans"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="block text-xs uppercase text-[#6C7278]">Start Date</label>
+                  <input
+                    type="date"
+                    value={newProjStartDate}
+                    onChange={(e) => setNewProjStartDate(e.target.value)}
+                    className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1.5 focus:outline-none font-sans text-xs"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-xs uppercase text-[#6C7278]">Target Deadline</label>
+                  <input
+                    type="date"
+                    value={newProjDeadline}
+                    onChange={(e) => setNewProjDeadline(e.target.value)}
+                    className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1.5 focus:outline-none font-sans text-xs"
+                  />
+                </div>
               </div>
 
               <div className="space-y-1">
@@ -797,11 +847,31 @@ function ProjectsContent() {
         </aside>
 
         {/* Right Column: Projects grid display */}
-        <section className="lg:col-span-3">
-          <div className="flex justify-between items-baseline mb-4">
+        <section className="lg:col-span-3 space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-[#6C7278]/25 pb-3">
             <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
-              Active Matrices ({filteredProjects.length})
+              {showArchived ? 'Archived Matrices' : 'Active Matrices'} ({filteredProjects.length})
             </span>
+            <div className="flex border border-[#6C7278] font-label text-[10px] uppercase tracking-wider select-none shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowArchived(false)}
+                className={`px-3 py-1.5 transition-all cursor-pointer font-bold ${
+                  !showArchived ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
+                }`}
+              >
+                Active
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowArchived(true)}
+                className={`px-3 py-1.5 border-l border-[#6C7278] transition-all cursor-pointer font-bold ${
+                  showArchived ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
+                }`}
+              >
+                Archived
+              </button>
+            </div>
           </div>
 
           {filteredProjects.length > 0 ? (

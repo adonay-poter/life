@@ -14,6 +14,8 @@ export interface Project {
   client?: string;
   gain?: string;
   deadline?: string;
+  start_date?: string;
+  is_archived?: boolean;
   status?: 'planning' | 'active' | 'paused' | 'completed' | 'cancelled';
 }
 
@@ -46,10 +48,12 @@ interface TaskProjectContextProps {
     client?: string,
     gain?: string,
     deadline?: string,
-    status?: Project['status']
+    status?: Project['status'],
+    start_date?: string
   ) => Promise<void>;
   updateProject: (projectId: string, updates: Partial<Omit<Project, 'id' | 'created_at'>>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  archiveProject: (id: string, isArchived: boolean) => Promise<void>;
   addTask: (
     projectId: string | undefined,
     name: string,
@@ -155,7 +159,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     client?: string,
     gain?: string,
     deadline?: string,
-    status: Project['status'] = 'active'
+    status: Project['status'] = 'active',
+    start_date?: string
   ) => {
     const newProject: Project = {
       id: crypto.randomUUID(),
@@ -167,6 +172,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
       gain,
       deadline,
       status,
+      start_date,
+      is_archived: false,
       created_at: new Date().toISOString()
     };
 
@@ -206,6 +213,22 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (isOnline) {
       await supabase.from('projects').delete().eq('id', id);
+    }
+  };
+
+  const archiveProject = async (id: string, isArchived: boolean) => {
+    const updated = projects.map((p) => {
+      if (p.id === id) {
+        return { ...p, is_archived: isArchived };
+      }
+      return p;
+    });
+
+    setProjects(updated);
+    localStorage.setItem('heritage_projects', JSON.stringify(updated));
+
+    if (isOnline) {
+      await supabase.from('projects').update({ is_archived: isArchived }).eq('id', id);
     }
   };
 
@@ -367,6 +390,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
         addProject,
         updateProject,
         deleteProject,
+        archiveProject,
         addTask,
         updateTask,
         updateTaskStatus,

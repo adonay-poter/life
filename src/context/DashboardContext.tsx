@@ -52,10 +52,12 @@ interface DashboardContextProps {
     client?: string,
     gain?: string,
     deadline?: string,
-    status?: Project['status']
+    status?: Project['status'],
+    start_date?: string
   ) => Promise<void>;
   updateProject: (projectId: string, updates: Partial<Omit<Project, 'id' | 'created_at'>>) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  archiveProject: (id: string, isArchived: boolean) => Promise<void>;
   addTask: (
     projectId: string | undefined,
     name: string,
@@ -84,8 +86,9 @@ interface DashboardContextProps {
   reviewFlashcard: (flashcardId: string, correct: boolean) => Promise<void>;
 
   // Habit operations
-  addHabit: (name: string, type: 'binary' | 'numeric', unit?: string, goal?: number) => Promise<void>;
+  addHabit: (name: string, type: 'binary' | 'numeric', unit?: string, goal?: number, category?: string, frequency?: string) => Promise<void>;
   deleteHabit: (id: string) => Promise<void>;
+  archiveHabit: (id: string, isArchived: boolean) => Promise<void>;
   recordHabitValue: (habitId: string, date: string, value: number) => Promise<void>;
   updateDailyLog: (date: string, mood: number, sleepHours: number, waterIntake: number) => Promise<void>;
 
@@ -127,6 +130,7 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
     addProject: taskProject.addProject,
     updateProject: taskProject.updateProject,
     deleteProject: taskProject.deleteProject,
+    archiveProject: taskProject.archiveProject,
     addTask: taskProject.addTask,
     updateTask: taskProject.updateTask,
     updateTaskStatus: taskProject.updateTaskStatus,
@@ -152,6 +156,7 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
     dailyLogs: habit.dailyLogs,
     addHabit: habit.addHabit,
     deleteHabit: habit.deleteHabit,
+    archiveHabit: habit.archiveHabit,
     recordHabitValue: habit.recordHabitValue,
     updateDailyLog: habit.updateDailyLog,
 

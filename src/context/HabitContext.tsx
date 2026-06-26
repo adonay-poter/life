@@ -11,6 +11,9 @@ export interface Habit {
   unit?: string;
   goal: number;
   created_at?: string;
+  category?: string;
+  frequency?: string;
+  is_archived?: boolean;
 }
 
 export interface HabitRecord {
@@ -34,8 +37,9 @@ interface HabitContextProps {
   habitRecords: HabitRecord[];
   dailyLogs: DailyLog[];
   loading: boolean;
-  addHabit: (name: string, type: 'binary' | 'numeric', unit?: string, goal?: number) => Promise<void>;
+  addHabit: (name: string, type: 'binary' | 'numeric', unit?: string, goal?: number, category?: string, frequency?: string) => Promise<void>;
   deleteHabit: (id: string) => Promise<void>;
+  archiveHabit: (id: string, isArchived: boolean) => Promise<void>;
   recordHabitValue: (habitId: string, date: string, value: number) => Promise<void>;
   updateDailyLog: (date: string, mood: number, sleepHours: number, waterIntake: number) => Promise<void>;
 }
@@ -144,13 +148,16 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchData();
   }, [isOnline, refreshKey]);
 
-  const addHabit = async (name: string, type: 'binary' | 'numeric', unit?: string, goal: number = 1) => {
+  const addHabit = async (name: string, type: 'binary' | 'numeric', unit?: string, goal: number = 1, category: string = 'Other', frequency: string = 'daily') => {
     const newHabit: Habit = {
       id: crypto.randomUUID(),
       name,
       type,
       unit,
       goal,
+      category,
+      frequency,
+      is_archived: false,
       created_at: new Date().toISOString()
     };
 
@@ -173,6 +180,22 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isOnline) {
       await supabase.from('habits').delete().eq('id', id);
+    }
+  };
+
+  const archiveHabit = async (id: string, isArchived: boolean) => {
+    const updated = habits.map((h) => {
+      if (h.id === id) {
+        return { ...h, is_archived: isArchived };
+      }
+      return h;
+    });
+
+    setHabits(updated);
+    localStorage.setItem('heritage_habits', JSON.stringify(updated));
+
+    if (isOnline) {
+      await supabase.from('habits').update({ is_archived: isArchived }).eq('id', id);
     }
   };
 
@@ -238,6 +261,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loading,
         addHabit,
         deleteHabit,
+        archiveHabit,
         recordHabitValue,
         updateDailyLog
       }}

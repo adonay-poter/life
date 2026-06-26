@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
-import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
-import { Trash2, Check, Smile, Moon, Droplet } from 'lucide-react';
+import import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { Trash2, Check, Smile, Moon, Droplet, Archive, X, SlidersHorizontal, Tag } from 'lucide-react';
 
 export default function HabitsPage() {
   const {
@@ -14,6 +14,7 @@ export default function HabitsPage() {
     dailyLogs,
     addHabit,
     deleteHabit,
+    archiveHabit,
     recordHabitValue,
     updateDailyLog
   } = useDashboard();
@@ -28,10 +29,58 @@ export default function HabitsPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Form States
+  const [showAddHabitModal, setShowAddHabitModal] = useState(false);
   const [newHabitName, setNewHabitName] = useState('');
   const [newHabitType, setNewHabitType] = useState<'binary' | 'numeric'>('binary');
   const [newHabitUnit, setNewHabitUnit] = useState('');
   const [newHabitGoal, setNewHabitGoal] = useState<number>(1);
+  const [newHabitCategory, setNewHabitCategory] = useState<string>('Other');
+  const [newHabitFrequency, setNewHabitFrequency] = useState<string>('daily');
+
+  // Filter States
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('All');
+  const [showArchived, setShowArchived] = useState(false);
+  const [animatingCell, setAnimatingCell] = useState<string | null>(null);
+
+  // Streak calculator
+  const getHabitStreak = (habitId: string) => {
+    let streak = 0;
+    let index = 0;
+    const habitObj = habits.find(h => h.id === habitId);
+    if (!habitObj) return 0;
+    
+    while (true) {
+      const d = new Date();
+      d.setDate(d.getDate() - index);
+      const dateStr = getLocalDateString(d);
+      
+      const record = habitRecords.find(r => r.habit_id === habitId && r.date === dateStr);
+      if (record) {
+        const isCompleted = habitObj.type === 'binary' 
+          ? record.value > 0 
+          : record.value >= habitObj.goal;
+          
+        if (isCompleted) {
+          streak++;
+        } else {
+          if (index === 0) {
+            index++;
+            continue;
+          }
+          break;
+        }
+      } else {
+        if (index === 0) {
+          index++;
+          continue;
+        }
+        break;
+      }
+      index++;
+      if (index > 365) break;
+    }
+    return streak;
+  };
 
   // Get date strings for the current month
   const getDaysInCurrentMonth = () => {
@@ -55,20 +104,23 @@ export default function HabitsPage() {
   const handleCreateHabit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newHabitName.trim()) return;
-    await addHabit(newHabitName, newHabitType, newHabitUnit || undefined, newHabitGoal);
+    await addHabit(newHabitName, newHabitType, newHabitUnit || undefined, newHabitGoal, newHabitCategory, newHabitFrequency);
     showToast('New habit created successfully.', 'success');
     setNewHabitName('');
     setNewHabitUnit('');
     setNewHabitGoal(1);
+    setNewHabitCategory('Other');
+    setNewHabitFrequency('daily');
+    setShowAddHabitModal(false);
   };
 
   // ==========================================
-  // 90-DAY CONSISTENCY HEATMAP GENERATOR
+  // 180-DAY CONSISTENCY HEATMAP GENERATOR
   // ==========================================
   const getHeatmapData = () => {
     const data = [];
     
-    for (let i = 89; i >= 0; i--) {
+    for (let i = 179; i >= 0; i--) {
       const d = new Date();
       d.setDate(d.getDate() - i);
       const dateStr = getLocalDateString(d);
@@ -149,11 +201,20 @@ export default function HabitsPage() {
   // Matrix cell handlers
   const handleCheckboxToggle = (habitId: string, dateStr: string, currentVal: number) => {
     const nextVal = currentVal > 0 ? 0 : 1;
+    if (nextVal > 0) {
+      setAnimatingCell(`${habitId}-${dateStr}`);
+      setTimeout(() => setAnimatingCell(null), 250);
+    }
     recordHabitValue(habitId, dateStr, nextVal);
   };
 
   const handleNumericChange = (habitId: string, dateStr: string, valStr: string) => {
     const numeric = parseFloat(valStr) || 0;
+    const habitObj = habits.find(h => h.id === habitId);
+    if (habitObj && numeric >= habitObj.goal) {
+      setAnimatingCell(`${habitId}-${dateStr}`);
+      setTimeout(() => setAnimatingCell(null), 250);
+    }
     recordHabitValue(habitId, dateStr, numeric);
   };
 
@@ -177,6 +238,14 @@ export default function HabitsPage() {
   };
 
   const formattedMonth = selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }).toUpperCase();
+  const todayStr = getLocalDateString();
+
+  const filteredHabits = habits.filter((h) => {
+    const isArchived = h.is_archived || false;
+    if (showArchived !== isArchived) return false;
+    if (selectedCategoryFilter === 'All') return true;
+    return h.category === selectedCategoryFilter;
+  });
 
   return (
     <div className="space-y-12">
@@ -187,19 +256,25 @@ export default function HabitsPage() {
             THE HABIT ENGINE
           </h2>
           <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
-            Daily Tracker Matrix &bull; 90-Day Discipline Heatmap
+            Daily Tracker Matrix &bull; 180-Day Discipline Heatmap
           </p>
         </div>
+        <button
+          onClick={() => setShowAddHabitModal(true)}
+          className="btn-tertiary uppercase text-xs tracking-wider font-bold cursor-pointer"
+        >
+          Add Habit
+        </button>
       </header>
 
-      {/* 90-DAY HEATMAP SECTION */}
+      {/* 180-DAY HEATMAP SECTION */}
       <section className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
         <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1 mb-2">
-          Discipline Heatmap (Last 90 Days)
+          Discipline Heatmap (Last 180 Days)
         </span>
         
-        <div className="flex flex-col items-center md:items-start space-y-4">
-          <div className="flex space-x-2 overflow-x-auto max-w-full pb-2">
+        <div className="flex flex-col items-start space-y-4">
+          <div className="flex space-x-2 overflow-x-auto w-full pb-2">
             {/* Weekday indicator labels */}
             <div className="grid grid-rows-7 gap-1 font-label text-xs text-[#6C7278] uppercase justify-center pr-2 pt-1 select-none">
               <div>S</div>
@@ -245,33 +320,64 @@ export default function HabitsPage() {
         
         {/* DAILY MATRIX TABLE */}
         <section className="xl:col-span-3 bg-white border border-[#6C7278] p-6 rounded-sm space-y-6">
-          <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-2 mb-4">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center border-b border-[#6C7278]/25 pb-2 mb-4 gap-3">
             <h4 className="font-display text-lg font-bold text-[#1A1C1E] tracking-tight">
               {formattedMonth} MATRIX
             </h4>
             
-            <div className="flex space-x-2 font-label text-xs">
+            <div className="flex flex-wrap items-center gap-3 font-label text-xs">
+              {/* Category Filter */}
+              <div className="flex items-center space-x-1.5">
+                <span className="text-[#6C7278] uppercase font-bold text-[10px]">Category:</span>
+                <select
+                  value={selectedCategoryFilter}
+                  onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                  className="bg-[#F7F5F2] border border-[#6C7278]/30 px-2 py-0.5 focus:outline-none uppercase font-bold text-[10px]"
+                >
+                  <option value="All">All Sectors</option>
+                  <option value="Mind">Mind</option>
+                  <option value="Body">Body</option>
+                  <option value="Spirit">Spirit</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              {/* Show Archived Toggle */}
               <button
-                onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-                className="px-2 py-1 border border-[#6C7278] hover:bg-[#F7F5F2]"
+                type="button"
+                onClick={() => setShowArchived(!showArchived)}
+                className={`px-2 py-0.5 border transition-colors cursor-pointer font-bold text-[10px] uppercase ${
+                  showArchived ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : 'border-[#6C7278]/30 text-[#6C7278] hover:text-[#1A1C1E]'
+                }`}
               >
-                &larr; PREV
+                {showArchived ? 'View Active' : 'View Archived'}
               </button>
-              <button
-                onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-                className="px-2 py-1 border border-[#6C7278] hover:bg-[#F7F5F2]"
-              >
-                NEXT &rarr;
-              </button>
+
+              <div className="h-4 w-px bg-[#6C7278]/25 hidden sm:block"></div>
+
+              <div className="flex space-x-1 font-bold">
+                <button
+                  onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
+                  className="px-2 py-0.5 border border-[#6C7278] hover:bg-[#F7F5F2]"
+                >
+                  &larr; PREV
+                </button>
+                <button
+                  onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
+                  className="px-2 py-0.5 border border-[#6C7278] hover:bg-[#F7F5F2]"
+                >
+                  NEXT &rarr;
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* MATRIX HORIZONTAL CONTAINER */}
-          <div className="overflow-x-auto border border-[#6C7278]/40 rounded-sm">
+          {/* MATRIX HORIZONTAL CONTAINER (Desktop only) */}
+          <div className="hidden md:block overflow-x-auto border border-[#6C7278]/40 rounded-sm">
             <table className="min-w-[800px] w-full border-collapse text-left font-label text-xs">
               <thead className="bg-[#F7F5F2] border-b border-[#6C7278]">
                 <tr>
-                  <th className="p-3 w-36 border-r border-[#6C7278] font-bold text-[#1A1C1E] uppercase tracking-wider sticky left-0 bg-[#F7F5F2] z-10">
+                  <th className="p-3 w-44 border-r border-[#6C7278] font-bold text-[#1A1C1E] uppercase tracking-wider sticky left-0 bg-[#F7F5F2] z-10">
                     Day / Metric
                   </th>
                   {currentMonthDays.map((day) => (
@@ -284,20 +390,41 @@ export default function HabitsPage() {
               </thead>
               <tbody>
                 {/* HABIT ROWS */}
-                {habits.map((habit) => (
+                {filteredHabits.map((habit) => (
                   <tr key={habit.id} className="border-b border-[#6C7278]/30 hover:bg-[#F7F5F2]/20">
-                    <td className="p-3 border-r border-[#6C7278] font-sans font-semibold text-[#1A1C1E] sticky left-0 bg-white z-10 flex justify-between items-center group">
-                      <span className="truncate max-w-[100px]">{habit.name}</span>
-                      <button
-                        onClick={() => {
-                          setHabitToDelete({ id: habit.id, name: habit.name });
-                          setDeleteModalOpen(true);
-                        }}
-                        className="opacity-0 group-hover:opacity-100 text-[#6C7278] hover:text-[#B8422E] p-0.5"
-                        title="Delete habit"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                    <td className="p-3 border-r border-[#6C7278] font-sans sticky left-0 bg-white z-10 flex flex-col justify-center group min-h-[55px]">
+                      <div className="flex justify-between items-center w-full">
+                        <span className="font-semibold text-[#1A1C1E] truncate max-w-[100px]">{habit.name}</span>
+                        <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1.5 transition-opacity shrink-0">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const nextArchived = !habit.is_archived;
+                              await archiveHabit(habit.id, nextArchived);
+                              showToast(nextArchived ? 'Habit archived.' : 'Habit unarchived.', 'success');
+                            }}
+                            className={`hover:text-[#B8422E] p-0.5 cursor-pointer ${habit.is_archived ? 'text-[#B8422E]' : 'text-[#6C7278]'}`}
+                            title={habit.is_archived ? 'Unarchive Habit' : 'Archive Habit'}
+                          >
+                            <Archive className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHabitToDelete({ id: habit.id, name: habit.name });
+                              setDeleteModalOpen(true);
+                            }}
+                            className="text-[#6C7278] hover:text-[#B8422E] p-0.5 cursor-pointer"
+                            title="Delete Habit"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1.5 mt-1 font-label text-[9px] text-[#6C7278] uppercase font-bold select-none">
+                        <span className="bg-[#6C7278]/10 px-1 rounded-[2px]">{habit.category || 'Other'}</span>
+                        <span>Goal: {habit.frequency || 'daily'} ({habit.goal}{habit.unit || ''})</span>
+                      </div>
                     </td>
                     
                     {currentMonthDays.map((day) => {
@@ -311,7 +438,7 @@ export default function HabitsPage() {
                               onClick={() => handleCheckboxToggle(habit.id, day.dateStr, val)}
                               className={`mx-auto h-5 w-5 border border-[#6C7278] flex items-center justify-center rounded-none transition-all ${
                                 val > 0 ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : 'bg-transparent text-transparent hover:bg-[#F7F5F2]'
-                              }`}
+                              } ${animatingCell === `${habit.id}-${day.dateStr}` ? 'animate-pop' : ''}`}
                             >
                               <Check className="h-3 w-3" />
                             </button>
@@ -421,70 +548,198 @@ export default function HabitsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* MOBILE FRIENDLY DAILY LIST */}
+          <div className="block md:hidden space-y-4">
+            <div className="flex justify-between items-center bg-[#F7F5F2] border border-[#6C7278]/30 p-4 rounded-sm font-label text-xs">
+              <span className="font-bold text-[#6C7278] uppercase">Today Focus Matrix</span>
+              <span className="text-[#B8422E] font-bold">{todayStr}</span>
+            </div>
+            
+            <div className="space-y-3">
+              {filteredHabits.length > 0 ? (
+                filteredHabits.map((habit) => {
+                  const record = habitRecords.find((r) => r.habit_id === habit.id && r.date === todayStr);
+                  const val = record ? record.value : 0;
+                  const isDone = habit.type === 'binary' ? val > 0 : val >= habit.goal;
+                  const streak = getHabitStreak(habit.id);
+                  
+                  return (
+                    <div 
+                      key={habit.id}
+                      className="bg-white border border-[#6C7278]/25 p-4 rounded-sm flex items-center justify-between shadow-sm transition-all hover:border-[#1A1C1E]"
+                    >
+                      <div className="space-y-1 min-w-0 flex-1 mr-4">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-sans text-sm font-bold text-[#1A1C1E] truncate">{habit.name}</span>
+                          <span className="font-label text-[9px] bg-[#6C7278]/10 text-[#6C7278] px-1 rounded-[2px] font-bold uppercase shrink-0">
+                            {habit.category || 'Other'}
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-3 font-label text-[10px] text-[#6C7278] font-bold">
+                          <span>Goal: {habit.frequency || 'daily'} ({habit.goal}{habit.unit || ''})</span>
+                          {streak > 0 && (
+                            <span className="text-[#B8422E] flex items-center">
+                              🔥 {streak} {streak === 1 ? 'day' : 'days'}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="shrink-0 flex items-center space-x-2">
+                        {habit.type === 'binary' ? (
+                          <button
+                            onClick={() => handleCheckboxToggle(habit.id, todayStr, val)}
+                            className={`h-10 w-10 border border-[#6C7278] flex items-center justify-center transition-all cursor-pointer ${
+                              isDone ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : 'bg-transparent text-transparent hover:bg-[#F7F5F2]'
+                            } ${animatingCell === `${habit.id}-${todayStr}` ? 'animate-pop' : ''}`}
+                          >
+                            <Check className="h-5 w-5" />
+                          </button>
+                        ) : (
+                          <div className="flex items-center space-x-1 font-sans">
+                            <button
+                              onClick={() => recordHabitValue(habit.id, todayStr, Math.max(0, val - 1))}
+                              className="h-8 w-8 border border-[#6C7278]/30 flex items-center justify-center text-xs font-bold hover:bg-[#F7F5F2] cursor-pointer"
+                            >
+                              -
+                            </button>
+                            <span className="w-10 text-center font-bold text-sm text-[#1A1C1E]">{val}</span>
+                            <button
+                              onClick={() => {
+                                const nextVal = val + 1;
+                                if (nextVal >= habit.goal && val < habit.goal) {
+                                  setAnimatingCell(`${habit.id}-${todayStr}`);
+                                  setTimeout(() => setAnimatingCell(null), 250);
+                                  showToast(`Goal met for "${habit.name}"!`, 'success');
+                                }
+                                recordHabitValue(habit.id, todayStr, nextVal);
+                              }}
+                              className={`h-8 w-8 border border-[#6C7278]/30 flex items-center justify-center text-xs font-bold hover:bg-[#F7F5F2] cursor-pointer ${
+                                isDone ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : ''
+                              }`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="bg-white border border-[#6C7278]/30 py-10 text-center rounded-sm">
+                  <p className="font-sans text-xs text-[#6C7278] italic">No active habits in this category.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
         </section>
 
-        {/* HABIT CREATOR DRAWER */}
-        <section className="bg-white border border-[#6C7278] p-6 rounded-sm self-start">
-          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4 border-b border-[#6C7278]/25 pb-1">
-            Habit Configurator
-          </span>
+      </div>
 
-          <form onSubmit={handleCreateHabit} className="space-y-4 font-label text-xs">
-            <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Habit Name *</label>
-              <input
-                type="text"
-                value={newHabitName}
-                onChange={(e) => setNewHabitName(e.target.value)}
-                placeholder="e.g. Read 15 pages"
-                required
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Tracker Type</label>
-              <select
-                value={newHabitType}
-                onChange={(e) => setNewHabitType(e.target.value as 'binary' | 'numeric')}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 focus:outline-none"
+      {/* Habit Configurator Modal */}
+      {showAddHabitModal && (
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4">
+          <div className="bg-white border-2 border-[#1A1C1E] p-6 max-w-sm w-full space-y-4 shadow-2xl rounded-sm font-label text-xs">
+            <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-2">
+              <span className="font-bold uppercase text-[#1A1C1E] text-sm tracking-wide">Configure New Habit</span>
+              <button 
+                onClick={() => setShowAddHabitModal(false)} 
+                className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer p-0.5"
               >
-                <option value="binary">Binary Checked (Yes/No)</option>
-                <option value="numeric">Numeric Metric (Volume)</option>
-              </select>
+                <X className="h-4 w-4" />
+              </button>
             </div>
+            
+            <form onSubmit={handleCreateHabit} className="space-y-4 font-label">
+              <div className="space-y-1.5">
+                <label className="block text-xs uppercase text-[#6C7278]">Habit Name *</label>
+                <input
+                  type="text"
+                  value={newHabitName}
+                  onChange={(e) => setNewHabitName(e.target.value)}
+                  placeholder="e.g. Workout (30 mins)"
+                  required
+                  className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
+                />
+              </div>
 
-            {newHabitType === 'numeric' && (
-              <>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-[#6C7278]">Measurement Unit</label>
-                  <input
-                    type="text"
-                    value={newHabitUnit}
-                    onChange={(e) => setNewHabitUnit(e.target.value)}
-                    placeholder="e.g. glass, km, page"
-                    className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
-                  />
+                  <label className="block text-xs uppercase text-[#6C7278]">Category</label>
+                  <select
+                    value={newHabitCategory}
+                    onChange={(e) => setNewHabitCategory(e.target.value)}
+                    className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 focus:outline-none"
+                  >
+                    <option value="Mind">Mind</option>
+                    <option value="Body">Body</option>
+                    <option value="Spirit">Spirit</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
+                
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-[#6C7278]">Daily Volume Goal</label>
-                  <input
-                    type="number"
-                    step="any"
-                    value={newHabitGoal}
-                    onChange={(e) => setNewHabitGoal(parseFloat(e.target.value) || 1)}
-                    className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
-                  />
+                  <label className="block text-xs uppercase text-[#6C7278]">Frequency Goal</label>
+                  <select
+                    value={newHabitFrequency}
+                    onChange={(e) => setNewHabitFrequency(e.target.value)}
+                    className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 focus:outline-none"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="3x/week">3x/Week</option>
+                    <option value="5x/week">5x/Week</option>
+                  </select>
                 </div>
-              </>
-            )}
+              </div>
 
-            {/* Terracotta Action Button */}
-            <button type="submit" className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2">
-              SAVE NEW HABIT
-            </button>
-          </form>
-        </section>
+              <div className="space-y-1.5">
+                <label className="block text-xs uppercase text-[#6C7278]">Tracker Type</label>
+                <select
+                  value={newHabitType}
+                  onChange={(e) => setNewHabitType(e.target.value as 'binary' | 'numeric')}
+                  className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 focus:outline-none"
+                >
+                  <option value="binary">Binary Checked (Yes/No)</option>
+                  <option value="numeric">Numeric Metric (Volume)</option>
+                </select>
+              </div>
+
+              {newHabitType === 'numeric' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs uppercase text-[#6C7278]">Unit</label>
+                    <input
+                      type="text"
+                      value={newHabitUnit}
+                      onChange={(e) => setNewHabitUnit(e.target.value)}
+                      placeholder="e.g. glass, km, page"
+                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs uppercase text-[#6C7278]">Goal</label>
+                    <input
+                      type="number"
+                      step="any"
+                      value={newHabitGoal}
+                      onChange={(e) => setNewHabitGoal(parseFloat(e.target.value) || 1)}
+                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <button type="submit" className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2">
+                SAVE NEW HABIT
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       </div>
       {/* Delete Confirmation Modal */}
