@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
-import import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { Trash2, Check, Smile, Moon, Droplet, Archive, X, SlidersHorizontal, Tag } from 'lucide-react';
 
 export default function HabitsPage() {
@@ -740,8 +740,6 @@ export default function HabitsPage() {
           </div>
         </div>
       )}
-
-      </div>
       {/* Delete Confirmation Modal */}
       <ConfirmDeleteModal
         isOpen={deleteModalOpen}
