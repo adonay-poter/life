@@ -4,10 +4,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
-import { Search, Calendar, ChevronRight } from 'lucide-react';
+import { Search, Calendar, ChevronRight, Activity, Smile, Moon, Droplet, CheckCircle } from 'lucide-react';
 
 export default function JournalPage() {
-  const { journalEntries, updateJournalEntry } = useDashboard();
+  const {
+    journalEntries,
+    updateJournalEntry,
+    habits,
+    habitRecords,
+    dailyLogs,
+    recordHabitValue,
+    updateDailyLog,
+    tasks,
+    loading
+  } = useDashboard();
   const { showToast } = useToast();
 
   // Selected date to edit (YYYY-MM-DD)
@@ -30,6 +40,14 @@ export default function JournalPage() {
 
   // Search filter
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Mobile tab state
+  const [mobileTab, setMobileTab] = useState<'editor' | 'metrics' | 'timeline'>('editor');
+
+  // Metrics states
+  const [mood, setMood] = useState(3);
+  const [sleepHours, setSleepHours] = useState(8);
+  const [waterIntake, setWaterIntake] = useState(2);
 
   // Auto-save and dirty tracking states
   const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'dirty'>('saved');
@@ -131,6 +149,73 @@ export default function JournalPage() {
     prevDateRef.current = selectedDateStr;
   }, [selectedDateStr, journalEntries]);
 
+  // Load metrics for the selected date
+  useEffect(() => {
+    const entryLog = dailyLogs.find((dl) => dl.date === selectedDateStr);
+    if (entryLog) {
+      setMood(entryLog.mood || 3);
+      setSleepHours(entryLog.sleep_hours || 8);
+      setWaterIntake(entryLog.water_intake || 2);
+    } else {
+      setMood(3);
+      setSleepHours(8);
+      setWaterIntake(2);
+    }
+  }, [selectedDateStr, dailyLogs]);
+
+  const handleMetricChange = async (newMood: number, newSleep: number, newWater: number) => {
+    setMood(newMood);
+    setSleepHours(newSleep);
+    setWaterIntake(newWater);
+    await updateDailyLog(selectedDateStr, newMood, newSleep, newWater);
+  };
+
+  const getHabitStatus = (habitId: string) => {
+    const record = habitRecords.find(hr => hr.habit_id === habitId && hr.date === selectedDateStr);
+    return record ? record.value > 0 : false;
+  };
+
+  const handleHabitToggle = async (habitId: string, currentChecked: boolean) => {
+    await recordHabitValue(habitId, selectedDateStr, currentChecked ? 0 : 1);
+    showToast('Habit progress updated.', 'success');
+  };
+
+  const completedTasks = tasks.filter(t => t.status === 'done' && t.due_date && t.due_date.startsWith(selectedDateStr));
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.hasAttribute('contenteditable')
+      );
+
+      // Ctrl+S / Cmd+S to save journal entry immediately
+      if ((e.key === 's' || e.key === 'S') && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setSaveStatus('saving');
+        saveEntryForDate(selectedDateStr, formValuesRef.current);
+        setSaveStatus('saved');
+        showToast('Journal entry saved.', 'success');
+        setHasAutoSaved(true);
+        if (isTyping) {
+          (activeEl as HTMLElement).blur();
+        }
+      }
+
+      if (e.key === 'Escape') {
+        if (isTyping) {
+          (activeEl as HTMLElement).blur();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedDateStr, hasAutoSaved]);
+
   // Debounced auto-save effect
   useEffect(() => {
     if (saveStatus !== 'dirty') return;
@@ -227,6 +312,35 @@ export default function JournalPage() {
 
   const filteredLogs = getFilteredLogs();
 
+  if (loading) {
+    return (
+      <div className="space-y-12 animate-pulse">
+        <header className="border-b-2 border-[#6C7278]/20 pb-4">
+          <div className="h-8 bg-[#6C7278]/15 w-48 rounded-sm mb-2" />
+          <div className="h-4 bg-[#6C7278]/10 w-80 rounded-sm" />
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-6">
+            <div className="h-4 bg-[#6C7278]/15 w-32 rounded-sm" />
+            <div className="space-y-4">
+              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
+              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
+              <div className="h-24 bg-[#6C7278]/10 w-full rounded-sm" />
+            </div>
+          </div>
+          <div className="space-y-8 lg:col-span-1">
+            <div className="bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-4">
+              <div className="h-4 bg-[#6C7278]/15 w-24 rounded-sm" />
+              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
+              <div className="h-16 bg-[#6C7278]/10 w-full rounded-sm" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-12">
       {/* Header */}
@@ -241,12 +355,37 @@ export default function JournalPage() {
         </div>
       </header>
 
+      {/* Mobile view Tab Selector */}
+      <div className="flex lg:hidden border border-[#6C7278] font-label text-xs">
+        <button
+          type="button"
+          onClick={() => setMobileTab('editor')}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'editor' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'}`}
+        >
+          Editor
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('metrics')}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-[#6C7278] cursor-pointer ${mobileTab === 'metrics' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'}`}
+        >
+          Insights
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileTab('timeline')}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'timeline' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'}`}
+        >
+          Timeline
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* ==========================================
             COLUMN 1 & 2: ACTIVE JOURNAL WRITER
            ========================================== */}
-        <section className="lg:col-span-2 bg-white border border-[#6C7278] p-6 rounded-sm space-y-6">
+        <section className={`lg:col-span-2 bg-white border border-[#6C7278] p-6 rounded-sm space-y-6 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
           <form onSubmit={handleSaveJournal} className="space-y-6">
             
             {/* Header select date bar */}
@@ -402,65 +541,193 @@ export default function JournalPage() {
         </section>
 
         {/* ==========================================
-            COLUMN 3: SEARCHABLE HISTORICAL TIMELINE
+            COLUMN 3: DAILY METRICS & TIMELINE
            ========================================== */}
-        <section className="bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between max-h-[700px]">
-          <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
-            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1">
-              Historical Timeline
-            </span>
-
-            {/* Search Input Bar */}
-            <div className="relative font-label text-xs">
-              <Search className="h-4 w-4 text-[#6C7278] absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search past logs..."
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] pl-9 pr-3 py-2 focus:outline-none focus:border-[#B8422E] font-sans"
-              />
+        <div className={`space-y-8 lg:col-span-1 ${mobileTab === 'editor' ? 'hidden lg:block' : ''}`}>
+          
+          {/* DAILY INSIGHTS & METRICS PANEL */}
+          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm space-y-6 shadow-sm ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
+            <div className="border-b border-[#6C7278]/25 pb-2 flex items-center space-x-2">
+              <Activity className="h-4 w-4 text-[#B8422E]" />
+              <span className="font-label text-xs text-[#1A1C1E] uppercase tracking-[0.15em] font-bold">
+                Day Insights & Metrics
+              </span>
             </div>
 
-            {/* Scrollable list */}
-            <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 mt-3">
-              {filteredLogs.map((entry) => {
-                const formattedLogDate = new Date(entry.date).toLocaleDateString('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                });
-                
-                return (
-                  <div
-                    key={entry.date}
-                    onClick={() => setSelectedDateStr(entry.date)}
-                    className={`p-3 border border-[#6C7278]/35 rounded-sm hover:border-[#1A1C1E] cursor-pointer transition-all flex justify-between items-center ${
-                      selectedDateStr === entry.date ? 'bg-[#F7F5F2] border-[#1A1C1E]' : 'bg-white'
+            {/* Mood Selector */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-baseline">
+                <span className="font-label text-xs text-[#6C7278] uppercase font-bold">Daily Mood</span>
+                <span className="font-display text-sm font-semibold text-[#B8422E]">
+                  {mood === 1 && '1 - Terrible'}
+                  {mood === 2 && '2 - Bad'}
+                  {mood === 3 && '3 - Okay'}
+                  {mood === 4 && '4 - Good'}
+                  {mood === 5 && '5 - Excellent'}
+                </span>
+              </div>
+              <div className="flex gap-1.5">
+                {[1, 2, 3, 4, 5].map((val) => (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => handleMetricChange(val, sleepHours, waterIntake)}
+                    className={`flex-1 py-1 text-center font-label text-xs uppercase border rounded-[2px] transition-all cursor-pointer ${
+                      mood === val ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : 'border-[#6C7278]/30 text-[#6C7278] hover:border-[#1A1C1E] hover:text-[#1A1C1E]'
                     }`}
                   >
-                    <div>
-                      <span className="font-label text-xs font-bold text-[#1A1C1E] block">
-                        {formattedLogDate.toUpperCase()}
-                      </span>
-                      {entry.morning_intentions[0] && (
-                        <span className="font-sans text-xs text-[#6C7278] line-clamp-1 mt-1 italic">
-                          &ldquo;{entry.morning_intentions[0]}&rdquo;
-                        </span>
-                      )}
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-[#6C7278] shrink-0 ml-2" />
-                  </div>
-                );
-              })}
-
-              {filteredLogs.length === 0 && (
-                <p className="font-sans text-xs text-[#6C7278] italic text-center py-12">No matching logs found.</p>
-              )}
+                    {val}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </section>
+
+            {/* Sleep and Hydration */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5 font-label text-xs">
+                <div className="flex items-center space-x-1.5">
+                  <Moon className="h-3.5 w-3.5 text-[#B8422E]" />
+                  <span className="uppercase text-[#6C7278] font-bold">Sleep (Hrs)</span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="0.5"
+                  value={sleepHours}
+                  onChange={(e) => handleMetricChange(mood, parseFloat(e.target.value) || 0, waterIntake)}
+                  className="w-full bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1.5 font-sans focus:outline-none focus:border-[#B8422E]"
+                />
+              </div>
+              <div className="space-y-1.5 font-label text-xs">
+                <div className="flex items-center space-x-1.5">
+                  <Droplet className="h-3.5 w-3.5 text-[#B8422E]" />
+                  <span className="uppercase text-[#6C7278] font-bold">Water (L)</span>
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  max="10"
+                  step="0.25"
+                  value={waterIntake}
+                  onChange={(e) => handleMetricChange(mood, sleepHours, parseFloat(e.target.value) || 0)}
+                  className="w-full bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1.5 font-sans focus:outline-none focus:border-[#B8422E]"
+                />
+              </div>
+            </div>
+
+            {/* Habits tracker for this day */}
+            <div className="space-y-2.5 pt-4 border-t border-[#6C7278]/20">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block font-bold">
+                Habits Tracker
+              </span>
+              <div className="space-y-2.5 bg-[#F7F5F2]/45 p-3 border border-[#6C7278]/15 rounded-sm">
+                {habits.filter(h => !h.is_archived).map((habit) => {
+                  const checked = getHabitStatus(habit.id);
+                  return (
+                    <label key={habit.id} className="flex items-center justify-between font-sans text-xs text-[#1A1C1E] cursor-pointer">
+                      <span className={checked ? 'line-through text-[#6C7278]' : ''}>
+                        {habit.name}
+                        {habit.type === 'numeric' && ` (Goal: ${habit.goal}${habit.unit || ''})`}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleHabitToggle(habit.id, checked)}
+                        className="h-4 w-4 accent-[#B8422E] cursor-pointer"
+                      />
+                    </label>
+                  );
+                })}
+                {habits.filter(h => !h.is_archived).length === 0 && (
+                  <p className="font-sans text-xs text-[#6C7278] italic text-center">No active habits configured.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Completed Tasks on this Day */}
+            <div className="space-y-2 pt-4 border-t border-[#6C7278]/20">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block font-bold">
+                Tasks Completed Today
+              </span>
+              <div className="space-y-2 bg-[#F7F5F2]/45 p-3 border border-[#6C7278]/15 rounded-sm max-h-36 overflow-y-auto">
+                {completedTasks.map((task) => (
+                  <div key={task.id} className="flex items-center space-x-2 text-xs font-sans text-[#1A1C1E]">
+                    <CheckCircle className="h-3.5 w-3.5 text-[#B8422E] shrink-0" />
+                    <span className="truncate">{task.name}</span>
+                  </div>
+                ))}
+                {completedTasks.length === 0 && (
+                  <p className="font-sans text-xs text-[#6C7278] italic text-center">No tasks completed today.</p>
+                )}
+              </div>
+            </div>
+          </section>
+
+          {/* HISTORICAL TIMELINE PANEL */}
+          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between max-h-[500px] shadow-sm ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
+            <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1">
+                Historical Timeline
+              </span>
+
+              {/* Search Input Bar */}
+              <div className="relative font-label text-xs">
+                <Search className="h-4 w-4 text-[#6C7278] absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search past logs..."
+                  className="w-full bg-[#F7F5F2] border border-[#6C7278] pl-9 pr-3 py-2 focus:outline-none focus:border-[#B8422E] font-sans"
+                />
+              </div>
+
+              {/* Scrollable list */}
+              <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 mt-3">
+                {filteredLogs.map((entry) => {
+                  const formattedLogDate = new Date(entry.date).toLocaleDateString('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric'
+                  });
+                  
+                  return (
+                    <div
+                      key={entry.date}
+                      onClick={() => {
+                        setSelectedDateStr(entry.date);
+                        // Auto-toggle back to editor on mobile when selecting a past date
+                        setMobileTab('editor');
+                      }}
+                      className={`p-3 border border-[#6C7278]/35 rounded-sm hover:border-[#1A1C1E] cursor-pointer transition-all flex justify-between items-center ${
+                        selectedDateStr === entry.date ? 'bg-[#F7F5F2] border-[#1A1C1E]' : 'bg-white'
+                      }`}
+                    >
+                      <div>
+                        <span className="font-label text-xs font-bold text-[#1A1C1E] block">
+                          {formattedLogDate.toUpperCase()}
+                        </span>
+                        {entry.morning_intentions[0] && (
+                          <span className="font-sans text-xs text-[#6C7278] line-clamp-1 mt-1 italic">
+                            &ldquo;{entry.morning_intentions[0]}&rdquo;
+                          </span>
+                        )}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-[#6C7278] shrink-0 ml-2" />
+                    </div>
+                  );
+                })}
+
+                {filteredLogs.length === 0 && (
+                  <p className="font-sans text-xs text-[#6C7278] italic text-center py-12">No matching logs found.</p>
+                )}
+              </div>
+            </div>
+          </section>
+          
+        </div>
 
       </div>
     </div>

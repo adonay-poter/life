@@ -28,6 +28,7 @@ export interface Lesson {
   title: string;
   completed: boolean;
   link?: string;
+  order_index?: number;
   created_at?: string;
 }
 
@@ -39,6 +40,8 @@ export interface Flashcard {
   back: string;
   box: number; // Leitner box 1-5
   next_review_date: string;
+  correct_reviews?: number;
+  total_reviews?: number;
   created_at?: string;
 }
 
@@ -51,11 +54,17 @@ interface AcademyContextProps {
   addCourse: (title: string, description?: string, category?: string) => Promise<void>;
   deleteCourse: (id: string) => Promise<void>;
   addModule: (courseId: string, title: string, orderIndex: number) => Promise<void>;
+  deleteModule: (id: string) => Promise<void>;
   updateModuleNotes: (moduleId: string, notes: string) => Promise<void>;
   addLesson: (moduleId: string, title: string, link?: string) => Promise<void>;
+  deleteLesson: (id: string) => Promise<void>;
   toggleLessonCompleted: (lessonId: string, completed: boolean) => Promise<void>;
   addFlashcard: (courseId: string, moduleId: string, front: string, back: string) => Promise<void>;
+  deleteFlashcard: (id: string) => Promise<void>;
   reviewFlashcard: (flashcardId: string, correct: boolean) => Promise<void>;
+  updateCourse: (id: string, updates: Partial<Omit<Course, 'id' | 'created_at'>>) => Promise<void>;
+  updateModule: (id: string, updates: Partial<Omit<CourseModule, 'id' | 'created_at'>>) => Promise<void>;
+  updateLesson: (id: string, updates: Partial<Omit<Lesson, 'id' | 'created_at'>>) => Promise<void>;
 }
 
 const AcademyContext = createContext<AcademyContextProps | undefined>(undefined);
@@ -77,8 +86,8 @@ const MOCK_MODULES: CourseModule[] = [
 ];
 
 const MOCK_LESSONS: Lesson[] = [
-  { id: 'l1', module_id: 'm1', title: 'The Lifecycle of a Service Worker', completed: true, link: 'https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API' },
-  { id: 'l2', module_id: 'm1', title: 'Offline caching strategies detailed', completed: false, link: 'https://web.dev/offline-cookbook/' }
+  { id: 'l1', module_id: 'm1', title: 'The Lifecycle of a Service Worker', completed: true, link: 'https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API', order_index: 1 },
+  { id: 'l2', module_id: 'm1', title: 'Offline caching strategies detailed', completed: false, link: 'https://web.dev/offline-cookbook/', order_index: 2 }
 ];
 
 const MOCK_FLASHCARDS: Flashcard[] = [
@@ -223,12 +232,14 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addLesson = async (moduleId: string, title: string, link?: string) => {
+    const currentLessons = lessons.filter((l) => l.module_id === moduleId);
     const newLesson: Lesson = {
       id: crypto.randomUUID(),
       module_id: moduleId,
       title,
       completed: false,
       link,
+      order_index: currentLessons.length + 1,
       created_at: new Date().toISOString()
     };
 
@@ -290,10 +301,15 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const nextReview = new Date();
         nextReview.setDate(nextReview.getDate() + daysToAdd);
 
+        const newCorrect = (fc.correct_reviews || 0) + (correct ? 1 : 0);
+        const newTotal = (fc.total_reviews || 0) + 1;
+
         return {
           ...fc,
           box: nextBox,
-          next_review_date: nextReview.toISOString()
+          next_review_date: nextReview.toISOString(),
+          correct_reviews: newCorrect,
+          total_reviews: newTotal
         };
       }
       return fc;
@@ -309,11 +325,87 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .from('flashcards')
           .update({
             box: card.box,
-            next_review_date: card.next_review_date
+            next_review_date: card.next_review_date,
+            correct_reviews: card.correct_reviews,
+            total_reviews: card.total_reviews
           })
           .eq('id', flashcardId);
         if (error) throw error;
       }
+    }
+  };
+
+  const deleteModule = async (id: string) => {
+    const updatedM = courseModules.filter((m) => m.id !== id);
+    setCourseModules(updatedM);
+    localStorage.setItem('heritage_modules', JSON.stringify(updatedM));
+
+    const updatedL = lessons.filter((l) => l.module_id !== id);
+    setLessons(updatedL);
+    localStorage.setItem('heritage_lessons', JSON.stringify(updatedL));
+
+    const updatedF = flashcards.filter((f) => f.module_id !== id);
+    setFlashcards(updatedF);
+    localStorage.setItem('heritage_flashcards', JSON.stringify(updatedF));
+
+    if (isOnline) {
+      const { error } = await supabase.from('course_modules').delete().eq('id', id);
+      if (error) throw error;
+    }
+  };
+
+  const deleteLesson = async (id: string) => {
+    const updatedL = lessons.filter((l) => l.id !== id);
+    setLessons(updatedL);
+    localStorage.setItem('heritage_lessons', JSON.stringify(updatedL));
+
+    if (isOnline) {
+      const { error } = await supabase.from('lessons').delete().eq('id', id);
+      if (error) throw error;
+    }
+  };
+
+  const deleteFlashcard = async (id: string) => {
+    const updatedF = flashcards.filter((f) => f.id !== id);
+    setFlashcards(updatedF);
+    localStorage.setItem('heritage_flashcards', JSON.stringify(updatedF));
+
+    if (isOnline) {
+      const { error } = await supabase.from('flashcards').delete().eq('id', id);
+      if (error) throw error;
+    }
+  };
+
+  const updateCourse = async (id: string, updates: Partial<Omit<Course, 'id' | 'created_at'>>) => {
+    const updated = courses.map((c) => (c.id === id ? { ...c, ...updates } : c));
+    setCourses(updated);
+    localStorage.setItem('heritage_courses', JSON.stringify(updated));
+
+    if (isOnline) {
+      const { error } = await supabase.from('courses').update(updates).eq('id', id);
+      if (error) throw error;
+    }
+  };
+
+  const updateModule = async (id: string, updates: Partial<Omit<CourseModule, 'id' | 'created_at'>>) => {
+    const updated = courseModules.map((m) => (m.id === id ? { ...m, ...updates } : m));
+    setCourseModules(updated);
+    localStorage.setItem('heritage_modules', JSON.stringify(updated));
+
+    if (isOnline) {
+      const { error } = await supabase.from('course_modules').update(updates).eq('id', id);
+      if (error) throw error;
+    }
+  };
+
+  const updateLesson = async (id: string, updates: Partial<Omit<Lesson, 'id' | 'created_at'>>) => {
+    const updated = lessons.map((l) => (l.id === id ? { ...l, ...updates } : l));
+    setLessons(updated);
+    localStorage.setItem('heritage_lessons', JSON.stringify(updated));
+
+    if (isOnline) {
+      const { error } = await supabase.from('lessons').update(updates).eq('id', id);
+      if (error) throw error;
     }
   };
 
@@ -328,11 +420,17 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addCourse,
         deleteCourse,
         addModule,
+        deleteModule,
         updateModuleNotes,
         addLesson,
+        deleteLesson,
         toggleLessonCompleted,
         addFlashcard,
-        reviewFlashcard
+        deleteFlashcard,
+        reviewFlashcard,
+        updateCourse,
+        updateModule,
+        updateLesson
       }}
     >
       {children}

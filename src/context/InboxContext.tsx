@@ -30,7 +30,8 @@ interface InboxContextProps {
     tags?: string[],
     status?: InboxItem['status']
   ) => Promise<void>;
-  updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string) => Promise<void>;
+  updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
+  updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
   deleteInboxItem: (id: string) => Promise<void>;
 }
 
@@ -145,15 +146,16 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const updateInboxItemStatus = async (id: string, status: InboxItem['status'], projectId?: string) => {
+  const updateInboxItemStatus = async (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => {
     const tomorrow = getLocalDateString(new Date(Date.now() + 86400000));
+    const targetSnoozedUntil = status === 'snoozed' ? (snoozedUntil || tomorrow) : undefined;
     const updated = inboxItems.map((item) => {
       if (item.id === id) {
         return {
           ...item,
           status,
           project_id: projectId || item.project_id,
-          snoozed_until: status === 'snoozed' ? tomorrow : undefined
+          snoozed_until: targetSnoozedUntil
         } as InboxItem;
       }
       return item;
@@ -165,9 +167,29 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (isOnline) {
       const dbUpdates: Record<string, unknown> = { status };
       if (projectId) dbUpdates.project_id = projectId;
-      dbUpdates.snoozed_until = status === 'snoozed' ? tomorrow : null;
+      dbUpdates.snoozed_until = targetSnoozedUntil || null;
       const { error } = await supabase.from('inbox_items').update(dbUpdates).eq('id', id);
         if (error) throw error;
+    }
+  };
+
+  const updateInboxItem = async (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => {
+    const updated = inboxItems.map((item) => {
+      if (item.id === id) {
+        return {
+          ...item,
+          ...updates
+        } as InboxItem;
+      }
+      return item;
+    });
+
+    setInboxItems(updated);
+    localStorage.setItem('heritage_inbox', JSON.stringify(updated));
+
+    if (isOnline) {
+      const { error } = await supabase.from('inbox_items').update(updates).eq('id', id);
+      if (error) throw error;
     }
   };
 
@@ -189,7 +211,8 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         loading,
         addInboxItem,
         updateInboxItemStatus,
-        deleteInboxItem
+        deleteInboxItem,
+        updateInboxItem
       }}
     >
       {children}

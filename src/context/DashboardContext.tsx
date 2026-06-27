@@ -41,7 +41,8 @@ interface DashboardContextProps {
     tags?: string[],
     status?: InboxItem['status']
   ) => Promise<void>;
-  updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string) => Promise<void>;
+  updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
+  updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
   deleteInboxItem: (id: string) => Promise<void>;
 
   // Project & Task operations
@@ -68,7 +69,8 @@ interface DashboardContextProps {
     recurring?: Task['recurring'],
     parentTaskId?: string,
     dependencies?: string[],
-    category?: Task['category']
+    category?: Task['category'],
+    inboxItemId?: string
   ) => Promise<void>;
   updateTask: (taskId: string, updates: Partial<Omit<Task, 'id' | 'created_at'>>) => Promise<void>;
   updateTaskStatus: (taskId: string, status: Task['status']) => Promise<void>;
@@ -80,11 +82,17 @@ interface DashboardContextProps {
   addCourse: (title: string, description?: string, category?: string) => Promise<void>;
   deleteCourse: (id: string) => Promise<void>;
   addModule: (courseId: string, title: string, orderIndex: number) => Promise<void>;
+  deleteModule: (id: string) => Promise<void>;
   updateModuleNotes: (moduleId: string, notes: string) => Promise<void>;
   addLesson: (moduleId: string, title: string, link?: string) => Promise<void>;
+  deleteLesson: (id: string) => Promise<void>;
   toggleLessonCompleted: (lessonId: string, completed: boolean) => Promise<void>;
   addFlashcard: (courseId: string, moduleId: string, front: string, back: string) => Promise<void>;
+  deleteFlashcard: (id: string) => Promise<void>;
   reviewFlashcard: (flashcardId: string, correct: boolean) => Promise<void>;
+  updateCourse: (id: string, updates: Partial<Omit<Course, 'id' | 'created_at'>>) => Promise<void>;
+  updateModule: (id: string, updates: Partial<Omit<CourseModule, 'id' | 'created_at'>>) => Promise<void>;
+  updateLesson: (id: string, updates: Partial<Omit<Lesson, 'id' | 'created_at'>>) => Promise<void>;
 
   // Habit operations
   addHabit: (name: string, type: 'binary' | 'numeric', unit?: string, goal?: number, category?: string, frequency?: string) => Promise<void>;
@@ -139,6 +147,7 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
     addInboxItem: withErrorHandling(inbox.addInboxItem) as any,
     updateInboxItemStatus: withErrorHandling(inbox.updateInboxItemStatus) as any,
     deleteInboxItem: withErrorHandling(inbox.deleteInboxItem) as any,
+    updateInboxItem: withErrorHandling(inbox.updateInboxItem) as any,
 
     projects: taskProject.projects,
     tasks: taskProject.tasks,
@@ -160,11 +169,17 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
     addCourse: withErrorHandling(academy.addCourse) as any,
     deleteCourse: withErrorHandling(academy.deleteCourse) as any,
     addModule: withErrorHandling(academy.addModule) as any,
+    deleteModule: withErrorHandling(academy.deleteModule) as any,
     updateModuleNotes: withErrorHandling(academy.updateModuleNotes) as any,
     addLesson: withErrorHandling(academy.addLesson) as any,
+    deleteLesson: withErrorHandling(academy.deleteLesson) as any,
     toggleLessonCompleted: withErrorHandling(academy.toggleLessonCompleted) as any,
     addFlashcard: withErrorHandling(academy.addFlashcard) as any,
+    deleteFlashcard: withErrorHandling(academy.deleteFlashcard) as any,
     reviewFlashcard: withErrorHandling(academy.reviewFlashcard) as any,
+    updateCourse: withErrorHandling(academy.updateCourse) as any,
+    updateModule: withErrorHandling(academy.updateModule) as any,
+    updateLesson: withErrorHandling(academy.updateLesson) as any,
 
     habits: habit.habits,
     habitRecords: habit.habitRecords,

@@ -30,6 +30,34 @@ export default function PomodoroFloating() {
     setIsLoaded(true);
   }, []);
 
+  // Listen to pomodoro_sync event dispatched when focus starts elsewhere
+  useEffect(() => {
+    const handleSync = () => {
+      const storedTime = localStorage.getItem('pomodoro_timeRemaining');
+      const storedRunning = localStorage.getItem('pomodoro_isRunning');
+      const storedBreak = localStorage.getItem('pomodoro_isBreak');
+      const storedTaskId = localStorage.getItem('pomodoro_activeTaskId');
+
+      if (storedTime !== null) setTimeRemaining(parseInt(storedTime, 10));
+      if (storedRunning !== null) setIsRunning(storedRunning === 'true');
+      if (storedBreak !== null) setIsBreak(storedBreak === 'true');
+      if (storedTaskId !== null) setActiveTaskId(storedTaskId || '');
+      
+      // Auto-expand the floating pomodoro timer widget when started
+      if (storedRunning === 'true') {
+        setIsOpen(true);
+      }
+    };
+
+    window.addEventListener('pomodoro_sync', handleSync);
+    window.addEventListener('storage', handleSync);
+
+    return () => {
+      window.removeEventListener('pomodoro_sync', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   // Persist state to localStorage
   useEffect(() => {
     if (!isLoaded) return;
@@ -166,11 +194,11 @@ export default function PomodoroFloating() {
     setActiveTaskId(e.target.value);
   };
 
-  const formatTime = (secs: number) => {
+  function formatTime(secs: number) {
     const mins = Math.floor(secs / 60);
     const remainder = secs % 60;
     return `${mins.toString().padStart(2, '0')}:${remainder.toString().padStart(2, '0')}`;
-  };
+  }
 
   const activeTask = tasks.find((t) => t.id === activeTaskId);
   const pendingTasks = tasks.filter((t) => t.status !== 'done');

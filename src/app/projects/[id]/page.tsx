@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useDashboard, Project, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import TaskDetailsModal from '@/components/TaskDetailsModal';
 import { getLocalDateString } from '@/utils/dateUtils';
 import Link from 'next/link';
 import {
@@ -81,6 +82,9 @@ function ProjectDetailContent() {
 
   // Delete modal
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  // Active task details modal
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
   // Load project defaults once loaded
   useEffect(() => {
@@ -628,7 +632,8 @@ function ProjectDetailContent() {
                   colTasks.map((task) => (
                     <div
                       key={task.id}
-                      className="bg-[#F7F5F2] border border-[#6C7278]/25 p-3 rounded-sm flex flex-col justify-between hover:border-[#1A1C1E] transition-all group"
+                      onClick={() => setSelectedTaskId(task.id)}
+                      className="bg-[#F7F5F2] border border-[#6C7278]/25 p-3 rounded-sm flex flex-col justify-between hover:border-[#1A1C1E] transition-all group cursor-pointer"
                     >
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
@@ -653,6 +658,7 @@ function ProjectDetailContent() {
                           <input
                             type="checkbox"
                             checked={task.status === 'done'}
+                            onClick={(e) => e.stopPropagation()}
                             onChange={() => handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done')}
                             className="h-4 w-4 accent-[#B8422E] shrink-0 cursor-pointer mt-0.5"
                           />
@@ -672,7 +678,10 @@ function ProjectDetailContent() {
                         <span>{task.priority}</span>
                         {task.status !== 'done' && (
                           <button
-                            onClick={() => handleStartFocusSession(task.id)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStartFocusSession(task.id);
+                            }}
                             className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer flex items-center space-x-0.5"
                             title="Start Focus Session"
                           >
@@ -737,6 +746,12 @@ function ProjectDetailContent() {
         }}
         itemName={project.name}
         itemType="project"
+      />
+
+      {/* Task Details Dialog Popup */}
+      <TaskDetailsModal
+        taskId={selectedTaskId}
+        onClose={() => setSelectedTaskId(null)}
       />
     </div>
   );

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useSearchParams } from 'next/navigation';
 import { 
   Inbox, 
   Link2, 
@@ -20,18 +21,21 @@ import {
   Search,
   Sparkles,
   GripVertical,
-  BookOpen
+  BookOpen,
+  Pencil
 } from 'lucide-react';
 
-export default function InboxPage() {
+function InboxPageContent() {
   const {
     inboxItems,
     projects,
     courses,
     courseModules,
+    loading,
     addInboxItem,
     updateInboxItemStatus,
     deleteInboxItem,
+    updateInboxItem,
     addTask,
     addLesson
   } = useDashboard();
@@ -66,13 +70,169 @@ export default function InboxPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const query = params.get('searchQuery');
+      if (query) {
+        setSearchQuery(query);
+      }
+    }
+  }, []);
+
+  // Input ref for keyboard shortcut focus
+  const captureTitleInputRef = useRef<HTMLInputElement | null>(null);
+  // Ref for click outside dropdown detection
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  // Edit states
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editType, setEditType] = useState<'text' | 'url' | 'snippet'>('text');
+  const [editUrl, setEditUrl] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editTags, setEditTags] = useState('');
+
+  const searchParams = useSearchParams();
+  const highlightId = searchParams ? searchParams.get('id') : null;
+
+  // Auto-select tab, scroll, and highlight when id query param is present
+  useEffect(() => {
+    if (highlightId && inboxItems.length > 0) {
+      const item = inboxItems.find((i) => i.id === highlightId);
+      if (item) {
+        if (item.status === 'unsorted') {
+          setActiveTab('queue');
+        } else if (item.status === 'knowledge') {
+          setActiveTab('knowledge');
+        } else if (item.status === 'snoozed' || item.status === 'archived') {
+          setActiveTab('snoozed_archived');
+        }
+
+        setTimeout(() => {
+          const el = document.getElementById(`inbox-card-${highlightId}`);
+          if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            el.classList.add('ring-2', 'ring-[#B8422E]', 'ring-offset-2');
+            const timer = setTimeout(() => {
+              el.classList.remove('ring-2', 'ring-[#B8422E]', 'ring-offset-2');
+            }, 3000);
+            return () => clearTimeout(timer);
+          }
+        }, 300);
+      }
+    }
+  }, [highlightId, inboxItems]);
+
+  function startEditing(item: InboxItem) {
+    setEditingItemId(item.id);
+    setEditTitle(item.title);
+    setEditType(item.type);
+    setEditUrl(item.url || '');
+    setEditContent(item.content || '');
+    setEditTags((item.tags || []).map(t => t.replace('#', '')).join(', '));
+    setActiveDropdownId(null);
+  }
+
+  async function handleSaveEdit(id: string) {
+    if (!editTitle.trim()) return;
+
+    let finalUrl = editUrl;
+    if (editType === 'url' && editUrl) {
+      if (!editUrl.startsWith('http://') && !editUrl.startsWith('https://')) {
+        finalUrl = 'https://' + editUrl;
+      }
+    }
+
+    const tagsArray = editTags
+      .split(',')
+      .map((tag) => tag.trim())
+      .filter((tag) => tag.length > 0)
+      .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
+
+    const updates = {
+      title: editTitle,
+      type: editType,
+      url: editType === 'url' ? finalUrl : undefined,
+      content: editType === 'snippet' ? editContent : undefined,
+      tags: tagsArray
+    };
+
+    try {
+      await updateInboxItem(id, updates);
+      showToast('Changes saved successfully.', 'success');
+      setEditingItemId(null);
+    } catch (err) {
+      console.error('Failed to update inbox item:', err);
+      showToast('Failed to save changes. Please try again.', 'error');
+    }
+  }
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.hasAttribute('contenteditable')
+      );
+
+      // Ctrl+S / Cmd+S to save card edit
+      if ((e.key === 's' || e.key === 'S') && (e.metaKey || e.ctrlKey)) {
+        if (editingItemId) {
+          e.preventDefault();
+          handleSaveEdit(editingItemId);
+          return;
+        }
+      }
+
+      if (e.key === 'Escape') {
+        if (deleteModalOpen) {
+          e.preventDefault();
+          setDeleteModalOpen(false);
+          return;
+        }
+        if (convertingItemId) {
+          e.preventDefault();
+          setConvertingItemId(null);
+          setConversionType(null);
+          return;
+        }
+        if (editingItemId) {
+          e.preventDefault();
+          setEditingItemId(null);
+          return;
+        }
+        if (activeDropdownId) {
+          e.preventDefault();
+          setActiveDropdownId(null);
+          return;
+        }
+        if (isTyping) {
+          (activeEl as HTMLElement).blur();
+        }
+      }
+
+      if (isTyping) return;
+
+      // Shortcut: Cmd+K or Ctrl+K or '/' key
+      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || e.key === '/') {
+        e.preventDefault();
+        captureTitleInputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editingItemId, editTitle, editType, editUrl, editContent, editTags, convertingItemId, deleteModalOpen, activeDropdownId]);
+
   // Handle click outside dropdown and Escape key
   useEffect(() => {
     if (!activeDropdownId) return;
 
     const handleOutsideClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      if (!target.closest('.absolute.right-4.top-4')) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setActiveDropdownId(null);
       }
     };
@@ -92,6 +252,14 @@ export default function InboxPage() {
     };
   }, [activeDropdownId]);
 
+  // Reset triage setup states when converting item changes
+  useEffect(() => {
+    setTargetProjectId('');
+    setTargetCourseId('');
+    setTargetModuleId('');
+    setTaskPriority('medium');
+  }, [convertingItemId]);
+
   // Scraper states
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeError, setScrapeError] = useState<string | null>(null);
@@ -110,10 +278,8 @@ export default function InboxPage() {
   // URL Autoscraper effect
   useEffect(() => {
     if (captureType !== 'url' || !inputUrl) {
-      requestAnimationFrame(() => {
-        setScrapeError(null);
-        setIsScraping(false);
-      });
+      setScrapeError(null);
+      setIsScraping(false);
       return;
     }
 
@@ -131,10 +297,8 @@ export default function InboxPage() {
       return;
     }
 
-    requestAnimationFrame(() => {
-      setIsScraping(true);
-      setScrapeError(null);
-    });
+    setIsScraping(true);
+    setScrapeError(null);
 
     const applyHostnameFallback = () => {
       try {
@@ -317,9 +481,9 @@ export default function InboxPage() {
   // ==========================================
   // QUICK CAPTURE SUBMIT
   // ==========================================
-  const handleCapture = (e: React.FormEvent) => {
+  const handleCapture = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputTitle.trim()) return;
+    if (captureType !== 'url' && !inputTitle.trim()) return;
 
     let finalTitle = inputTitle;
     let finalUrl = inputUrl;
@@ -344,14 +508,19 @@ export default function InboxPage() {
       .filter((tag) => tag.length > 0)
       .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
 
-    addInboxItem(captureType, finalTitle, finalUrl || undefined, finalContent || undefined, tagsArray, captureDestination);
-    showToast('Inbox item captured successfully.', 'success');
-    
-    // Reset Form
-    setInputTitle('');
-    setInputUrl('');
-    setInputContent('');
-    setInputTags('');
+    try {
+      await addInboxItem(captureType, finalTitle, finalUrl || undefined, finalContent || undefined, tagsArray, captureDestination);
+      showToast('Inbox item captured successfully.', 'success');
+      
+      // Reset Form on success
+      setInputTitle('');
+      setInputUrl('');
+      setInputContent('');
+      setInputTags('');
+    } catch (err) {
+      console.error('Failed to capture inbox item:', err);
+      showToast('Failed to capture inbox item. Please try again.', 'error');
+    }
   };
 
   // ==========================================
@@ -366,7 +535,12 @@ export default function InboxPage() {
       item.title, 
       item.content || item.url || 'Imported from Inbox triage.', 
       taskPriority,
-      getLocalDateString()
+      getLocalDateString(),
+      'none',
+      undefined,
+      [],
+      'Work',
+      item.id
     );
 
     // Update status to task
@@ -398,7 +572,7 @@ export default function InboxPage() {
 
     showToast('✓ Academy lesson created successfully', 'success', {
       label: 'View Academy',
-      href: '/academy'
+      href: `/academy?courseId=${targetCourseId}&moduleId=${targetModuleId}`
     });
 
     // Reset triage states
@@ -438,6 +612,40 @@ export default function InboxPage() {
     if (clean.includes('read')) return 'bg-[#6C7278]/20 text-[#1A1C1E]';
     return 'bg-[#F7F5F2] border border-[#6C7278]/30 text-[#6C7278]';
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-12 animate-pulse">
+        <header className="border-b-2 border-[#6C7278]/20 pb-4">
+          <div className="h-8 bg-[#6C7278]/15 w-48 rounded-sm mb-2" />
+          <div className="h-4 bg-[#6C7278]/10 w-80 rounded-sm" />
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="space-y-8 self-start">
+            <div className="bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-4">
+              <div className="h-4 bg-[#6C7278]/15 w-32 rounded-sm" />
+              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
+              <div className="h-16 bg-[#6C7278]/10 w-full rounded-sm" />
+            </div>
+          </div>
+          <div className="lg:col-span-2 space-y-6">
+            <div className="bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-4">
+              <div className="h-6 bg-[#6C7278]/15 w-40 rounded-sm" />
+              <div className="space-y-3">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="border border-[#6C7278]/15 p-4 rounded-sm space-y-2">
+                    <div className="h-4 bg-[#6C7278]/15 w-1/3 rounded-sm" />
+                    <div className="h-3 bg-[#6C7278]/10 w-3/4 rounded-sm" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-12">
@@ -480,17 +688,22 @@ export default function InboxPage() {
             COLUMN 1: MULTI-MODAL QUICK CAPTURE & MOBILE SEARCH
            ========================================== */}
         <div className="space-y-8 self-start">
-          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm ${isSearchFocused || searchQuery.trim().length > 0 ? 'hidden lg:block' : ''}`}>
-            <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
-              Intel Capture System
-            </span>
+          <section className="bg-white border border-[#6C7278] p-6 rounded-sm">
+            <div className="flex justify-between items-center mb-4">
+              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
+                Intel Capture System
+              </span>
+              <span className="hidden md:inline font-label text-[10px] text-[#6C7278]/60 uppercase tracking-wider">
+                [Cmd+K] / [/] to focus
+              </span>
+            </div>
           <form onSubmit={handleCapture} className="space-y-4">
             {/* Capture Type Selection */}
-            <div className="flex border border-[#6C7278] font-label text-xs">
+            <div className="flex border border-[#6C7278] font-label text-sm md:text-xs">
               <button
                 type="button"
                 onClick={() => { setCaptureType('text'); setInputUrl(''); }}
-                className={`flex-1 py-2 flex items-center justify-center space-x-1.5 transition-all ${
+                className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all ${
                   captureType === 'text' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
                 }`}
               >
@@ -500,7 +713,7 @@ export default function InboxPage() {
               <button
                 type="button"
                 onClick={() => setCaptureType('url')}
-                className={`flex-1 py-2 flex items-center justify-center space-x-1.5 transition-all border-l border-r border-[#6C7278] ${
+                className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all border-l border-r border-[#6C7278] ${
                   captureType === 'url' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
                 }`}
               >
@@ -510,7 +723,7 @@ export default function InboxPage() {
               <button
                 type="button"
                 onClick={() => { setCaptureType('snippet'); setInputUrl(''); }}
-                className={`flex-1 py-2 flex items-center justify-center space-x-1.5 transition-all ${
+                className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all ${
                   captureType === 'snippet' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
                 }`}
               >
@@ -525,6 +738,7 @@ export default function InboxPage() {
                 {captureType === 'url' ? 'Link Label (Optional)' : 'Capture Title'}
               </label>
               <input
+                ref={captureTitleInputRef}
                 type="text"
                 value={inputTitle}
                 onChange={(e) => setInputTitle(e.target.value)}
@@ -626,14 +840,14 @@ export default function InboxPage() {
 
             {/* Destination Selection */}
             <div className="space-y-1.5">
-              <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.15em]">
+              <label className="block font-label text-sm md:text-xs text-[#6C7278] uppercase tracking-[0.15em]">
                 Destination
               </label>
-              <div className="flex border border-[#6C7278] font-label text-xs">
+              <div className="flex border border-[#6C7278] font-label text-sm md:text-xs">
                 <button
                   type="button"
                   onClick={() => setCaptureDestination('unsorted')}
-                  className={`flex-1 py-1.5 flex items-center justify-center transition-all ${
+                  className={`flex-1 py-2.5 md:py-1.5 flex items-center justify-center transition-all ${
                     captureDestination === 'unsorted' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
                   }`}
                 >
@@ -642,7 +856,7 @@ export default function InboxPage() {
                 <button
                   type="button"
                   onClick={() => setCaptureDestination('knowledge')}
-                  className={`flex-1 py-1.5 flex items-center justify-center transition-all border-l border-[#6C7278] ${
+                  className={`flex-1 py-2.5 md:py-1.5 flex items-center justify-center transition-all border-l border-[#6C7278] ${
                     captureDestination === 'knowledge' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
                   }`}
                 >
@@ -695,6 +909,7 @@ export default function InboxPage() {
                   {items.length > 0 ? (
                     items.map((item) => (
                       <div
+                        id={`inbox-card-${item.id}`}
                         key={item.id}
                         draggable
                         onDragStart={(e) => handleDragStart(e, item.id)}
@@ -997,7 +1212,7 @@ export default function InboxPage() {
               <>
                 {/* Navigation Tabs (Hidden during search) */}
                 {!isSearching && (
-                  <div className="flex border-b border-[#6C7278]/40 font-label text-xs space-x-4 mb-4">
+                  <div className="flex border-b border-[#6C7278]/40 font-label text-sm md:text-xs space-x-4 mb-4">
                     <button
                       onClick={() => setActiveTab('queue')}
                       className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
@@ -1154,54 +1369,22 @@ export default function InboxPage() {
                     {activeTab === 'snoozed_archived' && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {/* Snoozed Queue */}
-                        <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
+                        <div className="bg-white border border-[#6C7278] p-5 rounded-sm space-y-4">
                           <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
                             Snoozed Queue ({snoozedItems.length})
                           </span>
-                          <div className="space-y-3 max-h-96 overflow-y-auto">
-                            {filteredSnoozed.map((item) => (
-                              <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
-                                <span className="font-sans text-xs text-[#1A1C1E] truncate shrink-0 max-w-[150px]">{item.title}</span>
-                                <button
-                                  onClick={async () => {
-                                    await updateInboxItemStatus(item.id, 'unsorted');
-                                    showToast('Item unsnoozed and returned to triage queue.', 'success');
-                                  }}
-                                  className="font-label text-xs text-[#B8422E] hover:underline uppercase tracking-wide cursor-pointer"
-                                >
-                                  Unsnooze
-                                </button>
-                              </div>
-                            ))}
-                            {filteredSnoozed.length === 0 && (
-                              <p className="font-sans text-xs text-[#6C7278] italic text-center py-4">No snoozed items.</p>
-                            )}
+                          <div className="max-h-[500px] overflow-y-auto pr-1">
+                            {renderInboxCards(filteredSnoozed, "No snoozed items.")}
                           </div>
                         </div>
 
                         {/* Archived Queue */}
-                        <div className="bg-white border border-[#6C7278] p-5 rounded-sm">
+                        <div className="bg-white border border-[#6C7278] p-5 rounded-sm space-y-4">
                           <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-3 border-b border-[#6C7278]/25 pb-1">
                             Archived Log ({archivedItems.length})
                           </span>
-                          <div className="space-y-3 max-h-96 overflow-y-auto">
-                            {filteredArchived.map((item) => (
-                              <div key={item.id} className="flex justify-between items-center bg-[#F7F5F2] px-3 py-2 border border-[#6C7278]/20">
-                                <span className="font-sans text-xs text-[#6C7278] truncate shrink-0 max-w-[150px]">{item.title}</span>
-                                <button
-                                  onClick={async () => {
-                                    await updateInboxItemStatus(item.id, 'unsorted');
-                                    showToast('Item restored from archive to triage queue.', 'success');
-                                  }}
-                                  className="font-label text-xs text-[#1A1C1E] hover:underline uppercase tracking-wide cursor-pointer"
-                                >
-                                  Restore
-                                </button>
-                              </div>
-                            ))}
-                            {filteredArchived.length === 0 && (
-                              <p className="font-sans text-xs text-[#6C7278] italic text-center py-4">Archive is empty.</p>
-                            )}
+                          <div className="max-h-[500px] overflow-y-auto pr-1">
+                            {renderInboxCards(filteredArchived, "Archive is empty.")}
                           </div>
                         </div>
                       </div>
@@ -1230,5 +1413,17 @@ export default function InboxPage() {
         itemType="inbox item"
       />
     </div>
+  );
+}
+
+export default function InboxPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="font-label text-xs uppercase tracking-wider text-[#6C7278]">Loading Inbox Triage...</p>
+      </div>
+    }>
+      <InboxPageContent />
+    </Suspense>
   );
 }

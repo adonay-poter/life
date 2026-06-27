@@ -23,6 +23,7 @@ export interface Project {
 export interface Task {
   id: string;
   project_id?: string;
+  inbox_item_id?: string;
   name: string;
   description?: string;
   priority: 'high' | 'medium' | 'low';
@@ -64,7 +65,8 @@ interface TaskProjectContextProps {
     recurring?: Task['recurring'],
     parentTaskId?: string,
     dependencies?: string[],
-    category?: Task['category']
+    category?: Task['category'],
+    inboxItemId?: string
   ) => Promise<void>;
   updateTask: (taskId: string, updates: Partial<Omit<Task, 'id' | 'created_at'>>) => Promise<void>;
   updateTaskStatus: (taskId: string, status: Task['status']) => Promise<void>;
@@ -247,11 +249,13 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     recurring: Task['recurring'] = 'none',
     parentTaskId?: string,
     dependencies: string[] = [],
-    category?: Task['category']
+    category?: Task['category'],
+    inboxItemId?: string
   ) => {
     const newTask: Task = {
       id: crypto.randomUUID(),
       project_id: projectId || undefined,
+      inbox_item_id: inboxItemId || undefined,
       name,
       description,
       priority,
