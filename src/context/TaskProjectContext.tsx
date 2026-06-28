@@ -35,6 +35,7 @@ export interface Task {
   dependencies: string[]; // blocking task IDs
   pomodoro_sessions: number;
   created_at?: string;
+  completed_at?: string;
   category?: 'Work' | 'Personal' | 'Urgent' | 'Learning' | 'Other';
 }
 
@@ -325,7 +326,10 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } else {
       updatedTasks = tasks.map((t) => {
         if (t.id === taskId) {
-          return { ...t, status };
+          let completed_at = t.completed_at;
+          if (status === 'done') completed_at = new Date().toISOString();
+          else if (status !== 'done') completed_at = undefined;
+          return { ...t, status, completed_at };
         }
         return t;
       });
@@ -341,7 +345,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
           .from('tasks')
           .update({
             status: updatedItem.status,
-            due_date: updatedItem.due_date
+            due_date: updatedItem.due_date,
+            completed_at: updatedItem.completed_at || null
           })
           .eq('id', taskId);
         if (error) throw error;

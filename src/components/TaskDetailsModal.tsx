@@ -67,6 +67,27 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
     }
   }, [activeTask]);
 
+  const handleSaveTaskEdit = async () => {
+    if (!activeTask) return;
+    if (!editTaskName.trim()) {
+      showToast('Task name cannot be empty.', 'error');
+      return;
+    }
+
+    await updateTask(activeTask.id, {
+      name: editTaskName,
+      description: editTaskDesc || undefined,
+      project_id: editTaskProjId || undefined,
+      category: editTaskCategory,
+      priority: editTaskPriority,
+      due_date: editTaskDueDate || undefined,
+      recurring: editTaskRecurring
+    });
+
+    showToast('Task updated successfully.', 'success');
+    setIsEditingTask(false);
+  };
+
   // Keyboard escape & saving shortcut listeners
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -100,27 +121,6 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
   ]);
 
   if (!activeTask) return null;
-
-  const handleSaveTaskEdit = async () => {
-    if (!editTaskName.trim()) {
-      showToast('Task name cannot be empty.', 'error');
-      return;
-    }
-
-    await updateTask(activeTask.id, {
-      name: editTaskName,
-      description: editTaskDesc || undefined,
-      project_id: editTaskProjId || undefined,
-      category: editTaskCategory,
-      priority: editTaskPriority,
-      due_date: editTaskDueDate || undefined,
-      recurring: editTaskRecurring
-    });
-
-    showToast('Task updated successfully.', 'success');
-    setIsEditingTask(false);
-  };
-
   const handleAddSubtask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSubtaskName.trim()) return;
@@ -199,7 +199,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4 animate-backdrop"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-[2px] p-4 animate-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();

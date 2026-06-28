@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation';
 import { useDashboard, Course, CourseModule, Lesson, Flashcard } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import ResearchModal from '@/components/ResearchModal';
+import QAPanel from '@/components/QAPanel';
 import { 
   BookOpen, 
   HelpCircle, 
@@ -61,6 +63,9 @@ function AcademyContent() {
 
   // New Module Modal state
   const [newModuleModalOpen, setNewModuleModalOpen] = useState(false);
+
+  // Research Modal state
+  const [researchModalOpen, setResearchModalOpen] = useState(false);
   const [editCourseTitle, setEditCourseTitle] = useState('');
   const [editCourseDesc, setEditCourseDesc] = useState('');
   const [editCourseCategory, setEditCourseCategory] = useState('');
@@ -91,9 +96,23 @@ function AcademyContent() {
   const courseModulesRef = useRef(courseModules);
 
   // Sync refs
+  const lastSavedNotesRef = useRef(localNotes);
+
   useEffect(() => {
     notesRef.current = localNotes;
   }, [localNotes]);
+
+  // Sync external changes to notes (e.g. from AI Research Agent)
+  useEffect(() => {
+    if (activeModule && activeModule.notes !== undefined) {
+      // If the notes changed in the database, and it's not the same as what we just saved,
+      // it means it was updated externally (like by the Research Agent)
+      if (activeModule.notes !== lastSavedNotesRef.current && activeModule.notes !== localNotes) {
+        setLocalNotes(activeModule.notes);
+        lastSavedNotesRef.current = activeModule.notes;
+      }
+    }
+  }, [activeModule?.notes]);
 
   useEffect(() => {
     courseModulesRef.current = courseModules;
@@ -110,7 +129,11 @@ function AcademyContent() {
     }
 
     if (activeModule) {
-      setLocalNotes(activeModule.notes || '');
+      // Only set localNotes if we're actually switching to a different module
+      if (activeModuleIdRef.current !== activeModule.id) {
+        setLocalNotes(activeModule.notes || '');
+        lastSavedNotesRef.current = activeModule.notes || '';
+      }
       activeModuleIdRef.current = activeModule.id;
     } else {
       setLocalNotes('');
@@ -126,6 +149,7 @@ function AcademyContent() {
 
     setIsSavingNotes(true);
     const timer = setTimeout(async () => {
+      lastSavedNotesRef.current = localNotes;
       await updateModuleNotes(activeModule.id, localNotes);
       setIsSavingNotes(false);
       
@@ -659,13 +683,22 @@ function AcademyContent() {
                 className="w-full pl-9 pr-4 py-2 bg-surface border border-secondary/40 rounded-sm text-xs focus:outline-none focus:border-primary"
               />
             </div>
-            <button
-              onClick={() => setShowAddCourse(!showAddCourse)}
-              className="btn-tertiary flex items-center space-x-1.5 cursor-pointer w-full md:w-auto justify-center"
-            >
-              <Plus className="h-4 w-4" />
-              <span>ADD SKILL MATRIX</span>
-            </button>
+            <div className="flex gap-2 w-full md:w-auto">
+              <button
+                onClick={() => setResearchModalOpen(true)}
+                className="btn-tertiary flex items-center space-x-1.5 cursor-pointer w-full md:w-auto justify-center bg-primary text-on-primary hover:bg-primary/90"
+              >
+                <Search className="h-4 w-4 text-tertiary" />
+                <span>AI RESEARCH</span>
+              </button>
+              <button
+                onClick={() => setShowAddCourse(!showAddCourse)}
+                className="btn-tertiary flex items-center space-x-1.5 cursor-pointer w-full md:w-auto justify-center"
+              >
+                <Plus className="h-4 w-4" />
+                <span>ADD SKILL MATRIX</span>
+              </button>
+            </div>
           </div>
 
           {/* Add Course Form */}
@@ -1619,8 +1652,8 @@ function AcademyContent() {
 
       {/* Edit Course Modal */}
       {editCourseModalOpen && courseToEdit && (
-        <div className="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-lg space-y-4 font-label text-xs shadow-xl">
+        <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-backdrop">
+          <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-lg space-y-4 font-label text-xs shadow-xl animate-modal">
             <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
               Edit Skill Matrix
             </span>
@@ -1694,7 +1727,7 @@ function AcademyContent() {
               setNewModuleName('');
             }
           }}
-          className="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-backdrop"
+          className="fixed inset-0 bg-black/45 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-backdrop"
         >
           <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-md space-y-4 font-label text-xs shadow-xl animate-modal">
             <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
@@ -1778,6 +1811,25 @@ function AcademyContent() {
         itemName={itemToDelete?.title || ''}
         itemType={itemToDelete?.type === 'course' ? 'skill matrix' : itemToDelete?.type || ''}
       />
+
+      <ResearchModal
+        isOpen={researchModalOpen}
+        onClose={() => setResearchModalOpen(false)}
+        onComplete={(courseId) => {
+          if (courseId) {
+            setSelectedCourseId(courseId);
+            setAcademyTab('matrix');
+          }
+        }}
+        courses={courses}
+      />
+
+      {selectedCourseId && activeCourse && academyTab === 'matrix' && activeModule && (
+        <QAPanel
+          topic={activeCourse.title}
+          moduleNotes={activeModule.notes || ''}
+        />
+      )}
     </div>
   );
 }

@@ -20,7 +20,7 @@ URL: ${url || ''}
 Return ONLY a JSON array of strings (e.g., ["#idea", "#dev"]). Do not return markdown syntax, explanation, or backticks.`;
 
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/gemma-4-31b-it:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: {
@@ -36,9 +36,6 @@ Return ONLY a JSON array of strings (e.g., ["#idea", "#dev"]). Do not return mar
                   ],
                 },
               ],
-              generationConfig: {
-                responseMimeType: 'application/json',
-              },
             }),
           }
         );
@@ -48,11 +45,17 @@ Return ONLY a JSON array of strings (e.g., ["#idea", "#dev"]). Do not return mar
         }
 
         const data = await response.json();
-        const textResponse = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        const textResponse = parts.length > 0 ? parts[parts.length - 1].text : null;
 
         if (textResponse) {
-          // Parse output safely
-          const cleanText = textResponse.trim();
+          // Parse output safely, stripping markdown if present
+          let cleanText = textResponse.trim();
+          const match = cleanText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+          if (match) {
+            cleanText = match[1].trim();
+          }
+
           const parsedTags = JSON.parse(cleanText);
           if (Array.isArray(parsedTags)) {
             // Standardize tags (lowercase, ensure start with '#')

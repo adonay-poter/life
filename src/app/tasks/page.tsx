@@ -185,6 +185,9 @@ function TasksContent() {
   // TASK DETAIL MODAL STATE
   // ==========================================
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [showDoneModal, setShowDoneModal] = useState(false);
+  const [doneSortBy, setDoneSortBy] = useState<'date_desc' | 'date_asc' | 'priority' | 'name'>('date_desc');
+  const [doneFilterCategory, setDoneFilterCategory] = useState<'All' | Task['category']>('All');
 
   const openTaskModal = (task: Task) => {
     setSelectedTaskId(task.id);
@@ -200,11 +203,12 @@ function TasksContent() {
         setSelectedTaskId(null);
         setDeleteModalOpen(false);
         setShowAddTask(false);
+        setShowDoneModal(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showAddTask, deleteModalOpen]);
+  }, [showAddTask, deleteModalOpen, showDoneModal]);
 
   // ==========================================
   // FORM SUBMISSION HANDLERS
@@ -762,7 +766,13 @@ function TasksContent() {
           <div className="flex flex-col md:grid md:grid-cols-4 gap-4 pb-4">
             {kanbanColumns.map((col) => {
               // Filter only parent tasks (or orphans), subtasks render inside them
-              const columnTasks = filteredTasks.filter((t) => t.status === col.status && !t.parent_task_id);
+              let columnTasks = filteredTasks.filter((t) => t.status === col.status && !t.parent_task_id);
+              
+              if (col.status === 'done') {
+                const oneDayAgo = currentDate.getTime() - 24 * 60 * 60 * 1000;
+                columnTasks = columnTasks.filter(t => !t.completed_at || new Date(t.completed_at).getTime() > oneDayAgo);
+              }
+
               const isVisibleOnMobile = col.status === activeKanbanColumn;
               const isDraggedOver = col.status === draggedOverColumn;
               
@@ -779,8 +789,16 @@ function TasksContent() {
                     isVisibleOnMobile ? 'flex' : 'hidden md:flex'
                   }`}
                 >
-                  <span className="font-label text-xs text-primary uppercase tracking-[0.1em] block border-b border-secondary/25 pb-2 mb-3 font-bold">
-                    {col.name} ({columnTasks.length})
+                  <span className="font-label text-xs text-primary uppercase tracking-[0.1em] border-b border-secondary/25 pb-2 mb-3 font-bold flex justify-between items-center">
+                    <span>{col.name} ({columnTasks.length})</span>
+                    {col.status === 'done' && (
+                      <button 
+                        onClick={() => setShowDoneModal(true)}
+                        className="text-[10px] bg-secondary/10 hover:bg-secondary/20 px-2 py-0.5 rounded text-primary transition-colors cursor-pointer"
+                      >
+                        VIEW ALL
+                      </button>
+                    )}
                   </span>
 
                   <div className="space-y-3 flex-1">
@@ -1264,6 +1282,89 @@ function TasksContent() {
       itemName={taskToDelete?.name || ''}
       itemType="task"
     />
+
+    {/* View All Done Modal */}
+    {showDoneModal && (
+      <div className="fixed inset-0 bg-primary/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="bg-surface border border-secondary/20 w-full max-w-3xl max-h-[85vh] rounded-sm shadow-xl flex flex-col">
+          <div className="flex justify-between items-center p-6 border-b border-secondary/20 shrink-0">
+            <h2 className="font-serif text-2xl font-bold text-primary">Done Log History</h2>
+            <button
+              onClick={() => setShowDoneModal(false)}
+              className="text-secondary hover:text-primary transition-colors cursor-pointer"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          <div className="p-6 border-b border-secondary/20 flex flex-col md:flex-row gap-4 shrink-0 bg-neutral-bg/50">
+            <div className="flex-1">
+              <label className="font-label text-xs uppercase tracking-wider text-secondary block mb-1.5">Category</label>
+              <select
+                value={doneFilterCategory}
+                onChange={(e) => setDoneFilterCategory(e.target.value as any)}
+                className="w-full bg-surface border border-secondary/40 text-primary text-sm p-2 rounded-sm focus:border-tertiary focus:ring-1 focus:ring-tertiary outline-none"
+              >
+                <option value="All">All Categories</option>
+                {['Work', 'Personal', 'Urgent', 'Learning', 'Other'].map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="font-label text-xs uppercase tracking-wider text-secondary block mb-1.5">Sort By</label>
+              <select
+                value={doneSortBy}
+                onChange={(e) => setDoneSortBy(e.target.value as any)}
+                className="w-full bg-surface border border-secondary/40 text-primary text-sm p-2 rounded-sm focus:border-tertiary focus:ring-1 focus:ring-tertiary outline-none"
+              >
+                <option value="date_desc">Completion Date (Newest)</option>
+                <option value="date_asc">Completion Date (Oldest)</option>
+                <option value="priority">Priority</option>
+                <option value="name">Name (A-Z)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-6 space-y-3">
+            {tasks
+              .filter(t => t.status === 'done' && (doneFilterCategory === 'All' || t.category === doneFilterCategory))
+              .sort((a, b) => {
+                if (doneSortBy === 'priority') {
+                  const p = { high: 0, medium: 1, low: 2 };
+                  if (p[a.priority] !== p[b.priority]) return p[a.priority] - p[b.priority];
+                  return a.name.localeCompare(b.name);
+                }
+                if (doneSortBy === 'name') {
+                  return a.name.localeCompare(b.name);
+                }
+                const dateA = a.completed_at ? new Date(a.completed_at).getTime() : 0;
+                const dateB = b.completed_at ? new Date(b.completed_at).getTime() : 0;
+                return doneSortBy === 'date_asc' ? dateA - dateB : dateB - dateA;
+              })
+              .map(task => (
+                <div key={task.id} className="bg-neutral-bg border border-secondary/30 p-4 rounded-[2px] flex justify-between items-center group hover:border-primary transition-colors cursor-pointer" onClick={() => { setShowDoneModal(false); openTaskModal(task); }}>
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-sans text-sm font-semibold text-primary/80 line-through truncate">{task.name}</span>
+                    <div className="flex items-center gap-2 mt-1 font-sans text-[11px] text-secondary">
+                      <span className="font-bold">{task.priority.toUpperCase()}</span>
+                      <span>•</span>
+                      <span>{task.category || 'No Category'}</span>
+                      {task.completed_at && (
+                        <>
+                          <span>•</span>
+                          <span>Completed: {new Date(task.completed_at).toLocaleDateString()}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            {tasks.filter(t => t.status === 'done' && (doneFilterCategory === 'All' || t.category === doneFilterCategory)).length === 0 && (
+              <p className="text-secondary text-sm italic text-center py-8">No completed tasks match your filters.</p>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
   </div>
 );
 }

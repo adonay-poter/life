@@ -62,6 +62,7 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${zemach.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <head>
         <script

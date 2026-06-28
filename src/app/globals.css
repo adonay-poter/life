@@ -82,11 +82,11 @@ body {
 
 /* --- Page / view enter --- */
 @keyframes page-enter {
-  from { opacity: 0; transform: translateY(10px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 .animate-page-enter {
-  animation: page-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: page-enter 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* --- Fade in (backdrop, overlays) --- */

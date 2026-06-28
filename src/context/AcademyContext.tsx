@@ -51,12 +51,12 @@ interface AcademyContextProps {
   lessons: Lesson[];
   flashcards: Flashcard[];
   loading: boolean;
-  addCourse: (title: string, description?: string, category?: string) => Promise<void>;
+  addCourse: (title: string, description?: string, category?: string) => Promise<string>;
   deleteCourse: (id: string) => Promise<void>;
-  addModule: (courseId: string, title: string, orderIndex: number) => Promise<void>;
+  addModule: (courseId: string, title: string, orderIndex: number) => Promise<string>;
   deleteModule: (id: string) => Promise<void>;
   updateModuleNotes: (moduleId: string, notes: string) => Promise<void>;
-  addLesson: (moduleId: string, title: string, link?: string) => Promise<void>;
+  addLesson: (moduleId: string, title: string, link?: string) => Promise<string>;
   deleteLesson: (id: string) => Promise<void>;
   toggleLessonCompleted: (lessonId: string, completed: boolean) => Promise<void>;
   addFlashcard: (courseId: string, moduleId: string, front: string, back: string) => Promise<void>;
@@ -174,20 +174,25 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       created_at: new Date().toISOString()
     };
 
-    const updated = [...courses, newCourse];
-    setCourses(updated);
-    localStorage.setItem('heritage_courses', JSON.stringify(updated));
+    setCourses((prev) => {
+      const updated = [...prev, newCourse];
+      localStorage.setItem('heritage_courses', JSON.stringify(updated));
+      return updated;
+    });
 
     if (isOnline) {
       const { error } = await supabase.from('courses').insert(newCourse);
         if (error) throw error;
     }
+    return newCourse.id;
   };
 
   const deleteCourse = async (id: string) => {
-    const updatedC = courses.filter((c) => c.id !== id);
-    setCourses(updatedC);
-    localStorage.setItem('heritage_courses', JSON.stringify(updatedC));
+    setCourses((prev) => {
+      const updated = prev.filter((c) => c.id !== id);
+      localStorage.setItem('heritage_courses', JSON.stringify(updated));
+      return updated;
+    });
 
     if (isOnline) {
       const { error } = await supabase.from('courses').delete().eq('id', id);
@@ -204,26 +209,30 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
       notes: ''
     };
 
-    const updated = [...courseModules, newModule];
-    setCourseModules(updated);
-    localStorage.setItem('heritage_modules', JSON.stringify(updated));
+    setCourseModules((prev) => {
+      const updated = [...prev, newModule];
+      localStorage.setItem('heritage_modules', JSON.stringify(updated));
+      return updated;
+    });
 
     if (isOnline) {
       const { error } = await supabase.from('course_modules').insert(newModule);
         if (error) throw error;
     }
+    return newModule.id;
   };
 
   const updateModuleNotes = async (moduleId: string, notes: string) => {
-    const updated = courseModules.map((m) => {
-      if (m.id === moduleId) {
-        return { ...m, notes };
-      }
-      return m;
+    setCourseModules((prev) => {
+      const updated = prev.map((m) => {
+        if (m.id === moduleId) {
+          return { ...m, notes };
+        }
+        return m;
+      });
+      localStorage.setItem('heritage_modules', JSON.stringify(updated));
+      return updated;
     });
-
-    setCourseModules(updated);
-    localStorage.setItem('heritage_modules', JSON.stringify(updated));
 
     if (isOnline) {
       const { error } = await supabase.from('course_modules').update({ notes }).eq('id', moduleId);
@@ -232,25 +241,30 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const addLesson = async (moduleId: string, title: string, link?: string) => {
-    const currentLessons = lessons.filter((l) => l.module_id === moduleId);
-    const newLesson: Lesson = {
-      id: crypto.randomUUID(),
-      module_id: moduleId,
-      title,
-      completed: false,
-      link,
-      order_index: currentLessons.length + 1,
-      created_at: new Date().toISOString()
-    };
+    let createdLesson: Lesson | null = null;
 
-    const updated = [...lessons, newLesson];
-    setLessons(updated);
-    localStorage.setItem('heritage_lessons', JSON.stringify(updated));
+    setLessons((prev) => {
+      const newLesson: Lesson = {
+        id: crypto.randomUUID(),
+        module_id: moduleId,
+        title,
+        completed: false,
+        link,
+        order_index: prev.filter((l) => l.module_id === moduleId).length + 1,
+        created_at: new Date().toISOString()
+      };
+      
+      createdLesson = newLesson;
+      const updated = [...prev, newLesson];
+      localStorage.setItem('heritage_lessons', JSON.stringify(updated));
+      return updated;
+    });
 
-    if (isOnline) {
-      const { error } = await supabase.from('lessons').insert(newLesson);
+    if (isOnline && createdLesson) {
+      const { error } = await supabase.from('lessons').insert(createdLesson);
         if (error) throw error;
     }
+    return createdLesson ? (createdLesson as Lesson).id : '';
   };
 
   const toggleLessonCompleted = async (lessonId: string, completed: boolean) => {

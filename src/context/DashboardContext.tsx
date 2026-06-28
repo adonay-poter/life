@@ -9,6 +9,7 @@ import { useTaskProject, TaskProjectProvider, Task, Project } from './TaskProjec
 import { useAcademy, AcademyProvider, Course, CourseModule, Lesson, Flashcard } from './AcademyContext';
 import { useHabit, HabitProvider, Habit, HabitRecord, DailyLog } from './HabitContext';
 import { useJournal, JournalProvider, JournalEntry } from './JournalContext';
+import { ResearchProvider } from './ResearchContext';
 
 export { getLocalDateString };
 export type { InboxItem, Project, Task, Course, CourseModule, Lesson, Flashcard, Habit, HabitRecord, DailyLog, JournalEntry };
@@ -79,12 +80,12 @@ interface DashboardContextProps {
   deleteTask: (taskId: string) => Promise<void>;
 
   // Academy operations
-  addCourse: (title: string, description?: string, category?: string) => Promise<void>;
+  addCourse: (title: string, description?: string, category?: string) => Promise<string>;
   deleteCourse: (id: string) => Promise<void>;
-  addModule: (courseId: string, title: string, orderIndex: number) => Promise<void>;
+  addModule: (courseId: string, title: string, orderIndex: number) => Promise<string>;
   deleteModule: (id: string) => Promise<void>;
   updateModuleNotes: (moduleId: string, notes: string) => Promise<void>;
-  addLesson: (moduleId: string, title: string, link?: string) => Promise<void>;
+  addLesson: (moduleId: string, title: string, link?: string) => Promise<string>;
   deleteLesson: (id: string) => Promise<void>;
   toggleLessonCompleted: (lessonId: string, completed: boolean) => Promise<void>;
   addFlashcard: (courseId: string, moduleId: string, front: string, back: string) => Promise<void>;
@@ -206,7 +207,9 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           <AcademyProvider>
             <HabitProvider>
               <JournalProvider>
-                <DashboardContextAggregator>{children}</DashboardContextAggregator>
+                <ResearchProvider>
+                  <DashboardContextAggregator>{children}</DashboardContextAggregator>
+                </ResearchProvider>
               </JournalProvider>
             </HabitProvider>
           </AcademyProvider>
