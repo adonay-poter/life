@@ -326,9 +326,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } else {
       updatedTasks = tasks.map((t) => {
         if (t.id === taskId) {
-          let completed_at = t.completed_at;
-          if (status === 'done') completed_at = new Date().toISOString();
-          else if (status !== 'done') completed_at = undefined;
+          const completed_at = status === 'done' ? new Date().toISOString() : undefined;
           return { ...t, status, completed_at };
         }
         return t;
