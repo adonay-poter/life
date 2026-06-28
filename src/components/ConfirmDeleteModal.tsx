@@ -110,7 +110,7 @@ export default function ConfirmDeleteModal({
               onConfirm();
               onClose();
             }}
-            className="px-4 py-2 bg-tertiary text-white hover:bg-tertiary/90 transition-colors border border-tertiary rounded-sm cursor-pointer"
+            className="px-4 py-2 bg-tertiary text-on-primary hover:bg-tertiary/90 transition-colors border border-tertiary rounded-sm cursor-pointer"
           >
             Delete
           </button>

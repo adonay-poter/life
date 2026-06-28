@@ -233,7 +233,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               )}
 
               {/* Status Badge */}
-              <span className="font-label text-xs text-white bg-primary px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+              <span className="font-label text-xs text-on-primary bg-primary px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
                 {activeTask.status.replace('_', ' ')}
               </span>
             </div>
@@ -280,7 +280,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   className="w-full bg-neutral-bg border border-secondary px-3 py-2 text-sm text-primary focus:outline-none font-sans"
                 />
               ) : (
-                <p className="text-sm text-[#2C2D30] leading-relaxed whitespace-pre-wrap font-sans">
+                <p className="text-sm text-primary leading-relaxed whitespace-pre-wrap font-sans">
                   {activeTask.description || <span className="text-stone-400 italic">No description provided for this task.</span>}
                 </p>
               )}
@@ -335,7 +335,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 <button
                   type="submit"
                   disabled={!newSubtaskName.trim()}
-                  className="bg-primary text-white hover:bg-tertiary font-label text-xs uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
+                  className="bg-primary text-on-primary hover:bg-tertiary font-label text-xs uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
                 >
                   <Plus className="h-3 w-3" />
                   <span>Add</span>
@@ -355,7 +355,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                     if (!depTask) return null;
                     const isDone = depTask.status === 'done';
                     return (
-                      <div key={depId} className="flex items-center space-x-2 text-xs font-sans text-[#2C2D30]">
+                      <div key={depId} className="flex items-center space-x-2 text-xs font-sans text-primary">
                         <span className={`h-2 w-2 rounded-full ${isDone ? 'bg-green-600' : 'bg-tertiary'}`}></span>
                         <span className={isDone ? 'line-through text-stone-400' : 'font-semibold'}>
                           {depTask.name} ({depTask.status.replace('_', ' ')})
@@ -581,7 +581,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 <button
                   type="button"
                   onClick={handleSaveTaskEdit}
-                  className="px-4 py-1.5 bg-primary text-white hover:bg-green-700 rounded-sm cursor-pointer transition-all"
+                  className="px-4 py-1.5 bg-primary text-on-primary hover:bg-green-700 rounded-sm cursor-pointer transition-all"
                 >
                   Save Changes
                 </button>

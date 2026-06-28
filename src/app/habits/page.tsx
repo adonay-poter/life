@@ -352,7 +352,7 @@ export default function HabitsPage() {
                 type="button"
                 onClick={() => setShowArchived(!showArchived)}
                 className={`px-2 py-0.5 border transition-colors cursor-pointer font-bold text-[10px] uppercase ${
-                  showArchived ? 'bg-primary text-white border-primary' : 'border-secondary/30 text-secondary hover:text-primary'
+                  showArchived ? 'bg-primary text-on-primary border-primary' : 'border-secondary/30 text-secondary hover:text-primary'
                 }`}
               >
                 {showArchived ? 'View Active' : 'View Archived'}
@@ -442,7 +442,7 @@ export default function HabitsPage() {
                             <button
                               onClick={() => handleCheckboxToggle(habit.id, day.dateStr, val)}
                               className={`mx-auto h-5 w-5 border border-secondary flex items-center justify-center rounded-none transition-all ${
-                                val > 0 ? 'bg-primary text-white border-primary' : 'bg-transparent text-transparent hover:bg-neutral-bg'
+                                val > 0 ? 'bg-primary text-on-primary border-primary' : 'bg-transparent text-transparent hover:bg-neutral-bg'
                               } ${animatingCell === `${habit.id}-${day.dateStr}` ? 'animate-pop' : ''}`}
                             >
                               <Check className="h-3 w-3" />
@@ -599,7 +599,7 @@ export default function HabitsPage() {
                           <button
                             onClick={() => handleCheckboxToggle(habit.id, todayStr, val)}
                             className={`h-10 w-10 border border-secondary flex items-center justify-center transition-all cursor-pointer ${
-                              isDone ? 'bg-primary text-white border-primary' : 'bg-transparent text-transparent hover:bg-neutral-bg'
+                              isDone ? 'bg-primary text-on-primary border-primary' : 'bg-transparent text-transparent hover:bg-neutral-bg'
                             } ${animatingCell === `${habit.id}-${todayStr}` ? 'animate-pop' : ''}`}
                           >
                             <Check className="h-5 w-5" />
@@ -624,7 +624,7 @@ export default function HabitsPage() {
                                 recordHabitValue(habit.id, todayStr, nextVal);
                               }}
                               className={`h-8 w-8 border border-secondary/30 flex items-center justify-center text-xs font-bold hover:bg-neutral-bg cursor-pointer ${
-                                isDone ? 'bg-primary text-white border-primary' : ''
+                                isDone ? 'bg-primary text-on-primary border-primary' : ''
                               }`}
                             >
                               +

@@ -101,7 +101,7 @@ export default function MobileNav() {
           )}
 
           {/* Micro Life Score Badge */}
-          <div className="bg-primary text-white px-2 py-0.5 rounded-sm font-label text-xs font-medium tracking-wider">
+          <div className="bg-primary text-on-primary px-2 py-0.5 rounded-sm font-label text-xs font-medium tracking-wider">
             {lifeScore}%
           </div>
 
@@ -179,7 +179,7 @@ export default function MobileNav() {
                     onClick={() => setIsDrawerOpen(false)}
                     className={`flex flex-col items-center justify-center p-4 border rounded-sm transition-all text-center ${
                       isActive
-                        ? 'bg-primary text-white border-primary'
+                        ? 'bg-primary text-on-primary border-primary'
                         : 'bg-neutral-bg/45 border-secondary/20 hover:border-primary'
                     }`}
                   >

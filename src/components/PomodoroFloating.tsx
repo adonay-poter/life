@@ -222,7 +222,7 @@ export default function PomodoroFloating() {
             {formatTime(timeRemaining)}
           </span>
           {isBreak && (
-            <span className="font-label text-xs bg-tertiary text-white px-1 uppercase tracking-wide">
+            <span className="font-label text-xs bg-tertiary text-on-primary px-1 uppercase tracking-wide">
               Break
             </span>
           )}

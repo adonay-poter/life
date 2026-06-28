@@ -332,7 +332,7 @@ function ProjectDetailContent() {
         </div>
 
         {project.description && (
-          <p className="font-sans text-sm text-[#2C2D30] leading-relaxed max-w-3xl">
+          <p className="font-sans text-sm text-primary leading-relaxed max-w-3xl">
             {project.description}
           </p>
         )}
@@ -495,7 +495,7 @@ function ProjectDetailContent() {
             />
           </div>
 
-          <button type="submit" className="w-full bg-primary text-white py-2.5 text-xs uppercase font-bold tracking-wider hover:bg-primary/95 cursor-pointer transition-colors">
+          <button type="submit" className="w-full bg-primary text-on-primary py-2.5 text-xs uppercase font-bold tracking-wider hover:bg-primary/95 cursor-pointer transition-colors">
             Save Matrix Changes
           </button>
         </form>
@@ -510,7 +510,7 @@ function ProjectDetailContent() {
         {!isAddingTask && (
           <button
             onClick={() => setIsAddingTask(true)}
-            className="px-4 py-2 bg-primary text-white hover:bg-tertiary font-label text-xs uppercase font-bold tracking-wider rounded-sm cursor-pointer transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 bg-primary text-on-primary hover:bg-tertiary font-label text-xs uppercase font-bold tracking-wider rounded-sm cursor-pointer transition-colors flex items-center space-x-1.5"
           >
             <Plus className="h-4 w-4" />
             <span>Add Inline Task</span>
@@ -561,7 +561,7 @@ function ProjectDetailContent() {
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
               className={`p-1.5 border rounded-sm cursor-pointer transition-colors flex items-center space-x-1 font-label text-[10px] uppercase font-bold ${
-                showAdvanced ? 'bg-primary text-white border-primary' : 'border-secondary/35 text-secondary'
+                showAdvanced ? 'bg-primary text-on-primary border-primary' : 'border-secondary/35 text-secondary'
               }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -608,7 +608,7 @@ function ProjectDetailContent() {
             </div>
           )}
 
-          <button type="submit" className="w-full bg-primary text-white py-2 text-xs uppercase font-bold tracking-wider cursor-pointer">
+          <button type="submit" className="w-full bg-primary text-on-primary py-2 text-xs uppercase font-bold tracking-wider cursor-pointer">
             Save task
           </button>
         </form>
@@ -711,7 +711,7 @@ function ProjectDetailContent() {
               <AlertCircle className="h-5 w-5" />
               <span className="font-bold text-sm uppercase tracking-wider">Unfinished Tasks Warning</span>
             </div>
-            <p className="font-sans text-xs text-[#2C2D30] leading-relaxed">
+            <p className="font-sans text-xs text-primary leading-relaxed">
               This project still contains <strong className="font-semibold">{pendingTasks.length}</strong> unfinished tasks. Are you sure you want to mark the project as completed?
             </p>
             <div className="flex justify-end space-x-2 text-[10px] font-bold uppercase">
@@ -726,7 +726,7 @@ function ProjectDetailContent() {
               </button>
               <button
                 onClick={handleConfirmGuardChange}
-                className="px-3 py-1.5 bg-tertiary text-white hover:opacity-90 cursor-pointer rounded-sm"
+                className="px-3 py-1.5 bg-tertiary text-on-primary hover:opacity-90 cursor-pointer rounded-sm"
               >
                 Proceed as Completed
               </button>

@@ -293,7 +293,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
               className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
             />
           </div>
-          <button type="submit" className="w-full bg-primary text-white py-1.5 text-xs uppercase font-bold tracking-wider cursor-pointer">
+          <button type="submit" className="w-full bg-primary text-on-primary py-1.5 text-xs uppercase font-bold tracking-wider cursor-pointer">
             Apply Changes
           </button>
         </form>
@@ -487,14 +487,14 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
                     className={`p-1 border rounded-sm cursor-pointer transition-colors ${
-                      showAdvanced ? 'bg-primary text-white border-primary' : 'border-secondary/35 text-secondary hover:text-primary'
+                      showAdvanced ? 'bg-primary text-on-primary border-primary' : 'border-secondary/35 text-secondary hover:text-primary'
                     }`}
                     title="Toggle Advanced Options"
                   >
                     <SlidersHorizontal className="h-3.5 w-3.5" />
                   </button>
 
-                  <button type="submit" className="bg-primary text-white p-1 rounded-sm cursor-pointer">
+                  <button type="submit" className="bg-primary text-on-primary p-1 rounded-sm cursor-pointer">
                     <Check className="h-3.5 w-3.5" />
                   </button>
                   <button
@@ -700,13 +700,13 @@ function ProjectsContent() {
                   onClick={() => setSelectedAreaFilter(area)}
                   className={`w-full text-left px-2 py-1.5 flex justify-between items-center transition-colors cursor-pointer rounded-sm ${
                     selectedAreaFilter === area
-                      ? 'bg-primary text-white'
+                      ? 'bg-primary text-on-primary'
                       : 'text-primary hover:bg-neutral-bg'
                   }`}
                 >
                   <span>{area.toUpperCase()}</span>
                   <span className={`text-xs px-1.5 py-0.2 rounded-full ${
-                    selectedAreaFilter === area ? 'bg-tertiary text-white' : 'bg-secondary/15 text-secondary'
+                    selectedAreaFilter === area ? 'bg-tertiary text-on-primary' : 'bg-secondary/15 text-secondary'
                   }`}>
                     {area === 'All' ? projects.filter((p) => (p.is_archived || false) === showArchived).length : getSectorCount(area)}
                   </span>
@@ -719,7 +719,7 @@ function ProjectsContent() {
           {!showAddProject ? (
             <button
               onClick={() => setShowAddProject(true)}
-              className="w-full bg-tertiary text-white py-3 font-label text-xs uppercase font-bold tracking-widest hover:bg-tertiary/90 transition-colors flex items-center justify-center space-x-2 rounded-sm cursor-pointer border border-tertiary"
+              className="w-full bg-tertiary text-on-primary py-3 font-label text-xs uppercase font-bold tracking-widest hover:bg-tertiary/90 transition-colors flex items-center justify-center space-x-2 rounded-sm cursor-pointer border border-tertiary"
             >
               <Plus className="h-4 w-4" />
               <span>Initiate Project</span>
@@ -847,7 +847,7 @@ function ProjectsContent() {
                 />
               </div>
 
-              <button type="submit" className="w-full bg-primary text-white py-2 text-xs uppercase font-bold tracking-wider hover:bg-primary/90 cursor-pointer">
+              <button type="submit" className="w-full bg-primary text-on-primary py-2 text-xs uppercase font-bold tracking-wider hover:bg-primary/90 cursor-pointer">
                 Save Project
               </button>
             </form>
@@ -866,7 +866,7 @@ function ProjectsContent() {
                 type="button"
                 onClick={() => setShowArchived(false)}
                 className={`px-3 py-1.5 transition-all cursor-pointer font-bold ${
-                  !showArchived ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                  !showArchived ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                 }`}
               >
                 Active
@@ -875,7 +875,7 @@ function ProjectsContent() {
                 type="button"
                 onClick={() => setShowArchived(true)}
                 className={`px-3 py-1.5 border-l border-secondary transition-all cursor-pointer font-bold ${
-                  showArchived ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                  showArchived ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                 }`}
               >
                 Archived

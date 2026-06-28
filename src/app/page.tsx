@@ -336,7 +336,7 @@ export default function DashboardHome() {
                   onClick={() => toggleWidget(widget.key as keyof typeof widgetsVisibility)}
                   className={`px-3 py-1.5 border flex items-center space-x-2 transition-all uppercase font-bold rounded-sm cursor-pointer ${
                     visible
-                      ? 'bg-primary text-white border-primary'
+                      ? 'bg-primary text-on-primary border-primary'
                       : 'bg-surface text-secondary border-secondary/30 hover:border-primary'
                   }`}
                 >
@@ -393,7 +393,7 @@ export default function DashboardHome() {
               <div className="h-28 flex items-end justify-between px-2 pt-2 border-b border-secondary">
                 {chartData.map((day) => (
                   <div key={day.dateStr} className="flex flex-col items-center flex-1 group">
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-primary text-white text-xs font-label px-1 py-0.5 mb-1 shrink-0">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-primary text-on-primary text-xs font-label px-1 py-0.5 mb-1 shrink-0">
                       {day.count}
                     </span>
                     <div className="w-4 bg-secondary/20 h-24 flex items-end">
@@ -473,7 +473,7 @@ export default function DashboardHome() {
                             {parentProject && (
                               <Link
                                 href={`/projects?projectId=${parentProject.id}`}
-                                className="font-label text-xs text-white bg-secondary hover:bg-primary transition-colors px-1 py-0.5 uppercase tracking-wide truncate max-w-[120px]"
+                                className="font-label text-xs text-on-primary bg-secondary hover:bg-primary transition-colors px-1 py-0.5 uppercase tracking-wide truncate max-w-[120px]"
                               >
                                 {parentProject.name}
                               </Link>
@@ -525,7 +525,7 @@ export default function DashboardHome() {
                     type="button"
                     onClick={() => setQaType('task')}
                     className={`flex-1 py-1 flex items-center justify-center transition-all ${
-                      qaType === 'task' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                      qaType === 'task' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                     }`}
                   >
                     TASK
@@ -534,7 +534,7 @@ export default function DashboardHome() {
                     type="button"
                     onClick={() => setQaType('inbox')}
                     className={`flex-1 py-1 flex items-center justify-center transition-all border-l border-secondary ${
-                      qaType === 'inbox' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                      qaType === 'inbox' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                     }`}
                   >
                     INBOX ITEM
@@ -585,7 +585,7 @@ export default function DashboardHome() {
                       placeholder={qaType === 'task' ? "Description (optional)..." : "Notes / URL detail..."}
                       className="flex-1 bg-neutral-bg border border-secondary/40 px-2 py-1.5 text-xs focus:outline-none focus:border-tertiary font-sans"
                     />
-                    <button type="submit" className="bg-primary text-white hover:bg-tertiary px-4 py-1.5 uppercase font-bold tracking-wider shrink-0 transition-colors rounded-sm cursor-pointer">
+                    <button type="submit" className="bg-primary text-on-primary hover:bg-tertiary px-4 py-1.5 uppercase font-bold tracking-wider shrink-0 transition-colors rounded-sm cursor-pointer">
                       ADD
                     </button>
                   </div>
@@ -682,7 +682,7 @@ export default function DashboardHome() {
               <div className="pt-2">
                 <Link
                   href="/habits"
-                  className="w-full flex items-center justify-between border border-primary hover:bg-primary hover:text-white transition-all py-2.5 px-4 font-label text-xs tracking-wider uppercase"
+                  className="w-full flex items-center justify-between border border-primary hover:bg-primary hover:text-on-primary transition-all py-2.5 px-4 font-label text-xs tracking-wider uppercase"
                 >
                   <span>Track Habits & Health</span>
                   <ChevronRight className="h-4 w-4" />
@@ -709,7 +709,7 @@ export default function DashboardHome() {
                     <span className="font-label text-xs text-emerald-700 font-bold uppercase tracking-wide">✓ Completed Today</span>
                     <Link href="/journal" className="font-label text-xs text-tertiary hover:underline uppercase font-bold tracking-wider">Full Log</Link>
                   </div>
-                  <p className="font-sans text-xs text-[#2C2D30] italic line-clamp-3 leading-relaxed">
+                  <p className="font-sans text-xs text-primary italic line-clamp-3 leading-relaxed">
                     {todayJournal.free_text || 'Morning intentions or reflections logged without diary notes.'}
                   </p>
                 </div>
@@ -730,7 +730,7 @@ export default function DashboardHome() {
                   <button
                     type="submit"
                     disabled={isLoggingReflection || !quickReflection.trim()}
-                    className="w-full bg-primary text-white hover:bg-tertiary py-2 uppercase font-bold tracking-widest text-xs transition-colors disabled:opacity-40 rounded-sm cursor-pointer"
+                    className="w-full bg-primary text-on-primary hover:bg-tertiary py-2 uppercase font-bold tracking-widest text-xs transition-colors disabled:opacity-40 rounded-sm cursor-pointer"
                   >
                     {isLoggingReflection ? 'LOGGING...' : 'LOG REFLECTION'}
                   </button>

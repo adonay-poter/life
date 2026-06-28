@@ -167,7 +167,7 @@ export default function NotificationCenter() {
       >
         <Bell className="h-5 w-5" />
         {activeAlerts.length > 0 && (
-          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-tertiary text-[8px] font-bold text-white ring-2 ring-white">
+          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-tertiary text-[8px] font-bold text-on-primary ring-2 ring-white">
             {activeAlerts.length}
           </span>
         )}
@@ -180,7 +180,7 @@ export default function NotificationCenter() {
               Notifications
             </span>
             {activeAlerts.length > 0 && (
-              <span className="bg-tertiary text-white text-[10px] px-1.5 py-0.5 rounded-sm font-bold">
+              <span className="bg-tertiary text-on-primary text-[10px] px-1.5 py-0.5 rounded-sm font-bold">
                 {activeAlerts.length} NEW
               </span>
             )}

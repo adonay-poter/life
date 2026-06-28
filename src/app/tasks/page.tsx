@@ -475,7 +475,7 @@ function TasksContent() {
           <button
             onClick={() => setActiveTab('kanban')}
             className={`px-4 py-2 flex items-center space-x-1.5 transition-all cursor-pointer ${
-              activeTab === 'kanban' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+              activeTab === 'kanban' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
             }`}
           >
             <Layers className="h-3.5 w-3.5" />
@@ -484,7 +484,7 @@ function TasksContent() {
           <button
             onClick={() => setActiveTab('calendar')}
             className={`px-4 py-2 flex items-center space-x-1.5 transition-all border-l border-r border-secondary cursor-pointer ${
-              activeTab === 'calendar' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+              activeTab === 'calendar' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
             }`}
           >
             <CalendarIcon className="h-3.5 w-3.5" />
@@ -493,7 +493,7 @@ function TasksContent() {
           <button
             onClick={() => setActiveTab('today')}
             className={`px-4 py-2 flex items-center space-x-1.5 transition-all cursor-pointer ${
-              activeTab === 'today' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+              activeTab === 'today' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
             }`}
           >
             <CheckSquare className="h-3.5 w-3.5" />
@@ -700,7 +700,7 @@ function TasksContent() {
                         }}
                         className={`font-label text-xs px-2 py-1 uppercase tracking-wide border rounded-[2px] transition-all cursor-pointer ${
                           isSelected
-                            ? 'bg-primary text-white border-primary font-bold'
+                            ? 'bg-primary text-on-primary border-primary font-bold'
                             : 'bg-surface text-primary border-secondary/25 hover:bg-neutral-bg'
                         }`}
                       >
@@ -719,7 +719,7 @@ function TasksContent() {
             <button
               type="submit"
               disabled={!newTaskName}
-              className="flex-1 bg-primary text-white py-2 uppercase tracking-wider text-xs font-bold disabled:opacity-50 cursor-pointer"
+              className="flex-1 bg-primary text-on-primary py-2 uppercase tracking-wider text-xs font-bold disabled:opacity-50 cursor-pointer"
             >
               Create Task
             </button>
@@ -750,7 +750,7 @@ function TasksContent() {
                   type="button"
                   onClick={() => setActiveKanbanColumn(col.status)}
                   className={`flex-1 min-w-[85px] py-3 text-center border-r border-secondary last:border-r-0 font-bold transition-all ${
-                    activeKanbanColumn === col.status ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                    activeKanbanColumn === col.status ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                   }`}
                 >
                   {mobileName}
@@ -850,7 +850,7 @@ function TasksContent() {
 
                           {/* Description */}
                           {task.description && (
-                            <p className="font-sans text-xs text-[#2C2D30] mt-1.5 line-clamp-2 leading-relaxed">
+                            <p className="font-sans text-xs text-primary mt-1.5 line-clamp-2 leading-relaxed">
                               {task.description}
                             </p>
                           )}
@@ -887,7 +887,7 @@ function TasksContent() {
                               </span>
                               <div className="space-y-1 bg-surface/40 p-1.5 rounded-sm">
                                 {subtasks.map((sub) => (
-                                  <div key={sub.id} className="flex items-center justify-between text-xs font-sans text-[#2C2D30] py-0.5">
+                                  <div key={sub.id} className="flex items-center justify-between text-xs font-sans text-primary py-0.5">
                                     <span className={sub.status === 'done' ? 'line-through text-secondary' : ''}>{sub.name}</span>
                                     <input
                                       type="checkbox"
@@ -912,7 +912,7 @@ function TasksContent() {
                             </span>
 
                             {/* Pomodoro sessions count */}
-                            <div className="flex items-center space-x-1.5 text-xs text-[#2C2D30] font-sans" title="Pomodoro focused sessions">
+                            <div className="flex items-center space-x-1.5 text-xs text-primary font-sans" title="Pomodoro focused sessions">
                               <Timer className="h-3.5 w-3.5 text-tertiary" />
                               <span>{task.pomodoro_sessions || 0}</span>
                             </div>
@@ -1041,7 +1041,7 @@ function TasksContent() {
                     onClick={() => setSelectedCalendarDate(cell.dateStr)}
                     className={`h-10 w-full flex flex-col items-center justify-center relative rounded-sm font-label text-xs font-bold transition-all cursor-pointer ${
                       isSelected
-                        ? 'bg-primary text-white border border-primary'
+                        ? 'bg-primary text-on-primary border border-primary'
                         : 'bg-surface border border-secondary/20 text-primary hover:bg-neutral-bg'
                     }`}
                   >
@@ -1182,7 +1182,7 @@ function TasksContent() {
                           {task.name}
                         </span>
                         {task.description && (
-                          <p className="font-sans text-xs text-[#2C2D30] mt-1">{task.description}</p>
+                          <p className="font-sans text-xs text-primary mt-1">{task.description}</p>
                         )}
                         <div className="flex items-center space-x-2 mt-2 font-label text-xs">
                           <span className="bg-surface border border-secondary/25 px-1.5 py-0.2 text-secondary font-bold rounded-[2px]">

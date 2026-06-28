@@ -188,7 +188,7 @@ export default function Sidebar() {
                   isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-3'
                 } text-sm font-label tracking-wide transition-all-custom rounded-sm relative group ${
                   isActive
-                    ? 'bg-primary text-white'
+                    ? 'bg-primary text-on-primary'
                     : 'text-primary hover:bg-neutral-bg border border-transparent hover:border-secondary/25'
                 }`}
                 title={isCollapsed ? item.name : undefined}
@@ -198,7 +198,7 @@ export default function Sidebar() {
 
                 {/* Collapsed Tooltip Overlay */}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+                  <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
                     {item.name}
                   </div>
                 )}
@@ -236,7 +236,7 @@ export default function Sidebar() {
               ></div>
             </div>
             {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
               Life Score: {lifeScore}%
             </div>
           </div>
@@ -276,7 +276,7 @@ export default function Sidebar() {
               <RefreshCw className="h-3.5 w-3.5 animate-spin text-tertiary" />
             )}
             {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
               {isOnline ? 'Cloud Connected' : 'Working Offline'}
               {syncPending && ' (Syncing)'}
             </div>

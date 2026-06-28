@@ -614,7 +614,7 @@ function AcademyContent() {
             <button
               onClick={() => setAcademyTab('matrix')}
               className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer ${
-                academyTab === 'matrix' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                academyTab === 'matrix' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -623,7 +623,7 @@ function AcademyContent() {
             <button
               onClick={() => setAcademyTab('flashcards')}
               className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-secondary cursor-pointer ${
-                academyTab === 'flashcards' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                academyTab === 'flashcards' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
               }`}
             >
               <HelpCircle className="h-3.5 w-3.5" />
@@ -698,7 +698,7 @@ function AcademyContent() {
                 />
               </div>
               <div className="flex space-x-3 pt-2">
-                <button type="submit" className="flex-1 bg-primary text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm">
+                <button type="submit" className="flex-1 bg-primary text-on-primary py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm">
                   Save Skill Matrix
                 </button>
                 <button
@@ -722,7 +722,7 @@ function AcademyContent() {
               </p>
               <button
                 onClick={() => setShowAddCourse(true)}
-                className="bg-primary text-white px-5 py-2 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-primary/90 transition-all rounded-sm"
+                className="bg-primary text-on-primary px-5 py-2 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-primary/90 transition-all rounded-sm"
               >
                 Create one to begin
               </button>
@@ -775,7 +775,7 @@ function AcademyContent() {
                                 setSelectedModuleId(modules[0].id);
                               }
                             }}
-                            className="border border-primary hover:bg-primary hover:text-white transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
+                            className="border border-primary hover:bg-primary hover:text-on-primary transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
                           >
                             ENTER STUDIO
                           </button>
@@ -831,7 +831,7 @@ function AcademyContent() {
               type="button"
               onClick={() => setMobileStudioTab('index')}
               className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer ${
-                mobileStudioTab === 'index' ? 'bg-primary text-white' : 'text-primary bg-surface'
+                mobileStudioTab === 'index' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'
               }`}
             >
               Index
@@ -840,7 +840,7 @@ function AcademyContent() {
               type="button"
               onClick={() => setMobileStudioTab('notepad')}
               className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer border-l border-secondary ${
-                mobileStudioTab === 'notepad' ? 'bg-primary text-white' : 'text-primary bg-surface'
+                mobileStudioTab === 'notepad' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'
               }`}
             >
               Studio Notepad
@@ -915,7 +915,7 @@ function AcademyContent() {
                                   setEditingModuleId(null);
                                   showToast('Module title updated.', 'success');
                                 }}
-                                className="bg-primary text-white px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
+                                className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
                               >
                                 Save
                               </button>
@@ -1011,7 +1011,7 @@ function AcademyContent() {
                                       setEditingLessonId(null);
                                       showToast('Lesson updated.', 'success');
                                     }}
-                                    className="bg-primary text-white px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
+                                    className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
                                   >
                                     Save
                                   </button>
@@ -1113,7 +1113,7 @@ function AcademyContent() {
                             />
                             <button
                               onClick={() => handleAddLesson(mod.id)}
-                              className="bg-primary text-white px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
+                              className="bg-primary text-on-primary px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
                             >
                               Add
                             </button>
@@ -1138,7 +1138,7 @@ function AcademyContent() {
                 />
                 <button
                   onClick={() => selectedCourseId && handleAddModule(selectedCourseId)}
-                  className="bg-primary text-white px-4 py-1.5 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
+                  className="bg-primary text-on-primary px-4 py-1.5 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
                 >
                   Create Module
                 </button>
@@ -1208,14 +1208,14 @@ function AcademyContent() {
                     <div className="flex border border-secondary font-label text-xs">
                       <button
                         onClick={() => setIsNotePreview(false)}
-                        className={`px-2 py-1 flex items-center space-x-1 cursor-pointer ${!isNotePreview ? 'bg-primary text-white' : 'text-primary'}`}
+                        className={`px-2 py-1 flex items-center space-x-1 cursor-pointer ${!isNotePreview ? 'bg-primary text-on-primary' : 'text-primary'}`}
                       >
                         <Edit3 className="h-3 w-3" />
                         <span>EDIT</span>
                       </button>
                       <button
                         onClick={() => setIsNotePreview(true)}
-                        className={`px-2 py-1 flex items-center space-x-1 border-l border-secondary cursor-pointer ${isNotePreview ? 'bg-primary text-white' : 'text-primary'}`}
+                        className={`px-2 py-1 flex items-center space-x-1 border-l border-secondary cursor-pointer ${isNotePreview ? 'bg-primary text-on-primary' : 'text-primary'}`}
                       >
                         <Eye className="h-3 w-3" />
                         <span>PREVIEW</span>
@@ -1367,7 +1367,7 @@ function AcademyContent() {
                           }
                           showToast('Marked incorrect.', 'error');
                         }}
-                        className="flex-1 bg-tertiary hover:bg-tertiary/90 text-white py-2 uppercase font-bold tracking-wider rounded-sm cursor-pointer"
+                        className="flex-1 bg-tertiary hover:bg-tertiary/90 text-on-primary py-2 uppercase font-bold tracking-wider rounded-sm cursor-pointer"
                       >
                         Incorrect (Box 1)
                       </button>
@@ -1667,7 +1667,7 @@ function AcademyContent() {
                     setCourseToEdit(null);
                   }
                 }}
-                className="flex-1 bg-primary text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm"
+                className="flex-1 bg-primary text-on-primary py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm"
               >
                 Save Changes
               </button>

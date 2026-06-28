@@ -360,21 +360,21 @@ export default function JournalPage() {
         <button
           type="button"
           onClick={() => setMobileTab('editor')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'editor' ? 'bg-primary text-white' : 'text-primary bg-surface'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'editor' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'}`}
         >
           Editor
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('metrics')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-secondary cursor-pointer ${mobileTab === 'metrics' ? 'bg-primary text-white' : 'text-primary bg-surface'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-secondary cursor-pointer ${mobileTab === 'metrics' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'}`}
         >
           Insights
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('timeline')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'timeline' ? 'bg-primary text-white' : 'text-primary bg-surface'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'timeline' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'}`}
         >
           Timeline
         </button>
@@ -573,7 +573,7 @@ export default function JournalPage() {
                     type="button"
                     onClick={() => handleMetricChange(val, sleepHours, waterIntake)}
                     className={`flex-1 py-1 text-center font-label text-xs uppercase border rounded-[2px] transition-all cursor-pointer ${
-                      mood === val ? 'bg-primary text-white border-primary' : 'border-secondary/30 text-secondary hover:border-primary hover:text-primary'
+                      mood === val ? 'bg-primary text-on-primary border-primary' : 'border-secondary/30 text-secondary hover:border-primary hover:text-primary'
                     }`}
                   >
                     {val}

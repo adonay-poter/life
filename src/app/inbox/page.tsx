@@ -607,7 +607,7 @@ function InboxPageContent() {
 
   const getTagColorClass = (tag: string) => {
     const clean = tag.toLowerCase();
-    if (clean.includes('idea')) return 'bg-primary text-white';
+    if (clean.includes('idea')) return 'bg-primary text-on-primary';
     if (clean.includes('purchase')) return 'bg-surface border border-secondary text-primary';
     if (clean.includes('read')) return 'bg-secondary/20 text-primary';
     return 'bg-neutral-bg border border-secondary/30 text-secondary';
@@ -704,7 +704,7 @@ function InboxPageContent() {
                 type="button"
                 onClick={() => { setCaptureType('text'); setInputUrl(''); }}
                 className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all ${
-                  captureType === 'text' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                  captureType === 'text' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -714,7 +714,7 @@ function InboxPageContent() {
                 type="button"
                 onClick={() => setCaptureType('url')}
                 className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all border-l border-r border-secondary ${
-                  captureType === 'url' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                  captureType === 'url' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                 }`}
               >
                 <Link2 className="h-3.5 w-3.5" />
@@ -724,7 +724,7 @@ function InboxPageContent() {
                 type="button"
                 onClick={() => { setCaptureType('snippet'); setInputUrl(''); }}
                 className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all ${
-                  captureType === 'snippet' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                  captureType === 'snippet' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                 }`}
               >
                 <Scissors className="h-3.5 w-3.5" />
@@ -848,7 +848,7 @@ function InboxPageContent() {
                   type="button"
                   onClick={() => setCaptureDestination('unsorted')}
                   className={`flex-1 py-2.5 md:py-1.5 flex items-center justify-center transition-all ${
-                    captureDestination === 'unsorted' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                    captureDestination === 'unsorted' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                   }`}
                 >
                   Triage Queue
@@ -857,7 +857,7 @@ function InboxPageContent() {
                   type="button"
                   onClick={() => setCaptureDestination('knowledge')}
                   className={`flex-1 py-2.5 md:py-1.5 flex items-center justify-center transition-all border-l border-secondary ${
-                    captureDestination === 'knowledge' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
+                    captureDestination === 'knowledge' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
                   }`}
                 >
                   Knowledge Base
@@ -1142,7 +1142,7 @@ function InboxPageContent() {
                                 <button
                                   onClick={() => handleConvertToTask(item)}
                                   disabled={!targetProjectId}
-                                  className="w-full bg-primary hover:bg-tertiary text-white py-2 uppercase text-xs tracking-widest disabled:opacity-50"
+                                  className="w-full bg-primary hover:bg-tertiary text-on-primary py-2 uppercase text-xs tracking-widest disabled:opacity-50"
                                 >
                                   Confirm Task Convert
                                 </button>
@@ -1185,7 +1185,7 @@ function InboxPageContent() {
                                 <button
                                   onClick={() => handleSendToAcademy(item)}
                                   disabled={!targetModuleId}
-                                  className="w-full bg-primary hover:bg-tertiary text-white py-2 uppercase text-xs tracking-widest disabled:opacity-50"
+                                  className="w-full bg-primary hover:bg-tertiary text-on-primary py-2 uppercase text-xs tracking-widest disabled:opacity-50"
                                 >
                                   Confirm Academy Send
                                 </button>
@@ -1254,7 +1254,7 @@ function InboxPageContent() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, 'task')}
                       className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'task' ? 'bg-primary text-white border-primary' : 'bg-surface border-secondary/40 text-primary'
+                        activeDropzone === 'task' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
                       }`}
                     >
                       <FolderPlus className="h-4 w-4 text-secondary" />
@@ -1265,7 +1265,7 @@ function InboxPageContent() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, 'academy')}
                       className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'academy' ? 'bg-primary text-white border-primary' : 'bg-surface border-secondary/40 text-primary'
+                        activeDropzone === 'academy' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
                       }`}
                     >
                       <GraduationCap className="h-4 w-4 text-secondary" />
@@ -1277,7 +1277,7 @@ function InboxPageContent() {
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, 'unsorted')}
                         className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                          activeDropzone === 'unsorted' ? 'bg-primary text-white border-primary' : 'bg-surface border-secondary/40 text-primary'
+                          activeDropzone === 'unsorted' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
                         }`}
                       >
                         <Inbox className="h-4 w-4 text-secondary" />
@@ -1289,7 +1289,7 @@ function InboxPageContent() {
                         onDragLeave={handleDragLeave}
                         onDrop={(e) => handleDrop(e, 'knowledge')}
                         className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                          activeDropzone === 'knowledge' ? 'bg-primary text-white border-primary' : 'bg-surface border-secondary/40 text-primary'
+                          activeDropzone === 'knowledge' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
                         }`}
                       >
                         <BookOpen className="h-4 w-4 text-secondary" />
@@ -1301,7 +1301,7 @@ function InboxPageContent() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, 'snooze')}
                       className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'snooze' ? 'bg-primary text-white border-primary' : 'bg-surface border-secondary/40 text-primary'
+                        activeDropzone === 'snooze' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
                       }`}
                     >
                       <Clock className="h-4 w-4 text-secondary" />
@@ -1312,7 +1312,7 @@ function InboxPageContent() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, 'archive')}
                       className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'archive' ? 'bg-primary text-white border-primary' : 'bg-surface border-secondary/40 text-primary'
+                        activeDropzone === 'archive' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
                       }`}
                     >
                       <Archive className="h-4 w-4 text-secondary" />
@@ -1323,7 +1323,7 @@ function InboxPageContent() {
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, 'delete')}
                       className={`col-span-2 md:col-span-1 border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'delete' ? 'bg-tertiary text-white border-tertiary' : 'bg-surface border-tertiary/20 text-tertiary border-tertiary/40'
+                        activeDropzone === 'delete' ? 'bg-tertiary text-on-primary border-tertiary' : 'bg-surface border-tertiary/20 text-tertiary border-tertiary/40'
                       }`}
                     >
                       <Trash2 className="h-4 w-4" />
