@@ -58,6 +58,9 @@ function AcademyContent() {
   // Edit Course Modal states
   const [editCourseModalOpen, setEditCourseModalOpen] = useState(false);
   const [courseToEdit, setCourseToEdit] = useState<any | null>(null);
+
+  // New Module Modal state
+  const [newModuleModalOpen, setNewModuleModalOpen] = useState(false);
   const [editCourseTitle, setEditCourseTitle] = useState('');
   const [editCourseDesc, setEditCourseDesc] = useState('');
   const [editCourseCategory, setEditCourseCategory] = useState('');
@@ -209,6 +212,12 @@ function AcademyContent() {
       }
 
       if (e.key === 'Escape') {
+        if (newModuleModalOpen) {
+          e.preventDefault();
+          setNewModuleModalOpen(false);
+          setNewModuleName('');
+          return;
+        }
         if (deleteModalOpen) {
           e.preventDefault();
           setDeleteModalOpen(false);
@@ -853,10 +862,19 @@ function AcademyContent() {
             <section className={`bg-surface border border-secondary p-6 rounded-sm space-y-6 max-h-[600px] overflow-y-auto shadow-sm ${
               mobileStudioTab !== 'index' ? 'hidden lg:block' : ''
             }`}>
-            <div className="border-b border-secondary/20 pb-2">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2">
-                Modules & Lessons Index
-              </span>
+            <div className="border-b border-secondary/20 pb-2 space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
+                  Modules & Lessons Index
+                </span>
+                <button
+                  onClick={() => setNewModuleModalOpen(true)}
+                  className="bg-primary text-on-primary text-[10px] font-bold px-2.5 py-1 uppercase tracking-wider rounded-sm cursor-pointer hover:bg-opacity-90 btn-press flex items-center space-x-1"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>New Module</span>
+                </button>
+              </div>
               <div className="relative w-full">
                 <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-secondary" />
                 <input
@@ -1125,25 +1143,7 @@ function AcademyContent() {
                 })}
             </div>
 
-            {/* Add Module controller */}
-            <div className="pt-4 border-t border-secondary/20 font-label text-xs">
-              <span className="block text-xs uppercase text-secondary mb-2 font-bold">New Module</span>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newModuleName}
-                  onChange={(e) => setNewModuleName(e.target.value)}
-                  placeholder="Module name..."
-                  className="flex-grow bg-neutral-bg border border-secondary/40 px-3 py-1.5 focus:outline-none"
-                />
-                <button
-                  onClick={() => selectedCourseId && handleAddModule(selectedCourseId)}
-                  className="bg-primary text-on-primary px-4 py-1.5 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
-                >
-                  Create Module
-                </button>
-              </div>
-            </div>
+            {/* New Module controller removed from bottom (moved to top popup) */}
           </section>
 
           {/* RIGHT SIDE: INTEGRATED MARKDOWN NOTES NOTEPAD */}
@@ -1681,6 +1681,67 @@ function AcademyContent() {
                 Cancel
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Module Modal */}
+      {newModuleModalOpen && (
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setNewModuleModalOpen(false);
+              setNewModuleName('');
+            }
+          }}
+          className="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-backdrop"
+        >
+          <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-md space-y-4 font-label text-xs shadow-xl animate-modal">
+            <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
+              Create New Module
+            </span>
+            <form
+              onSubmit={async (e) => {
+                e.preventDefault();
+                if (!newModuleName.trim()) return;
+                if (selectedCourseId) {
+                  await handleAddModule(selectedCourseId);
+                  setNewModuleModalOpen(false);
+                }
+              }}
+              className="space-y-4"
+            >
+              <div className="space-y-1.5">
+                <label className="block text-xs uppercase text-secondary">Module Title</label>
+                <input
+                  type="text"
+                  value={newModuleName}
+                  onChange={(e) => setNewModuleName(e.target.value)}
+                  placeholder="e.g. Fundamental Concepts..."
+                  required
+                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans text-primary text-xs"
+                />
+              </div>
+              <div className="flex space-x-3 pt-2">
+                <button
+                  type="submit"
+                  disabled={!newModuleName.trim()}
+                  className="flex-1 bg-primary text-on-primary py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm disabled:opacity-50 btn-press"
+                >
+                  Create Module
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewModuleModalOpen(false);
+                    setNewModuleName('');
+                  }}
+                  className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg uppercase text-xs tracking-wider cursor-pointer rounded-sm btn-press"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
