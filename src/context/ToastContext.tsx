@@ -55,12 +55,12 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       case 'success':
         return 'border-[#2E7D32] bg-[#EAF5EC] text-[#2E7D32]';
       case 'error':
-        return 'border-[#B8422E] bg-[#FFEBEE] text-[#B8422E]';
+        return 'border-tertiary bg-[#FFEBEE] text-tertiary';
       case 'warning':
         return 'border-[#D1A153] bg-[#FFFDE7] text-[#D1A153]';
       case 'info':
       default:
-        return 'border-[#6C7278] bg-[#F7F5F2] text-[#1A1C1E]';
+        return 'border-secondary bg-neutral-bg text-primary';
     }
   };
 
@@ -87,7 +87,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         if (toast.action?.onClick) toast.action.onClick();
                         removeToast(toast.id);
                       }}
-                      className="font-bold underline text-[#B8422E] hover:opacity-85 transition-opacity"
+                      className="font-bold underline text-tertiary hover:opacity-85 transition-opacity"
                     >
                       {toast.action.label}
                     </Link>
@@ -97,7 +97,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         if (toast.action?.onClick) toast.action.onClick();
                         removeToast(toast.id);
                       }}
-                      className="font-bold underline text-[#B8422E] hover:opacity-85 transition-opacity cursor-pointer"
+                      className="font-bold underline text-tertiary hover:opacity-85 transition-opacity cursor-pointer"
                     >
                       {toast.action.label}
                     </button>
@@ -107,7 +107,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             </div>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-[#6C7278] hover:text-[#1A1C1E] transition-colors cursor-pointer shrink-0"
+              className="text-secondary hover:text-primary transition-colors cursor-pointer shrink-0"
             >
               <X className="h-4 w-4" />
             </button>

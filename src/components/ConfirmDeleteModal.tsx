@@ -76,21 +76,21 @@ export default function ConfirmDeleteModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-modal-title"
-        className="relative bg-white border-2 border-[#1A1C1E] p-6 max-w-sm w-full shadow-2xl rounded-none flex flex-col space-y-4"
+        className="relative bg-surface border-2 border-primary p-6 max-w-sm w-full shadow-2xl rounded-none flex flex-col space-y-4"
       >
         <div className="flex items-start space-x-3">
-          <div className="bg-[#FFEBEE] p-2 text-[#B8422E] shrink-0 border border-[#FFCDD2]">
+          <div className="bg-[#FFEBEE] p-2 text-tertiary shrink-0 border border-[#FFCDD2]">
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div>
             <h3 
               id="delete-modal-title"
-              className="font-display text-lg font-bold text-[#1A1C1E] uppercase tracking-wide"
+              className="font-display text-lg font-bold text-primary uppercase tracking-wide"
             >
               Confirm Deletion
             </h3>
-            <p className="font-sans text-xs text-[#6C7278] mt-1 leading-relaxed">
-              Are you sure you want to permanently delete the {itemType} <strong className="text-[#1A1C1E] font-semibold">"{itemName}"</strong>? This action is irreversible.
+            <p className="font-sans text-xs text-secondary mt-1 leading-relaxed">
+              Are you sure you want to permanently delete the {itemType} <strong className="text-primary font-semibold">"{itemName}"</strong>? This action is irreversible.
             </p>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function ConfirmDeleteModal({
             type="button"
             data-autofocus
             onClick={onClose}
-            className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] transition-colors rounded-sm cursor-pointer"
+            className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg transition-colors rounded-sm cursor-pointer"
           >
             Cancel
           </button>
@@ -110,7 +110,7 @@ export default function ConfirmDeleteModal({
               onConfirm();
               onClose();
             }}
-            className="px-4 py-2 bg-[#B8422E] text-white hover:bg-[#B8422E]/90 transition-colors border border-[#B8422E] rounded-sm cursor-pointer"
+            className="px-4 py-2 bg-tertiary text-white hover:bg-tertiary/90 transition-colors border border-tertiary rounded-sm cursor-pointer"
           >
             Delete
           </button>

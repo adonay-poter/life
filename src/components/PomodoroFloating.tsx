@@ -213,34 +213,34 @@ export default function PomodoroFloating() {
       {!isOpen ? (
         <button
           onClick={() => setIsOpen(true)}
-          className={`flex items-center space-x-2 bg-white border border-[#6C7278] shadow-lg px-4 py-3 rounded-none transition-all duration-300 hover:border-[#B8422E] ${
-            isRunning ? 'ring-1 ring-[#B8422E]/55' : ''
+          className={`flex items-center space-x-2 bg-surface border border-secondary shadow-lg px-4 py-3 rounded-none transition-all duration-300 hover:border-tertiary ${
+            isRunning ? 'ring-1 ring-tertiary/55' : ''
           }`}
         >
-          <Timer className={`h-4.5 w-4.5 ${isRunning ? 'text-[#B8422E] animate-pulse' : 'text-[#1A1C1E]'}`} />
-          <span className="font-label text-xs font-bold tracking-widest text-[#1A1C1E]">
+          <Timer className={`h-4.5 w-4.5 ${isRunning ? 'text-tertiary animate-pulse' : 'text-primary'}`} />
+          <span className="font-label text-xs font-bold tracking-widest text-primary">
             {formatTime(timeRemaining)}
           </span>
           {isBreak && (
-            <span className="font-label text-xs bg-[#B8422E] text-white px-1 uppercase tracking-wide">
+            <span className="font-label text-xs bg-tertiary text-white px-1 uppercase tracking-wide">
               Break
             </span>
           )}
-          <ChevronUp className="h-3 w-3 text-[#6C7278]" />
+          <ChevronUp className="h-3 w-3 text-secondary" />
         </button>
       ) : (
         /* EXPANDED INTERACTIVE PANEL */
-        <div className="bg-white border border-[#6C7278] shadow-2xl p-5 w-72 rounded-none space-y-4">
-          <div className="flex justify-between items-center border-b border-[#6C7278]/30 pb-2">
+        <div className="bg-surface border border-secondary shadow-2xl p-5 w-72 rounded-none space-y-4">
+          <div className="flex justify-between items-center border-b border-secondary/30 pb-2">
             <div className="flex items-center space-x-2">
-              <Timer className="h-4 w-4 text-[#B8422E]" />
-              <span className="font-label text-xs font-bold tracking-[0.1em] uppercase text-[#6C7278]">
+              <Timer className="h-4 w-4 text-tertiary" />
+              <span className="font-label text-xs font-bold tracking-[0.1em] uppercase text-secondary">
                 {isBreak ? 'Break Session' : 'Focus Session'}
               </span>
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-[#6C7278] hover:text-[#1A1C1E] transition-all"
+              className="text-secondary hover:text-primary transition-all"
             >
               <ChevronDown className="h-4 w-4" />
             </button>
@@ -253,7 +253,7 @@ export default function PomodoroFloating() {
                 cx="56"
                 cy="56"
                 r="40"
-                className="stroke-current text-[#F7F5F2]"
+                className="stroke-current text-neutral-bg"
                 strokeWidth="6"
                 fill="transparent"
               />
@@ -261,7 +261,7 @@ export default function PomodoroFloating() {
                 cx="56"
                 cy="56"
                 r="40"
-                className="stroke-current text-[#B8422E]"
+                className="stroke-current text-tertiary"
                 strokeWidth="6"
                 fill="transparent"
                 strokeDasharray="251.2"
@@ -270,10 +270,10 @@ export default function PomodoroFloating() {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="font-display text-2xl font-bold tracking-tight text-[#1A1C1E]">
+              <span className="font-display text-2xl font-bold tracking-tight text-primary">
                 {formatTime(timeRemaining)}
               </span>
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.1em]">
                 {isBreak ? 'resting' : 'focusing'}
               </span>
             </div>
@@ -283,14 +283,14 @@ export default function PomodoroFloating() {
           <div className="flex justify-center space-x-6">
             <button
               onClick={toggleTimer}
-              className="flex items-center justify-center h-10 w-10 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] transition-all rounded-sm"
+              className="flex items-center justify-center h-10 w-10 border border-secondary text-primary hover:bg-neutral-bg transition-all rounded-sm"
               title={isRunning ? 'Pause' : 'Start'}
             >
               {isRunning ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
             </button>
             <button
               onClick={resetTimer}
-              className="flex items-center justify-center h-10 w-10 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] transition-all rounded-sm"
+              className="flex items-center justify-center h-10 w-10 border border-secondary text-primary hover:bg-neutral-bg transition-all rounded-sm"
               title="Reset"
             >
               <RotateCcw className="h-4 w-4" />
@@ -298,15 +298,15 @@ export default function PomodoroFloating() {
           </div>
 
           {/* LINKED TASK DROPDOWN */}
-          <div className="space-y-1.5 pt-2 border-t border-[#6C7278]/30">
-            <label className="block font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
+          <div className="space-y-1.5 pt-2 border-t border-secondary/30">
+            <label className="block font-label text-xs text-secondary uppercase tracking-[0.1em]">
               Link Focus Task
             </label>
             {pendingTasks.length > 0 ? (
               <select
                 value={activeTaskId}
                 onChange={handleTaskChange}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none focus:border-[#B8422E] font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 text-xs text-primary focus:outline-none focus:border-tertiary font-sans"
               >
                 {pendingTasks.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -315,11 +315,11 @@ export default function PomodoroFloating() {
                 ))}
               </select>
             ) : (
-              <p className="font-sans text-xs text-[#6C7278] italic">No active tasks available</p>
+              <p className="font-sans text-xs text-secondary italic">No active tasks available</p>
             )}
 
             {activeTask && (
-              <div className="flex items-center space-x-1.5 mt-2 bg-[#F7F5F2] px-2 py-1 text-xs text-[#6C7278] border border-[#6C7278]/20 font-sans">
+              <div className="flex items-center space-x-1.5 mt-2 bg-neutral-bg px-2 py-1 text-xs text-secondary border border-secondary/20 font-sans">
                 <CheckCircle2 className="h-3 w-3 text-emerald-700 shrink-0" />
                 <span className="truncate">Sessions logged: {activeTask.pomodoro_sessions || 0}</span>
               </div>

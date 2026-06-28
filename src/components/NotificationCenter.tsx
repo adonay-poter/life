@@ -52,7 +52,7 @@ export default function NotificationCenter() {
         title: `${overdueTasksCount} Overdue Task${overdueTasksCount > 1 ? 's' : ''}`,
         description: 'You have tasks that missed their deadline.',
         category: 'Tasks',
-        icon: <AlertTriangle className="h-4 w-4 text-[#B8422E]" />,
+        icon: <AlertTriangle className="h-4 w-4 text-tertiary" />,
         link: '/tasks'
       });
     }
@@ -90,7 +90,7 @@ export default function NotificationCenter() {
         title: `${dueFlashcards} Flashcard${dueFlashcards > 1 ? 's' : ''} Due`,
         description: 'Your spaced repetition queue needs attention.',
         category: 'Academy',
-        icon: <BookOpen className="h-4 w-4 text-[#1A1C1E]" />,
+        icon: <BookOpen className="h-4 w-4 text-primary" />,
         link: '/academy'
       });
     }
@@ -103,7 +103,7 @@ export default function NotificationCenter() {
         title: 'Inbox Overflow',
         description: `You have ${unsortedCount} items awaiting triage.`,
         category: 'Inbox',
-        icon: <Inbox className="h-4 w-4 text-[#1A1C1E]" />,
+        icon: <Inbox className="h-4 w-4 text-primary" />,
         link: '/inbox'
       });
     }
@@ -116,7 +116,7 @@ export default function NotificationCenter() {
         title: 'Daily Journal Pending',
         description: 'Morning intentions or evening reflections are missing.',
         category: 'Journal',
-        icon: <FileText className="h-4 w-4 text-[#1A1C1E]" />,
+        icon: <FileText className="h-4 w-4 text-primary" />,
         link: '/journal'
       });
     }
@@ -129,7 +129,7 @@ export default function NotificationCenter() {
         title: 'Snoozed Items Woke Up',
         description: `${wokeUpCount} item${wokeUpCount > 1 ? 's have' : ' has'} returned to your inbox.`,
         category: 'Inbox',
-        icon: <Clock className="h-4 w-4 text-[#1A1C1E]" />,
+        icon: <Clock className="h-4 w-4 text-primary" />,
         link: '/inbox'
       });
     }
@@ -162,25 +162,25 @@ export default function NotificationCenter() {
     <div className="relative flex items-center" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-[#6C7278] hover:text-[#1A1C1E] transition-colors cursor-pointer"
+        className="relative p-2 text-secondary hover:text-primary transition-colors cursor-pointer"
         title="Notification Center"
       >
         <Bell className="h-5 w-5" />
         {activeAlerts.length > 0 && (
-          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-[#B8422E] text-[8px] font-bold text-white ring-2 ring-white">
+          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-tertiary text-[8px] font-bold text-white ring-2 ring-white">
             {activeAlerts.length}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 md:right-auto md:left-0 mt-2 w-80 bg-white border border-[#6C7278] shadow-lg rounded-sm z-50 overflow-hidden">
-          <div className="flex justify-between items-center p-3 border-b border-[#6C7278]/20 bg-[#F7F5F2]">
-            <span className="font-label text-xs uppercase tracking-widest text-[#1A1C1E] font-bold">
+        <div className="absolute top-full right-0 md:right-auto md:left-0 mt-2 w-80 bg-surface border border-secondary shadow-lg rounded-sm z-50 overflow-hidden">
+          <div className="flex justify-between items-center p-3 border-b border-secondary/20 bg-neutral-bg">
+            <span className="font-label text-xs uppercase tracking-widest text-primary font-bold">
               Notifications
             </span>
             {activeAlerts.length > 0 && (
-              <span className="bg-[#B8422E] text-white text-[10px] px-1.5 py-0.5 rounded-sm font-bold">
+              <span className="bg-tertiary text-white text-[10px] px-1.5 py-0.5 rounded-sm font-bold">
                 {activeAlerts.length} NEW
               </span>
             )}
@@ -189,30 +189,30 @@ export default function NotificationCenter() {
           <div className="max-h-96 overflow-y-auto">
             {activeAlerts.length === 0 ? (
               <div className="p-6 text-center">
-                <span className="block font-display text-md text-[#1A1C1E]">All clear</span>
-                <span className="block font-sans text-xs text-[#6C7278] mt-1">You're on track ✓</span>
+                <span className="block font-display text-md text-primary">All clear</span>
+                <span className="block font-sans text-xs text-secondary mt-1">You're on track ✓</span>
               </div>
             ) : (
-              <div className="divide-y divide-[#6C7278]/15">
+              <div className="divide-y divide-secondary/15">
                 {activeAlerts.map(alert => (
                   <Link href={alert.link} key={alert.id} onClick={() => setIsOpen(false)}>
-                    <div className="p-3 hover:bg-[#F7F5F2]/50 transition-colors cursor-pointer group relative">
+                    <div className="p-3 hover:bg-neutral-bg/50 transition-colors cursor-pointer group relative">
                       <div className="flex gap-3">
                         <div className="pt-0.5 shrink-0">
                           {alert.icon}
                         </div>
                         <div className="flex-1 pr-6">
-                          <p className="font-label text-xs font-bold text-[#1A1C1E] uppercase tracking-wide">
+                          <p className="font-label text-xs font-bold text-primary uppercase tracking-wide">
                             {alert.title}
                           </p>
-                          <p className="font-sans text-xs text-[#6C7278] mt-0.5 leading-tight">
+                          <p className="font-sans text-xs text-secondary mt-0.5 leading-tight">
                             {alert.description}
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={(e) => dismissAlert(alert.id, e)}
-                        className="absolute right-3 top-3 text-[#6C7278]/50 hover:text-[#1A1C1E] opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        className="absolute right-3 top-3 text-secondary/50 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                         title="Dismiss alert"
                       >
                         <X className="h-4 w-4" />

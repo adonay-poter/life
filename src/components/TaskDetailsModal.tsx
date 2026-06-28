@@ -206,10 +206,10 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
         }
       }}
     >
-      <div className="bg-white border-2 border-[#1A1C1E] rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-sans relative">
+      <div className="bg-surface border-2 border-primary rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-sans relative">
         
         {/* Header */}
-        <div className="border-b border-[#6C7278]/25 p-5 flex justify-between items-start">
+        <div className="border-b border-secondary/25 p-5 flex justify-between items-start">
           <div className="space-y-2 flex-1 min-w-0 pr-4">
             <div className="flex flex-wrap gap-1.5">
               {/* Project Badge */}
@@ -227,13 +227,13 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               
               {/* Category Badge */}
               {activeTask.category && (
-                <span className="font-label text-xs text-[#B8422E] bg-[#B8422E]/10 border border-[#B8422E]/25 px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+                <span className="font-label text-xs text-tertiary bg-tertiary/10 border border-tertiary/25 px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
                   {activeTask.category}
                 </span>
               )}
 
               {/* Status Badge */}
-              <span className="font-label text-xs text-white bg-[#1A1C1E] px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+              <span className="font-label text-xs text-white bg-primary px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
                 {activeTask.status.replace('_', ' ')}
               </span>
             </div>
@@ -243,10 +243,10 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 type="text"
                 value={editTaskName}
                 onChange={(e) => setEditTaskName(e.target.value)}
-                className="font-display text-xl md:text-2xl font-bold text-[#1A1C1E] uppercase tracking-wide border border-[#6C7278] px-2 py-1 w-full bg-[#F7F5F2] focus:outline-none"
+                className="font-display text-xl md:text-2xl font-bold text-primary uppercase tracking-wide border border-secondary px-2 py-1 w-full bg-neutral-bg focus:outline-none"
               />
             ) : (
-              <h3 className="font-display text-xl md:text-2xl font-bold text-[#1A1C1E] uppercase tracking-wide">
+              <h3 className="font-display text-xl md:text-2xl font-bold text-primary uppercase tracking-wide">
                 {activeTask.name}
               </h3>
             )}
@@ -255,7 +255,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
           <button 
             type="button"
             onClick={onClose}
-            className="text-[#6C7278] hover:text-[#B8422E] p-1 cursor-pointer transition-colors"
+            className="text-secondary hover:text-tertiary p-1 cursor-pointer transition-colors"
           >
             <X className="h-6 w-6" />
           </button>
@@ -268,7 +268,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             
             {/* Description */}
             <div className="space-y-2">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
+              <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold block border-b border-secondary/25 pb-1">
                 Detailed Description
               </span>
               
@@ -277,7 +277,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   value={editTaskDesc}
                   onChange={(e) => setEditTaskDesc(e.target.value)}
                   rows={4}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-2 text-sm text-[#1A1C1E] focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-secondary px-3 py-2 text-sm text-primary focus:outline-none font-sans"
                 />
               ) : (
                 <p className="text-sm text-[#2C2D30] leading-relaxed whitespace-pre-wrap font-sans">
@@ -288,7 +288,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
             {/* Subtasks Section */}
             <div className="space-y-4">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
+              <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold block border-b border-secondary/25 pb-1">
                 Subtasks
               </span>
               
@@ -296,15 +296,15 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               <div className="space-y-2">
                 {subtasks.length > 0 ? (
                   subtasks.map((sub) => (
-                    <div key={sub.id} className="flex items-center justify-between p-2.5 bg-[#F7F5F2] border border-[#6C7278]/20 rounded-sm">
+                    <div key={sub.id} className="flex items-center justify-between p-2.5 bg-neutral-bg border border-secondary/20 rounded-sm">
                       <div className="flex items-center space-x-2.5 min-w-0">
                         <input
                           type="checkbox"
                           checked={sub.status === 'done'}
                           onChange={() => handleUpdateTaskStatusWithUndo(sub.id, sub.status === 'done' ? 'todo' : 'done')}
-                          className="h-4 w-4 accent-[#B8422E] shrink-0 cursor-pointer"
+                          className="h-4 w-4 accent-tertiary shrink-0 cursor-pointer"
                         />
-                        <span className={`text-sm text-[#1A1C1E] font-medium truncate ${sub.status === 'done' ? 'line-through text-[#6C7278]' : ''}`}>
+                        <span className={`text-sm text-primary font-medium truncate ${sub.status === 'done' ? 'line-through text-secondary' : ''}`}>
                           {sub.name}
                         </span>
                       </div>
@@ -312,7 +312,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                       <button
                         type="button"
                         onClick={() => triggerDeleteTask(sub.id, sub.name)}
-                        className="text-stone-400 hover:text-[#B8422E] p-1 cursor-pointer transition-colors"
+                        className="text-stone-400 hover:text-tertiary p-1 cursor-pointer transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
@@ -330,12 +330,12 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   placeholder="Create a new subtask..."
                   value={newSubtaskName}
                   onChange={(e) => setNewSubtaskName(e.target.value)}
-                  className="flex-1 bg-[#F7F5F2] border border-[#6C7278]/40 px-3 py-1.5 text-xs text-[#1A1C1E] focus:border-[#1A1C1E] focus:outline-none rounded-sm font-sans"
+                  className="flex-1 bg-neutral-bg border border-secondary/40 px-3 py-1.5 text-xs text-primary focus:border-primary focus:outline-none rounded-sm font-sans"
                 />
                 <button
                   type="submit"
                   disabled={!newSubtaskName.trim()}
-                  className="bg-[#1A1C1E] text-white hover:bg-[#B8422E] font-label text-xs uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
+                  className="bg-primary text-white hover:bg-tertiary font-label text-xs uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
                 >
                   <Plus className="h-3 w-3" />
                   <span>Add</span>
@@ -346,7 +346,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             {/* Blockers & Dependencies */}
             {activeTask.dependencies && activeTask.dependencies.length > 0 && (
               <div className="space-y-2">
-                <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block border-b border-[#6C7278]/25 pb-1">
+                <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold block border-b border-secondary/25 pb-1">
                   Dependencies (Blocks this task)
                 </span>
                 <div className="space-y-1.5">
@@ -356,7 +356,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                     const isDone = depTask.status === 'done';
                     return (
                       <div key={depId} className="flex items-center space-x-2 text-xs font-sans text-[#2C2D30]">
-                        <span className={`h-2 w-2 rounded-full ${isDone ? 'bg-green-600' : 'bg-[#B8422E]'}`}></span>
+                        <span className={`h-2 w-2 rounded-full ${isDone ? 'bg-green-600' : 'bg-tertiary'}`}></span>
                         <span className={isDone ? 'line-through text-stone-400' : 'font-semibold'}>
                           {depTask.name} ({depTask.status.replace('_', ' ')})
                         </span>
@@ -369,16 +369,16 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
           </div>
 
           {/* Right Sidebar options (1 col wide on desktop) */}
-          <div className="space-y-5 bg-[#F7F5F2]/40 border-t md:border-t-0 md:border-l border-[#6C7278]/20 pt-5 md:pt-0 md:pl-5">
+          <div className="space-y-5 bg-neutral-bg/40 border-t md:border-t-0 md:border-l border-secondary/20 pt-5 md:pt-0 md:pl-5">
             {/* Status Edit */}
             <div className="space-y-1">
-              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                 Status
               </label>
               <select
                 value={activeTask.status}
                 onChange={(e) => handleUpdateTaskStatusWithUndo(activeTask.id, e.target.value as Task['status'])}
-                className="w-full bg-white border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px] cursor-pointer"
+                className="w-full bg-surface border border-secondary/40 px-2 py-1.5 text-xs text-primary focus:outline-none font-sans rounded-[2px] cursor-pointer"
               >
                 <option value="backlog">Backlog</option>
                 <option value="todo">Todo Queue</option>
@@ -389,14 +389,14 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
             {/* Priority Edit */}
             <div className="space-y-1">
-              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                 Priority
               </label>
               {isEditingTask ? (
                 <select
                   value={editTaskPriority}
                   onChange={(e) => setEditTaskPriority(e.target.value as Task['priority'])}
-                  className="w-full bg-white border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px] cursor-pointer"
+                  className="w-full bg-surface border border-secondary/40 px-2 py-1.5 text-xs text-primary focus:outline-none font-sans rounded-[2px] cursor-pointer"
                 >
                   <option value="high">High</option>
                   <option value="medium">Medium</option>
@@ -405,8 +405,8 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               ) : (
                 <span className={`inline-block font-label text-xs font-bold border px-2 py-0.5 uppercase tracking-wide rounded-[2px] ${
                   activeTask.priority === 'high'
-                    ? 'border-[#B8422E]/40 text-[#B8422E] bg-[#B8422E]/5'
-                    : 'border-[#6C7278]/40 text-[#6C7278] bg-white'
+                    ? 'border-tertiary/40 text-tertiary bg-tertiary/5'
+                    : 'border-secondary/40 text-secondary bg-surface'
                 }`}>
                   {activeTask.priority}
                 </span>
@@ -416,13 +416,13 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             {/* Project Selector (Edit Mode Only) */}
             {isEditingTask && (
               <div className="space-y-1">
-                <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+                <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                   Project
                 </label>
                 <select
                   value={editTaskProjId}
                   onChange={(e) => setEditTaskProjId(e.target.value)}
-                  className="w-full bg-white border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px] cursor-pointer"
+                  className="w-full bg-surface border border-secondary/40 px-2 py-1.5 text-xs text-primary focus:outline-none font-sans rounded-[2px] cursor-pointer"
                 >
                   <option value="">-- Standalone (None) --</option>
                   {projects.map((p) => (
@@ -435,13 +435,13 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             {/* Category Selector (Edit Mode Only) */}
             {isEditingTask && (
               <div className="space-y-1">
-                <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+                <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                   Category
                 </label>
                 <select
                   value={editTaskCategory}
                   onChange={(e) => setEditTaskCategory(e.target.value as Task['category'])}
-                  className="w-full bg-white border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px] cursor-pointer"
+                  className="w-full bg-surface border border-secondary/40 px-2 py-1.5 text-xs text-primary focus:outline-none font-sans rounded-[2px] cursor-pointer"
                 >
                   <option value="Work">Work</option>
                   <option value="Personal">Personal</option>
@@ -454,7 +454,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
             {/* Due Date */}
             <div className="space-y-1">
-              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                 Due Date
               </label>
               {isEditingTask ? (
@@ -462,10 +462,10 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   type="date"
                   value={editTaskDueDate}
                   onChange={(e) => setEditTaskDueDate(e.target.value)}
-                  className="w-full bg-white border border-[#6C7278]/40 px-2 py-1 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px]"
+                  className="w-full bg-surface border border-secondary/40 px-2 py-1 text-xs text-primary focus:outline-none font-sans rounded-[2px]"
                 />
               ) : (
-                <span className="text-xs text-[#1A1C1E] font-medium font-sans">
+                <span className="text-xs text-primary font-medium font-sans">
                   {activeTask.due_date 
                     ? new Date(activeTask.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
                     : <span className="text-stone-400 italic">No deadline set</span>
@@ -476,14 +476,14 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
             {/* Recurring Option */}
             <div className="space-y-1">
-              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+              <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                 Recurring Frequency
               </label>
               {isEditingTask ? (
                 <select
                   value={editTaskRecurring}
                   onChange={(e) => setEditTaskRecurring(e.target.value as Task['recurring'])}
-                  className="w-full bg-white border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none font-sans rounded-[2px] cursor-pointer"
+                  className="w-full bg-surface border border-secondary/40 px-2 py-1.5 text-xs text-primary focus:outline-none font-sans rounded-[2px] cursor-pointer"
                 >
                   <option value="none">One Time</option>
                   <option value="daily">Daily Reset</option>
@@ -491,7 +491,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   <option value="monthly">Monthly Reset</option>
                 </select>
               ) : (
-                <span className="text-xs text-[#1A1C1E] font-medium uppercase font-label">
+                <span className="text-xs text-primary font-medium uppercase font-label">
                   {activeTask.recurring !== 'none' ? `${activeTask.recurring} reset` : 'One-time task'}
                 </span>
               )}
@@ -500,7 +500,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             {/* Source Inbox Item Link */}
             {activeTask.inbox_item_id && (
               <div className="space-y-1">
-                <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+                <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                   Task Origin
                 </label>
                 {(() => {
@@ -509,7 +509,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                     <Link
                       href={`/inbox?id=${activeTask.inbox_item_id}`}
                       onClick={onClose}
-                      className="text-xs font-semibold text-[#B8422E] hover:underline flex items-center gap-1 font-sans"
+                      className="text-xs font-semibold text-tertiary hover:underline flex items-center gap-1 font-sans"
                     >
                       <span>From Inbox: {sourceItem ? sourceItem.title : 'Captured Item'}</span>
                       <span className="text-[10px]">↗</span>
@@ -520,13 +520,13 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             )}
 
             {/* Pomodoro Focus Sessions */}
-            <div className="space-y-2 border-t border-[#6C7278]/25 pt-3">
-              <label className="font-label text-xs text-[#6C7278] uppercase tracking-wider font-bold block">
+            <div className="space-y-2 border-t border-secondary/25 pt-3">
+              <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                 Focus Sessions
               </label>
               <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1.5 text-[#1A1C1E] font-sans">
-                  <Timer className="h-4.5 w-4.5 text-[#B8422E]" />
+                <div className="flex items-center space-x-1.5 text-primary font-sans">
+                  <Timer className="h-4.5 w-4.5 text-tertiary" />
                   <span className="text-sm font-semibold">{activeTask.pomodoro_sessions || 0} sessions</span>
                 </div>
                 <button
@@ -535,7 +535,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                     updateTaskPomodoro(activeTask.id, (activeTask.pomodoro_sessions || 0) + 1);
                     showToast('Pomodoro session logged.', 'info');
                   }}
-                  className="bg-white border border-[#6C7278]/40 hover:bg-[#F7F5F2] hover:border-[#1A1C1E] font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
+                  className="bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
                 >
                   <span>+1 Session</span>
                 </button>
@@ -545,7 +545,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
         </div>
 
         {/* Footer Actions */}
-        <div className="border-t border-[#6C7278]/25 p-4 bg-[#F7F5F2]/30 flex flex-wrap justify-between items-center gap-3 font-label text-xs uppercase font-bold">
+        <div className="border-t border-secondary/25 p-4 bg-neutral-bg/30 flex flex-wrap justify-between items-center gap-3 font-label text-xs uppercase font-bold">
           <div className="flex items-center space-x-2">
             <button
               type="button"
@@ -555,8 +555,8 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               }}
               className={`px-3 py-1.5 border rounded-sm cursor-pointer flex items-center space-x-1 transition-all ${
                 activeTask.is_pinned 
-                  ? 'bg-[#B8422E]/10 border-[#B8422E] text-[#B8422E]' 
-                  : 'bg-white border-[#6C7278]/40 text-[#6C7278] hover:border-[#1A1C1E] hover:text-[#1A1C1E]'
+                  ? 'bg-tertiary/10 border-tertiary text-tertiary' 
+                  : 'bg-surface border-secondary/40 text-secondary hover:border-primary hover:text-primary'
               }`}
             >
               <Pin className="h-3 w-3 fill-current" />
@@ -568,7 +568,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               onClick={() => {
                 triggerDeleteTask(activeTask.id, activeTask.name);
               }}
-              className="px-3 py-1.5 bg-white border border-red-200 hover:border-red-600 text-red-600 hover:bg-red-50 rounded-sm cursor-pointer transition-all flex items-center space-x-1"
+              className="px-3 py-1.5 bg-surface border border-red-200 hover:border-red-600 text-red-600 hover:bg-red-50 rounded-sm cursor-pointer transition-all flex items-center space-x-1"
             >
               <Trash2 className="h-3 w-3" />
               <span>Delete</span>
@@ -581,14 +581,14 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 <button
                   type="button"
                   onClick={handleSaveTaskEdit}
-                  className="px-4 py-1.5 bg-[#1A1C1E] text-white hover:bg-green-700 rounded-sm cursor-pointer transition-all"
+                  className="px-4 py-1.5 bg-primary text-white hover:bg-green-700 rounded-sm cursor-pointer transition-all"
                 >
                   Save Changes
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsEditingTask(false)}
-                  className="px-4 py-1.5 bg-white border border-[#6C7278]/40 hover:bg-[#F7F5F2] text-[#1A1C1E] rounded-sm cursor-pointer transition-all"
+                  className="px-4 py-1.5 bg-surface border border-secondary/40 hover:bg-neutral-bg text-primary rounded-sm cursor-pointer transition-all"
                 >
                   Cancel
                 </button>
@@ -597,7 +597,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               <button
                 type="button"
                 onClick={() => setIsEditingTask(true)}
-                className="px-4 py-1.5 bg-white border border-[#6C7278]/40 hover:bg-[#F7F5F2] hover:border-[#1A1C1E] text-[#1A1C1E] rounded-sm cursor-pointer transition-all"
+                className="px-4 py-1.5 bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary text-primary rounded-sm cursor-pointer transition-all"
               >
                 Edit Details
               </button>

@@ -30,7 +30,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
     <ToastProvider>
       <DashboardProvider>
         <PWARegister />
-        <div className="min-h-screen bg-[#F7F5F2] flex flex-col md:flex-row text-[#1A1C1E]">
+        <div className="min-h-screen bg-neutral-bg flex flex-col md:flex-row text-primary">
           {/* Navigation */}
           <Sidebar />
           <MobileNav />

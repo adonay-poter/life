@@ -7,6 +7,19 @@
   --secondary: #6C7278;
   --tertiary: #B8422E;
   --surface: #FFFFFF;
+  --on-primary: #FFFFFF;
+  --heatmap-zero: #EAE8E4;
+}
+
+.dark {
+  --background: #101112; /* Neutral from designdark */
+  --foreground: #F7F5F2; /* Primary from designdark */
+  --primary: #F7F5F2;    /* Primary from designdark */
+  --secondary: #9BA1A6;  /* Secondary from designdark */
+  --tertiary: #E2583E;   /* Tertiary from designdark */
+  --surface: #1A1C1E;    /* Surface from designdark */
+  --on-primary: #101112; /* On-primary (dark neutral) */
+  --heatmap-zero: #222426; /* Dark heatmap zero */
 }
 
 @theme {
@@ -15,6 +28,8 @@
   --color-tertiary: var(--tertiary);
   --color-neutral-bg: var(--background);
   --color-surface: var(--surface);
+  --color-on-primary: var(--on-primary);
+  --color-heatmap-zero: var(--heatmap-zero);
   
   --font-display: var(--font-fraunces), Georgia, serif;
   --font-sans: var(--font-public-sans), Arial, Helvetica, sans-serif;
@@ -69,7 +84,7 @@ body {
 /* Accent highlight button - slightly larger & higher contrast */
 .btn-tertiary {
   background-color: var(--tertiary);
-  color: #FFFFFF;
+  color: var(--on-primary);
   border-radius: 4px;
   padding: 10px 20px;
   font-family: var(--font-label);

@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import NotificationCenter from './NotificationCenter';
+import ThemeToggle from './ThemeToggle';
 import {
   LayoutDashboard,
   Inbox,
@@ -85,10 +86,10 @@ export default function MobileNav() {
   return (
     <div className="md:hidden flex flex-col shrink-0">
       {/* Top Mobile Header */}
-      <header className="sticky top-0 bg-white border-b border-[#6C7278] px-4 py-3 flex items-center justify-between z-40">
+      <header className="sticky top-0 bg-surface border-b border-secondary px-4 py-3 flex items-center justify-between z-40">
         <div className="flex items-baseline space-x-2">
-          <span className="font-amharic font-bold text-xl text-[#1A1C1E] tracking-tight">ሁሉ</span>
-          <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">OS</span>
+          <span className="font-amharic font-bold text-xl text-primary tracking-tight">ሁሉ</span>
+          <span className="font-label text-xs text-secondary uppercase tracking-[0.1em]">OS</span>
         </div>
         
         <div className="flex items-center space-x-3">
@@ -96,20 +97,21 @@ export default function MobileNav() {
           {isOnline ? (
             <Cloud className="h-4 w-4 text-emerald-700" />
           ) : (
-            <CloudOff className="h-4 w-4 text-[#B8422E]" />
+            <CloudOff className="h-4 w-4 text-tertiary" />
           )}
 
           {/* Micro Life Score Badge */}
-          <div className="bg-[#1A1C1E] text-white px-2 py-0.5 rounded-sm font-label text-xs font-medium tracking-wider">
+          <div className="bg-primary text-white px-2 py-0.5 rounded-sm font-label text-xs font-medium tracking-wider">
             {lifeScore}%
           </div>
 
+          <ThemeToggle />
           <NotificationCenter />
         </div>
       </header>
 
       {/* Bottom Sticky Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#6C7278] flex justify-around items-center py-2 px-1 z-40 pb-safe shadow-md">
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-secondary flex justify-around items-center py-2 px-1 z-40 pb-safe shadow-md">
         {coreMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -118,7 +120,7 @@ export default function MobileNav() {
               key={item.name}
               href={item.href}
               className={`flex flex-col items-center justify-center w-12 py-1 transition-all-custom rounded-sm ${
-                isActive ? 'text-[#B8422E]' : 'text-[#6C7278] active:text-[#1A1C1E]'
+                isActive ? 'text-tertiary' : 'text-secondary active:text-primary'
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -131,7 +133,7 @@ export default function MobileNav() {
         <button
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
           className={`flex flex-col items-center justify-center w-12 py-1 transition-all-custom rounded-sm cursor-pointer ${
-            isDrawerOpen ? 'text-[#B8422E]' : 'text-[#6C7278] active:text-[#1A1C1E]'
+            isDrawerOpen ? 'text-tertiary' : 'text-secondary active:text-primary'
           }`}
         >
           <Menu className="h-5 w-5" />
@@ -149,14 +151,14 @@ export default function MobileNav() {
           />
           
           {/* Drawer Card */}
-          <div className="fixed bottom-14 left-0 right-0 bg-white border-t-2 border-[#1A1C1E] p-5 shadow-2xl z-[9999] md:hidden rounded-t-none">
-            <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-3 mb-4 font-label">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] font-semibold">
+          <div className="fixed bottom-14 left-0 right-0 bg-surface border-t-2 border-primary p-5 shadow-2xl z-[9999] md:hidden rounded-t-none">
+            <div className="flex justify-between items-center border-b border-secondary/25 pb-3 mb-4 font-label">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-semibold">
                 More Sectors
               </span>
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="text-[#6C7278] hover:text-[#1A1C1E] p-1 cursor-pointer"
+                className="text-secondary hover:text-primary p-1 cursor-pointer"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -177,15 +179,15 @@ export default function MobileNav() {
                     onClick={() => setIsDrawerOpen(false)}
                     className={`flex flex-col items-center justify-center p-4 border rounded-sm transition-all text-center ${
                       isActive
-                        ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]'
-                        : 'bg-[#F7F5F2]/45 border-[#6C7278]/20 hover:border-[#1A1C1E]'
+                        ? 'bg-primary text-white border-primary'
+                        : 'bg-neutral-bg/45 border-secondary/20 hover:border-primary'
                     }`}
                   >
                     <Icon className="h-6 w-6 mb-1.5 shrink-0" />
                     <span className="font-label text-xs uppercase font-bold tracking-wide">
                       {item.name}
                     </span>
-                    <span className="font-sans text-xs text-[#6C7278] mt-0.5 lowercase">
+                    <span className="font-sans text-xs text-secondary mt-0.5 lowercase">
                       {item.desc}
                     </span>
                   </Link>

@@ -31,7 +31,7 @@ import {
 const PROJECT_COLORS = [
   { name: 'Terracotta', value: '#B8422E' },
   { name: 'Slate', value: '#6C7278' },
-  { name: 'Ink', value: '#1A1C1E' },
+  { name: 'Ink', value: 'var(--primary)' },
   { name: 'Sage', value: '#58805F' },
   { name: 'Ochre', value: '#D1A153' },
   { name: 'Bronze', value: '#8D6E63' }
@@ -104,12 +104,12 @@ function ProjectDetailContent() {
   if (!project) {
     return (
       <div className="space-y-6">
-        <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-[#6C7278] hover:text-[#1A1C1E] uppercase tracking-wider">
+        <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider">
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Projects</span>
         </Link>
-        <div className="bg-white border border-[#6C7278]/30 py-16 text-center rounded-sm">
-          <p className="font-sans text-sm text-[#6C7278] italic">Project not found or Loading...</p>
+        <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
+          <p className="font-sans text-sm text-secondary italic">Project not found or Loading...</p>
         </div>
       </div>
     );
@@ -260,7 +260,7 @@ function ProjectDetailContent() {
       case 'paused': return 'bg-[#FFF9C4] text-[#F57F17] border-[#FFF59D]';
       case 'completed': return 'bg-[#F5F5F5] text-[#616161] border-[#E0E0E0]';
       case 'cancelled': return 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]';
-      default: return 'bg-[#F7F5F2] text-[#6C7278] border-[#6C7278]/25';
+      default: return 'bg-neutral-bg text-secondary border-secondary/25';
     }
   };
 
@@ -274,14 +274,14 @@ function ProjectDetailContent() {
   return (
     <div className="space-y-8">
       {/* Back link */}
-      <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-[#6C7278] hover:text-[#1A1C1E] uppercase tracking-wider">
+      <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider">
         <ArrowLeft className="h-4 w-4" />
         <span>Back to Projects</span>
       </Link>
 
       {/* Hero Header */}
       <div 
-        className="bg-white border border-[#6C7278]/30 border-l-8 p-6 md:p-8 rounded-sm shadow-sm space-y-4"
+        className="bg-surface border border-secondary/30 border-l-8 p-6 md:p-8 rounded-sm shadow-sm space-y-4"
         style={{ borderLeftColor: project.color || '#B8422E' }}
       >
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -299,7 +299,7 @@ function ProjectDetailContent() {
                 </span>
               )}
             </div>
-            <h2 className="font-display text-3xl font-bold text-[#1A1C1E] mt-3 leading-tight">
+            <h2 className="font-display text-3xl font-bold text-primary mt-3 leading-tight">
               {project.name}
             </h2>
           </div>
@@ -307,14 +307,14 @@ function ProjectDetailContent() {
           <div className="flex items-center space-x-2.5 font-label text-xs shrink-0">
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="px-3.5 py-2 border border-[#6C7278] hover:bg-[#F7F5F2] transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm"
+              className="px-3.5 py-2 border border-secondary hover:bg-neutral-bg transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm"
             >
-              <Edit3 className="h-3.5 w-3.5 text-[#6C7278]" />
+              <Edit3 className="h-3.5 w-3.5 text-secondary" />
               <span>{isEditing ? 'Cancel Edit' : 'Edit Matrix'}</span>
             </button>
             <button
               onClick={handleToggleArchive}
-              className={`px-3.5 py-2 border border-[#6C7278] hover:bg-[#F7F5F2] transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm ${
+              className={`px-3.5 py-2 border border-secondary hover:bg-neutral-bg transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm ${
                 project.is_archived ? 'bg-[#FFFDE7] text-[#D1A153]' : ''
               }`}
             >
@@ -323,7 +323,7 @@ function ProjectDetailContent() {
             </button>
             <button
               onClick={() => setDeleteModalOpen(true)}
-              className="px-3.5 py-2 border border-[#B8422E] text-[#B8422E] hover:bg-[#FFEBEE] transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm"
+              className="px-3.5 py-2 border border-tertiary text-tertiary hover:bg-[#FFEBEE] transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Delete</span>
@@ -337,22 +337,22 @@ function ProjectDetailContent() {
           </p>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-[#6C7278]/15 font-label text-xs text-[#1A1C1E]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-secondary/15 font-label text-xs text-primary">
           {project.client && (
             <div className="flex items-center space-x-2">
-              <Briefcase className="h-4 w-4 shrink-0 text-[#6C7278]" />
+              <Briefcase className="h-4 w-4 shrink-0 text-secondary" />
               <span>Client/Audience: <strong className="font-bold">{project.client}</strong></span>
             </div>
           )}
           {project.gain && (
             <div className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 shrink-0 text-[#6C7278]" />
+              <TrendingUp className="h-4 w-4 shrink-0 text-secondary" />
               <span>Expected Payoff: <strong className="font-bold">{project.gain}</strong></span>
             </div>
           )}
           {(project.start_date || project.deadline) && (
             <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 shrink-0 text-[#6C7278]" />
+              <Calendar className="h-4 w-4 shrink-0 text-secondary" />
               <span>
                 Timeline: {project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'None'}
                 {' '}&rarr;{' '}
@@ -365,12 +365,12 @@ function ProjectDetailContent() {
         {/* Linear progress */}
         <div className="space-y-2 pt-3">
           <div className="flex justify-between items-center text-xs font-label">
-            <span className="text-[#6C7278] uppercase">Project Completion Rate</span>
-            <span className="text-[#1A1C1E] font-bold">
+            <span className="text-secondary uppercase">Project Completion Rate</span>
+            <span className="text-primary font-bold">
               {doneTasks.length}/{projTasks.length} Completed ({progress}%)
             </span>
           </div>
-          <div className="w-full bg-[#6C7278]/15 h-2 rounded-none overflow-hidden">
+          <div className="w-full bg-secondary/15 h-2 rounded-none overflow-hidden">
             <div 
               className="h-full transition-all duration-300" 
               style={{ width: `${progress}%`, backgroundColor: project.color || '#B8422E' }}
@@ -381,17 +381,17 @@ function ProjectDetailContent() {
 
       {/* Configurator Form */}
       {isEditing && (
-        <form onSubmit={handleEditSubmit} className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4 font-label text-xs">
-          <span className="block font-bold text-sm uppercase text-[#1A1C1E] border-b border-[#6C7278]/25 pb-2">
+        <form onSubmit={handleEditSubmit} className="bg-surface border border-secondary p-6 rounded-sm space-y-4 font-label text-xs">
+          <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
             Configure Project Metadata
           </span>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Sector / Area</label>
+              <label className="block text-xs uppercase text-secondary">Sector / Area</label>
               <select
                 value={editArea}
                 onChange={(e) => setEditArea(e.target.value as Project['area'])}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none"
               >
                 <option value="Business">Business</option>
                 <option value="Health">Health</option>
@@ -401,11 +401,11 @@ function ProjectDetailContent() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Status</label>
+              <label className="block text-xs uppercase text-secondary">Status</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as Project['status'])}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none"
               >
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -415,7 +415,7 @@ function ProjectDetailContent() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Brand Accent Color</label>
+              <label className="block text-xs uppercase text-secondary">Brand Accent Color</label>
               <div className="flex flex-wrap gap-2 py-1">
                 {PROJECT_COLORS.map((c) => (
                   <button
@@ -423,7 +423,7 @@ function ProjectDetailContent() {
                     type="button"
                     onClick={() => setEditColor(c.value)}
                     className={`h-5 w-5 rounded-full transition-all border cursor-pointer ${
-                      editColor === c.value ? 'border-[#1A1C1E] scale-110 ring-1 ring-[#1A1C1E]' : 'border-transparent hover:scale-105'
+                      editColor === c.value ? 'border-primary scale-110 ring-1 ring-primary' : 'border-transparent hover:scale-105'
                     }`}
                     style={{ backgroundColor: c.value }}
                     title={c.name}
@@ -435,67 +435,67 @@ function ProjectDetailContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Project Name *</label>
+              <label className="block text-xs uppercase text-secondary">Project Name *</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 required
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Client / Audience</label>
+              <label className="block text-xs uppercase text-secondary">Client / Audience</label>
               <input
                 type="text"
                 value={editClient}
                 onChange={(e) => setEditClient(e.target.value)}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Project Payload / Gain</label>
+              <label className="block text-xs uppercase text-secondary">Project Payload / Gain</label>
               <input
                 type="text"
                 value={editGain}
                 onChange={(e) => setEditGain(e.target.value)}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Start Date</label>
+              <label className="block text-xs uppercase text-secondary">Start Date</label>
               <input
                 type="date"
                 value={editStartDate}
                 onChange={(e) => setEditStartDate(e.target.value)}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Target Deadline</label>
+              <label className="block text-xs uppercase text-secondary">Target Deadline</label>
               <input
                 type="date"
                 value={editDeadline}
                 onChange={(e) => setEditDeadline(e.target.value)}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs uppercase text-[#6C7278]">Detailed Description</label>
+            <label className="block text-xs uppercase text-secondary">Detailed Description</label>
             <textarea
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
               rows={3}
-              className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+              className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
             />
           </div>
 
-          <button type="submit" className="w-full bg-[#1A1C1E] text-white py-2.5 text-xs uppercase font-bold tracking-wider hover:bg-[#1A1C1E]/95 cursor-pointer transition-colors">
+          <button type="submit" className="w-full bg-primary text-white py-2.5 text-xs uppercase font-bold tracking-wider hover:bg-primary/95 cursor-pointer transition-colors">
             Save Matrix Changes
           </button>
         </form>
@@ -503,14 +503,14 @@ function ProjectDetailContent() {
 
       {/* Task Add Trigger */}
       <div className="flex justify-between items-center">
-        <h3 className="font-display text-lg font-bold text-[#1A1C1E] uppercase tracking-wider">
+        <h3 className="font-display text-lg font-bold text-primary uppercase tracking-wider">
           Task Workspace
         </h3>
         
         {!isAddingTask && (
           <button
             onClick={() => setIsAddingTask(true)}
-            className="px-4 py-2 bg-[#1A1C1E] text-white hover:bg-[#B8422E] font-label text-xs uppercase font-bold tracking-wider rounded-sm cursor-pointer transition-colors flex items-center space-x-1.5"
+            className="px-4 py-2 bg-primary text-white hover:bg-tertiary font-label text-xs uppercase font-bold tracking-wider rounded-sm cursor-pointer transition-colors flex items-center space-x-1.5"
           >
             <Plus className="h-4 w-4" />
             <span>Add Inline Task</span>
@@ -520,32 +520,32 @@ function ProjectDetailContent() {
 
       {/* Task Creation Form */}
       {isAddingTask && (
-        <form onSubmit={handleQuickTaskSubmit} className="bg-white border border-[#6C7278] p-5 rounded-sm space-y-4 font-label text-xs">
-          <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-2">
-            <span className="font-bold uppercase text-[#1A1C1E]">Configure Project Task</span>
-            <button type="button" onClick={() => setIsAddingTask(false)} className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer">
+        <form onSubmit={handleQuickTaskSubmit} className="bg-surface border border-secondary p-5 rounded-sm space-y-4 font-label text-xs">
+          <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
+            <span className="font-bold uppercase text-primary">Configure Project Task</span>
+            <button type="button" onClick={() => setIsAddingTask(false)} className="text-secondary hover:text-tertiary cursor-pointer">
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Task Name *</label>
+              <label className="block text-xs uppercase text-secondary">Task Name *</label>
               <input
                 type="text"
                 value={quickTaskName}
                 onChange={(e) => setQuickTaskName(e.target.value)}
                 placeholder="e.g. Draft technical specs"
                 required
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Category</label>
+              <label className="block text-xs uppercase text-secondary">Category</label>
               <select
                 value={quickTaskCategory}
                 onChange={(e) => setQuickTaskCategory(e.target.value as Task['category'])}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] p-1.5 focus:outline-none"
+                className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none"
               >
                 <option value="Work">Work</option>
                 <option value="Personal">Personal</option>
@@ -561,7 +561,7 @@ function ProjectDetailContent() {
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
               className={`p-1.5 border rounded-sm cursor-pointer transition-colors flex items-center space-x-1 font-label text-[10px] uppercase font-bold ${
-                showAdvanced ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : 'border-[#6C7278]/35 text-[#6C7278]'
+                showAdvanced ? 'bg-primary text-white border-primary' : 'border-secondary/35 text-secondary'
               }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -570,14 +570,14 @@ function ProjectDetailContent() {
           </div>
 
           {showAdvanced && (
-            <div className="bg-[#F7F5F2]/50 p-3 border border-[#6C7278]/25 space-y-3 rounded-sm">
+            <div className="bg-neutral-bg/50 p-3 border border-secondary/25 space-y-3 rounded-sm">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-[#6C7278]">Priority Level</label>
+                  <label className="block text-[10px] uppercase text-secondary">Priority Level</label>
                   <select
                     value={quickTaskPriority}
                     onChange={(e) => setQuickTaskPriority(e.target.value as Task['priority'])}
-                    className="w-full bg-white border border-[#6C7278]/25 p-1 focus:outline-none"
+                    className="w-full bg-surface border border-secondary/25 p-1 focus:outline-none"
                   >
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
@@ -585,30 +585,30 @@ function ProjectDetailContent() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-[#6C7278]">Due Date</label>
+                  <label className="block text-[10px] uppercase text-secondary">Due Date</label>
                   <input
                     type="date"
                     value={quickTaskDueDate}
                     onChange={(e) => setQuickTaskDueDate(e.target.value)}
-                    className="w-full bg-white border border-[#6C7278]/25 p-1 focus:outline-none font-sans"
+                    className="w-full bg-surface border border-secondary/25 p-1 focus:outline-none font-sans"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[10px] uppercase text-[#6C7278]">Notes / Details</label>
+                <label className="block text-[10px] uppercase text-secondary">Notes / Details</label>
                 <input
                   type="text"
                   value={quickTaskDesc}
                   onChange={(e) => setQuickTaskDesc(e.target.value)}
                   placeholder="e.g. requirements checklist..."
-                  className="w-full bg-white border border-[#6C7278]/25 p-1 focus:outline-none font-sans"
+                  className="w-full bg-surface border border-secondary/25 p-1 focus:outline-none font-sans"
                 />
               </div>
             </div>
           )}
 
-          <button type="submit" className="w-full bg-[#1A1C1E] text-white py-2 text-xs uppercase font-bold tracking-wider cursor-pointer">
+          <button type="submit" className="w-full bg-primary text-white py-2 text-xs uppercase font-bold tracking-wider cursor-pointer">
             Save task
           </button>
         </form>
@@ -621,9 +621,9 @@ function ProjectDetailContent() {
           return (
             <div 
               key={col.status}
-              className="bg-white border border-[#6C7278]/30 p-4 rounded-sm flex flex-col min-h-[300px]"
+              className="bg-surface border border-secondary/30 p-4 rounded-sm flex flex-col min-h-[300px]"
             >
-              <span className="font-label text-xs text-[#1A1C1E] uppercase tracking-wide block border-b border-[#6C7278]/20 pb-2 mb-3 font-bold">
+              <span className="font-label text-xs text-primary uppercase tracking-wide block border-b border-secondary/20 pb-2 mb-3 font-bold">
                 {col.name} ({colTasks.length})
               </span>
 
@@ -633,12 +633,12 @@ function ProjectDetailContent() {
                     <div
                       key={task.id}
                       onClick={() => setSelectedTaskId(task.id)}
-                      className="bg-[#F7F5F2] border border-[#6C7278]/25 p-3 rounded-sm flex flex-col justify-between hover:border-[#1A1C1E] transition-all group cursor-pointer"
+                      className="bg-neutral-bg border border-secondary/25 p-3 rounded-sm flex flex-col justify-between hover:border-primary transition-all group cursor-pointer"
                     >
                       <div>
                         <div className="flex items-center justify-between mb-1.5">
                           {task.category && (
-                            <span className="font-label text-[8px] bg-[#B8422E]/10 border border-[#B8422E]/25 text-[#B8422E] px-1 py-0.2 font-bold uppercase rounded-[2px]">
+                            <span className="font-label text-[8px] bg-tertiary/10 border border-tertiary/25 text-tertiary px-1 py-0.2 font-bold uppercase rounded-[2px]">
                               {task.category}
                             </span>
                           )}
@@ -648,7 +648,7 @@ function ProjectDetailContent() {
                               e.stopPropagation();
                               togglePinTask(task.id);
                             }}
-                            className={`text-xs shrink-0 ml-1.5 cursor-pointer ${task.is_pinned ? 'text-[#B8422E]' : 'text-stone-300 group-hover:text-[#6C7278] opacity-0 group-hover:opacity-100'}`}
+                            className={`text-xs shrink-0 ml-1.5 cursor-pointer ${task.is_pinned ? 'text-tertiary' : 'text-stone-300 group-hover:text-secondary opacity-0 group-hover:opacity-100'}`}
                           >
                             <Pin className="h-3 w-3 fill-current" />
                           </button>
@@ -660,21 +660,21 @@ function ProjectDetailContent() {
                             checked={task.status === 'done'}
                             onClick={(e) => e.stopPropagation()}
                             onChange={() => handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done')}
-                            className="h-4 w-4 accent-[#B8422E] shrink-0 cursor-pointer mt-0.5"
+                            className="h-4 w-4 accent-tertiary shrink-0 cursor-pointer mt-0.5"
                           />
-                          <span className={`font-sans text-xs font-semibold text-[#1A1C1E] leading-snug ${task.status === 'done' ? 'line-through text-[#6C7278]' : ''}`}>
+                          <span className={`font-sans text-xs font-semibold text-primary leading-snug ${task.status === 'done' ? 'line-through text-secondary' : ''}`}>
                             {task.name}
                           </span>
                         </div>
 
                         {task.description && (
-                          <p className="font-sans text-[10px] text-[#6C7278] mt-1.5 line-clamp-2 leading-relaxed">
+                          <p className="font-sans text-[10px] text-secondary mt-1.5 line-clamp-2 leading-relaxed">
                             {task.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-[#6C7278]/15 pt-2 mt-2 font-label text-[9px] uppercase font-bold text-[#6C7278]">
+                      <div className="flex items-center justify-between border-t border-secondary/15 pt-2 mt-2 font-label text-[9px] uppercase font-bold text-secondary">
                         <span>{task.priority}</span>
                         {task.status !== 'done' && (
                           <button
@@ -682,7 +682,7 @@ function ProjectDetailContent() {
                               e.stopPropagation();
                               handleStartFocusSession(task.id);
                             }}
-                            className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer flex items-center space-x-0.5"
+                            className="text-secondary hover:text-tertiary cursor-pointer flex items-center space-x-0.5"
                             title="Start Focus Session"
                           >
                             <Play className="h-3 w-3 fill-current" />
@@ -693,7 +693,7 @@ function ProjectDetailContent() {
                     </div>
                   ))
                 ) : (
-                  <div className="h-20 border border-dashed border-[#6C7278]/20 flex items-center justify-center rounded-sm">
+                  <div className="h-20 border border-dashed border-secondary/20 flex items-center justify-center rounded-sm">
                     <span className="font-sans text-[10px] text-stone-400 italic">Empty</span>
                   </div>
                 )}
@@ -706,8 +706,8 @@ function ProjectDetailContent() {
       {/* Guard Warning Modal */}
       {showGuardModal && (
         <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4">
-          <div className="bg-white border-2 border-[#B8422E] p-6 max-w-sm w-full space-y-4 shadow-2xl rounded-sm font-label">
-            <div className="flex items-center space-x-2 text-[#B8422E] border-b border-[#B8422E]/25 pb-2">
+          <div className="bg-surface border-2 border-tertiary p-6 max-w-sm w-full space-y-4 shadow-2xl rounded-sm font-label">
+            <div className="flex items-center space-x-2 text-tertiary border-b border-tertiary/25 pb-2">
               <AlertCircle className="h-5 w-5" />
               <span className="font-bold text-sm uppercase tracking-wider">Unfinished Tasks Warning</span>
             </div>
@@ -720,13 +720,13 @@ function ProjectDetailContent() {
                   setShowGuardModal(false);
                   setPendingStatusChange(null);
                 }}
-                className="px-3 py-1.5 border border-[#6C7278] hover:bg-[#F7F5F2] cursor-pointer rounded-sm"
+                className="px-3 py-1.5 border border-secondary hover:bg-neutral-bg cursor-pointer rounded-sm"
               >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmGuardChange}
-                className="px-3 py-1.5 bg-[#B8422E] text-white hover:opacity-90 cursor-pointer rounded-sm"
+                className="px-3 py-1.5 bg-tertiary text-white hover:opacity-90 cursor-pointer rounded-sm"
               >
                 Proceed as Completed
               </button>
@@ -760,8 +760,8 @@ function ProjectDetailContent() {
 export default function ProjectDetailPage() {
   return (
     <Suspense fallback={
-      <div className="bg-white border border-[#6C7278]/30 py-16 text-center rounded-sm">
-        <p className="font-sans text-sm text-[#6C7278] italic">Loading Project Details...</p>
+      <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
+        <p className="font-sans text-sm text-secondary italic">Loading Project Details...</p>
       </div>
     }>
       <ProjectDetailContent />

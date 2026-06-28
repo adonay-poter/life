@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import NotificationCenter from './NotificationCenter';
+import ThemeToggle from './ThemeToggle';
 import {
   LayoutDashboard,
   Inbox,
@@ -142,30 +143,31 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-white border-r border-[#6C7278] h-screen sticky top-0 flex flex-col justify-between py-6 transition-all duration-300 hidden md:flex shrink-0 self-start`}>
+    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-secondary h-screen sticky top-0 flex flex-col justify-between py-6 transition-all duration-300 hidden md:flex shrink-0 self-start`}>
       {/* Upper Logo & Nav Section */}
       <div className="space-y-8">
-        <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-[#6C7278] pb-3`}>
+        <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-secondary pb-3`}>
           {!isCollapsed ? (
             <div>
-              <h1 className="font-amharic text-2xl font-bold tracking-tight text-[#1A1C1E]">
+              <h1 className="font-amharic text-2xl font-bold tracking-tight text-primary">
                 ሁሉ
               </h1>
-              <p className="font-label text-xs text-[#6C7278] mt-0.5 uppercase tracking-[0.15em]">
+              <p className="font-label text-xs text-secondary mt-0.5 uppercase tracking-[0.15em]">
                 Life Operating System
               </p>
             </div>
           ) : (
-            <h1 className="font-amharic text-2xl font-bold text-[#1A1C1E]">
+            <h1 className="font-amharic text-2xl font-bold text-primary">
               ሁ
             </h1>
           )}
 
           <div className="flex items-center space-x-1">
             {!isCollapsed && <NotificationCenter />}
+            <ThemeToggle />
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-[#6C7278] hover:text-[#1A1C1E] p-1 transition-all rounded-sm hover:bg-[#F7F5F2] cursor-pointer"
+              className="text-secondary hover:text-primary p-1 transition-all rounded-sm hover:bg-neutral-bg cursor-pointer"
               title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -186,8 +188,8 @@ export default function Sidebar() {
                   isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-3'
                 } text-sm font-label tracking-wide transition-all-custom rounded-sm relative group ${
                   isActive
-                    ? 'bg-[#1A1C1E] text-white'
-                    : 'text-[#1A1C1E] hover:bg-[#F7F5F2] border border-transparent hover:border-[#6C7278]/25'
+                    ? 'bg-primary text-white'
+                    : 'text-primary hover:bg-neutral-bg border border-transparent hover:border-secondary/25'
                 }`}
                 title={isCollapsed ? item.name : undefined}
               >
@@ -196,7 +198,7 @@ export default function Sidebar() {
 
                 {/* Collapsed Tooltip Overlay */}
                 {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[#1A1C1E] text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-[#6C7278]/40">
+                  <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
                     {item.name}
                   </div>
                 )}
@@ -207,34 +209,34 @@ export default function Sidebar() {
       </div>
 
       {/* Footer Section: Life Score & Status */}
-      <div className="space-y-4 pt-4 border-t border-[#6C7278] flex flex-col items-center">
+      <div className="space-y-4 pt-4 border-t border-secondary flex flex-col items-center">
         {/* Dynamic Life Score */}
         {!isCollapsed ? (
-          <div className="bg-[#F7F5F2] border border-[#6C7278]/30 p-4 rounded-sm w-full">
+          <div className="bg-neutral-bg border border-secondary/30 p-4 rounded-sm w-full">
             <div className="flex justify-between items-center mb-1">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.1em]">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.1em]">
                 Life Score
               </span>
-              <span className="font-display text-lg font-bold text-[#B8422E]">{lifeScore}%</span>
+              <span className="font-display text-lg font-bold text-tertiary">{lifeScore}%</span>
             </div>
-            <div className="w-full bg-[#6C7278]/20 h-1.5 rounded-none overflow-hidden">
+            <div className="w-full bg-secondary/20 h-1.5 rounded-none overflow-hidden">
               <div
-                className="bg-[#B8422E] h-full transition-all duration-500"
+                className="bg-tertiary h-full transition-all duration-500"
                 style={{ width: `${lifeScore}%` }}
               ></div>
             </div>
           </div>
         ) : (
           <div className="text-center group relative cursor-pointer">
-            <span className="font-display text-xs font-bold text-[#B8422E]">{lifeScore}%</span>
-            <div className="w-12 bg-[#6C7278]/20 h-1 mt-1 rounded-none overflow-hidden">
+            <span className="font-display text-xs font-bold text-tertiary">{lifeScore}%</span>
+            <div className="w-12 bg-secondary/20 h-1 mt-1 rounded-none overflow-hidden">
               <div
-                className="bg-[#B8422E] h-full transition-all duration-500"
+                className="bg-tertiary h-full transition-all duration-500"
                 style={{ width: `${lifeScore}%` }}
               ></div>
             </div>
             {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[#1A1C1E] text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-[#6C7278]/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
               Life Score: {lifeScore}%
             </div>
           </div>
@@ -242,7 +244,7 @@ export default function Sidebar() {
 
         {/* Connection & Sync Status Indicators */}
         {!isCollapsed ? (
-          <div className="flex items-center justify-between font-label text-xs text-[#6C7278] w-full">
+          <div className="flex items-center justify-between font-label text-xs text-secondary w-full">
             <div className="flex items-center space-x-1.5">
               {isOnline ? (
                 <>
@@ -251,15 +253,15 @@ export default function Sidebar() {
                 </>
               ) : (
                 <>
-                  <WifiOff className="h-3.5 w-3.5 text-[#B8422E]" />
-                  <span className="uppercase tracking-[0.05em] text-[#B8422E]">Working Offline</span>
+                  <WifiOff className="h-3.5 w-3.5 text-tertiary" />
+                  <span className="uppercase tracking-[0.05em] text-tertiary">Working Offline</span>
                 </>
               )}
             </div>
             {syncPending && (
               <div className="flex items-center space-x-1">
-                <RefreshCw className="h-3 w-3 animate-spin text-[#B8422E]" />
-                <span className="uppercase tracking-[0.05em] text-[#B8422E]">Syncing</span>
+                <RefreshCw className="h-3 w-3 animate-spin text-tertiary" />
+                <span className="uppercase tracking-[0.05em] text-tertiary">Syncing</span>
               </div>
             )}
           </div>
@@ -268,13 +270,13 @@ export default function Sidebar() {
             {isOnline ? (
               <Wifi className="h-4 w-4 text-emerald-700" />
             ) : (
-              <WifiOff className="h-4 w-4 text-[#B8422E]" />
+              <WifiOff className="h-4 w-4 text-tertiary" />
             )}
             {syncPending && (
-              <RefreshCw className="h-3.5 w-3.5 animate-spin text-[#B8422E]" />
+              <RefreshCw className="h-3.5 w-3.5 animate-spin text-tertiary" />
             )}
             {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-[#1A1C1E] text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-[#6C7278]/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-white text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
               {isOnline ? 'Cloud Connected' : 'Working Offline'}
               {syncPending && ' (Syncing)'}
             </div>

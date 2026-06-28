@@ -275,12 +275,12 @@ export default function DashboardHome() {
   return (
     <div className="space-y-12">
       {/* Broadsheet Style Top Header with Refresh & Customize */}
-      <header className="border-b-2 border-[#1A1C1E] pb-4 flex flex-col md:flex-row justify-between items-baseline gap-4">
+      <header className="border-b-2 border-primary pb-4 flex flex-col md:flex-row justify-between items-baseline gap-4">
         <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
             THE DAILY MONITOR
           </h2>
-          <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+          <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
             Architecture of Self &mdash; Vol. CLXIX &bull; No. 1
           </p>
         </div>
@@ -291,17 +291,17 @@ export default function DashboardHome() {
             <button
               onClick={handleManualRefresh}
               disabled={syncPending}
-              className="text-[#6C7278] hover:text-[#1A1C1E] p-1.5 border border-[#6C7278]/25 hover:border-[#1A1C1E] transition-all rounded-sm bg-white cursor-pointer"
+              className="text-secondary hover:text-primary p-1.5 border border-secondary/25 hover:border-primary transition-all rounded-sm bg-surface cursor-pointer"
               title="Refresh Stats"
             >
-              <RefreshCw className={`h-4 w-4 ${syncPending ? 'animate-spin text-[#B8422E]' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${syncPending ? 'animate-spin text-tertiary' : ''}`} />
             </button>
 
             {/* Customize Widgets Button */}
             <button
               onClick={() => setShowConfig(!showConfig)}
-              className={`p-1.5 border transition-all rounded-sm bg-white cursor-pointer flex items-center space-x-1 ${
-                showConfig ? 'border-[#1A1C1E] text-[#1A1C1E]' : 'text-[#6C7278] border-[#6C7278]/25 hover:border-[#1A1C1E]'
+              className={`p-1.5 border transition-all rounded-sm bg-surface cursor-pointer flex items-center space-x-1 ${
+                showConfig ? 'border-primary text-primary' : 'text-secondary border-secondary/25 hover:border-primary'
               }`}
               title="Customize Layout"
             >
@@ -310,7 +310,7 @@ export default function DashboardHome() {
             </button>
           </div>
 
-          <div className="font-label text-xs text-[#1A1C1E] font-medium tracking-wider pl-3 border-l border-[#6C7278]/30">
+          <div className="font-label text-xs text-primary font-medium tracking-wider pl-3 border-l border-secondary/30">
             {formattedDate}
           </div>
         </div>
@@ -318,8 +318,8 @@ export default function DashboardHome() {
 
       {/* Widget Visibility Config Box */}
       {showConfig && (
-        <div className="bg-white border-2 border-[#1A1C1E] p-5 font-label text-xs space-y-3 shadow-md animate-fade-in">
-          <span className="block font-bold text-sm uppercase text-[#1A1C1E] border-b border-[#6C7278]/20 pb-2">
+        <div className="bg-surface border-2 border-primary p-5 font-label text-xs space-y-3 shadow-md animate-fade-in">
+          <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/20 pb-2">
             Customize Dashboard Layout
           </span>
           <div className="flex flex-wrap gap-3 pt-1">
@@ -336,8 +336,8 @@ export default function DashboardHome() {
                   onClick={() => toggleWidget(widget.key as keyof typeof widgetsVisibility)}
                   className={`px-3 py-1.5 border flex items-center space-x-2 transition-all uppercase font-bold rounded-sm cursor-pointer ${
                     visible
-                      ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]'
-                      : 'bg-white text-[#6C7278] border-[#6C7278]/30 hover:border-[#1A1C1E]'
+                      ? 'bg-primary text-white border-primary'
+                      : 'bg-surface text-secondary border-secondary/30 hover:border-primary'
                   }`}
                 >
                   {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -356,53 +356,53 @@ export default function DashboardHome() {
             COLUMN 1: THE MACRO METRIC
            ========================================== */}
         {widgetsVisibility.macroMetrics ? (
-          <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-start space-y-8 rounded-sm">
+          <section className="bg-surface border border-secondary p-6 flex flex-col justify-start space-y-8 rounded-sm">
             <div>
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2">
                 Composite Integrity
               </span>
-              <h3 className="font-display text-6xl font-bold text-[#1A1C1E] tracking-tight">
+              <h3 className="font-display text-6xl font-bold text-primary tracking-tight">
                 {lifeScore}%
               </h3>
-              <p className="font-sans text-xs text-[#6C7278] mt-3 leading-relaxed">
+              <p className="font-sans text-xs text-secondary mt-3 leading-relaxed">
                 Calculated dynamically. Weighted task throughput carries 40% value, daily habit consistency 30%, and learning progress 30%.
               </p>
             </div>
 
             {/* Sub-Progress Badges -> Deep Linked */}
-            <div className="grid grid-cols-3 gap-3 border-t border-b border-[#6C7278]/20 py-4 font-label">
+            <div className="grid grid-cols-3 gap-3 border-t border-b border-secondary/20 py-4 font-label">
               <Link href="/tasks?tab=today" className="text-center group hover:scale-105 transition-transform block">
-                <span className="text-xs text-[#6C7278] group-hover:text-[#B8422E] uppercase tracking-wider block mb-1">Tasks</span>
-                <span className="text-sm font-bold text-[#1A1C1E] group-hover:text-[#B8422E] underline decoration-dotted">{taskProgress}%</span>
+                <span className="text-xs text-secondary group-hover:text-tertiary uppercase tracking-wider block mb-1">Tasks</span>
+                <span className="text-sm font-bold text-primary group-hover:text-tertiary underline decoration-dotted">{taskProgress}%</span>
               </Link>
               <Link href="/habits" className="text-center group hover:scale-105 transition-transform block">
-                <span className="text-xs text-[#6C7278] group-hover:text-[#B8422E] uppercase tracking-wider block mb-1">Habits</span>
-                <span className="text-sm font-bold text-[#1A1C1E] group-hover:text-[#B8422E] underline decoration-dotted">{habitProgress}%</span>
+                <span className="text-xs text-secondary group-hover:text-tertiary uppercase tracking-wider block mb-1">Habits</span>
+                <span className="text-sm font-bold text-primary group-hover:text-tertiary underline decoration-dotted">{habitProgress}%</span>
               </Link>
               <Link href="/academy" className="text-center group hover:scale-105 transition-transform block">
-                <span className="text-xs text-[#6C7278] group-hover:text-[#B8422E] uppercase tracking-wider block mb-1">Academy</span>
-                <span className="text-sm font-bold text-[#1A1C1E] group-hover:text-[#B8422E] underline decoration-dotted">{learningProgress}%</span>
+                <span className="text-xs text-secondary group-hover:text-tertiary uppercase tracking-wider block mb-1">Academy</span>
+                <span className="text-sm font-bold text-primary group-hover:text-tertiary underline decoration-dotted">{learningProgress}%</span>
               </Link>
             </div>
 
             {/* 7-Day Completion Bar Chart */}
             <div>
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-4">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-4">
                 7-Day Task Completion
               </span>
-              <div className="h-28 flex items-end justify-between px-2 pt-2 border-b border-[#6C7278]">
+              <div className="h-28 flex items-end justify-between px-2 pt-2 border-b border-secondary">
                 {chartData.map((day) => (
                   <div key={day.dateStr} className="flex flex-col items-center flex-1 group">
-                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-[#1A1C1E] text-white text-xs font-label px-1 py-0.5 mb-1 shrink-0">
+                    <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-primary text-white text-xs font-label px-1 py-0.5 mb-1 shrink-0">
                       {day.count}
                     </span>
-                    <div className="w-4 bg-[#6C7278]/20 h-24 flex items-end">
+                    <div className="w-4 bg-secondary/20 h-24 flex items-end">
                       <div
-                        className="w-full bg-[#1A1C1E] hover:bg-[#B8422E] transition-colors"
+                        className="w-full bg-primary hover:bg-tertiary transition-colors"
                         style={{ height: `${day.heightPct}%` }}
                       ></div>
                     </div>
-                    <span className="font-label text-xs text-[#6C7278] mt-2 tracking-tighter">
+                    <span className="font-label text-xs text-secondary mt-2 tracking-tighter">
                       {day.label.slice(0, 2)}
                     </span>
                   </div>
@@ -411,9 +411,9 @@ export default function DashboardHome() {
             </div>
           </section>
         ) : (
-          <div className="bg-[#F7F5F2]/45 border border-dashed border-[#6C7278]/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[300px]">
-            <span className="font-label text-xs text-[#6C7278] uppercase tracking-widest block mb-2">Metrics Widget Hidden</span>
-            <button onClick={() => toggleWidget('macroMetrics')} className="text-xs text-[#B8422E] underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
+          <div className="bg-neutral-bg/45 border border-dashed border-secondary/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[300px]">
+            <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Metrics Widget Hidden</span>
+            <button onClick={() => toggleWidget('macroMetrics')} className="text-xs text-tertiary underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
           </div>
         )}
 
@@ -421,12 +421,12 @@ export default function DashboardHome() {
             COLUMN 2: TODAY FOCUS & INLINE QUICK ADD
            ========================================== */}
         {widgetsVisibility.focusEngine ? (
-          <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-start space-y-6 rounded-sm">
+          <section className="bg-surface border border-secondary p-6 flex flex-col justify-start space-y-6 rounded-sm">
             <div>
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2">
                 Focus Engine
               </span>
-              <h3 className="font-display text-2xl font-medium text-[#1A1C1E] border-b border-[#6C7278]/20 pb-2">
+              <h3 className="font-display text-2xl font-medium text-primary border-b border-secondary/20 pb-2">
                 Today Focus
               </h3>
               
@@ -437,7 +437,7 @@ export default function DashboardHome() {
                     return (
                       <div
                         key={task.id}
-                        className="flex items-start space-x-3 p-3 bg-[#F7F5F2] border border-[#6C7278]/20 rounded-sm group transition-all"
+                        className="flex items-start space-x-3 p-3 bg-neutral-bg border border-secondary/20 rounded-sm group transition-all"
                       >
                         <button
                           onClick={() => {
@@ -447,44 +447,44 @@ export default function DashboardHome() {
                               onClick: () => updateTaskStatus(task.id, 'todo')
                             });
                           }}
-                          className="text-[#6C7278] hover:text-[#B8422E] shrink-0 mt-0.5 cursor-pointer"
+                          className="text-secondary hover:text-tertiary shrink-0 mt-0.5 cursor-pointer"
                         >
                           <Square className="h-4.5 w-4.5" />
                         </button>
                         
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-1.5">
-                            <span className="font-sans text-xs font-semibold text-[#1A1C1E] truncate">
+                            <span className="font-sans text-xs font-semibold text-primary truncate">
                               {task.name}
                             </span>
-                            {task.is_pinned && <Pin className="h-3 w-3 text-[#B8422E] fill-[#B8422E]" />}
+                            {task.is_pinned && <Pin className="h-3 w-3 text-tertiary fill-tertiary" />}
                           </div>
                           
                           {task.description && (
-                            <p className="font-sans text-xs text-[#6C7278] line-clamp-1 mt-0.5">
+                            <p className="font-sans text-xs text-secondary line-clamp-1 mt-0.5">
                               {task.description}
                             </p>
                           )}
                           
                           <div className="flex flex-wrap items-center gap-2 mt-2">
-                            <span className="font-label text-xs bg-white border border-[#6C7278]/30 px-1 py-0.5 uppercase tracking-wide shrink-0">
+                            <span className="font-label text-xs bg-surface border border-secondary/30 px-1 py-0.5 uppercase tracking-wide shrink-0">
                               {task.priority}
                             </span>
                             {parentProject && (
                               <Link
                                 href={`/projects?projectId=${parentProject.id}`}
-                                className="font-label text-xs text-white bg-[#6C7278] hover:bg-[#1A1C1E] transition-colors px-1 py-0.5 uppercase tracking-wide truncate max-w-[120px]"
+                                className="font-label text-xs text-white bg-secondary hover:bg-primary transition-colors px-1 py-0.5 uppercase tracking-wide truncate max-w-[120px]"
                               >
                                 {parentProject.name}
                               </Link>
                             )}
                             {task.category && (
-                              <span className="font-label text-xs text-[#B8422E] bg-[#B8422E]/10 border border-[#B8422E]/25 px-1 py-0.5 uppercase tracking-wide font-bold shrink-0">
+                              <span className="font-label text-xs text-tertiary bg-tertiary/10 border border-tertiary/25 px-1 py-0.5 uppercase tracking-wide font-bold shrink-0">
                                 {task.category}
                               </span>
                             )}
                             {task.due_date && (
-                              <span className="font-label text-xs text-[#6C7278] shrink-0">
+                              <span className="font-label text-xs text-secondary shrink-0">
                                 Due: {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                               </span>
                             )}
@@ -496,7 +496,7 @@ export default function DashboardHome() {
                             togglePinTask(task.id);
                             showToast('Task unpinned.', 'info');
                           }}
-                          className="opacity-0 group-hover:opacity-100 text-[#6C7278] hover:text-[#B8422E] transition-all cursor-pointer"
+                          className="opacity-0 group-hover:opacity-100 text-secondary hover:text-tertiary transition-all cursor-pointer"
                         >
                           <PinOff className="h-3.5 w-3.5" />
                         </button>
@@ -504,9 +504,9 @@ export default function DashboardHome() {
                     );
                   })
                 ) : (
-                  <div className="text-center py-12 border border-dashed border-[#6C7278]/30 bg-[#F7F5F2]/40 rounded-sm">
-                    <p className="font-sans text-xs text-[#6C7278] italic">All focus items completed.</p>
-                    <Link href="/tasks?tab=today" className="font-label text-xs text-[#B8422E] uppercase tracking-wider underline mt-2 block">
+                  <div className="text-center py-12 border border-dashed border-secondary/30 bg-neutral-bg/40 rounded-sm">
+                    <p className="font-sans text-xs text-secondary italic">All focus items completed.</p>
+                    <Link href="/tasks?tab=today" className="font-label text-xs text-tertiary uppercase tracking-wider underline mt-2 block">
                       View Tasks Workspace &rarr;
                     </Link>
                   </div>
@@ -515,17 +515,17 @@ export default function DashboardHome() {
             </div>
 
             {/* Dashboard Quick Actions Form */}
-            <div className="border-t border-[#6C7278]/20 pt-4 space-y-3">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block font-semibold">
+            <div className="border-t border-secondary/20 pt-4 space-y-3">
+              <span className="font-label text-xs text-secondary uppercase tracking-wider block font-semibold">
                 Quick Action Intake
               </span>
               <form onSubmit={handleQuickActionSubmit} className="space-y-3 font-label text-xs">
-                <div className="flex border border-[#6C7278] text-xs rounded-sm overflow-hidden bg-[#F7F5F2]">
+                <div className="flex border border-secondary text-xs rounded-sm overflow-hidden bg-neutral-bg">
                   <button
                     type="button"
                     onClick={() => setQaType('task')}
                     className={`flex-1 py-1 flex items-center justify-center transition-all ${
-                      qaType === 'task' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
+                      qaType === 'task' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
                     }`}
                   >
                     TASK
@@ -533,8 +533,8 @@ export default function DashboardHome() {
                   <button
                     type="button"
                     onClick={() => setQaType('inbox')}
-                    className={`flex-1 py-1 flex items-center justify-center transition-all border-l border-[#6C7278] ${
-                      qaType === 'inbox' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
+                    className={`flex-1 py-1 flex items-center justify-center transition-all border-l border-secondary ${
+                      qaType === 'inbox' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
                     }`}
                   >
                     INBOX ITEM
@@ -548,7 +548,7 @@ export default function DashboardHome() {
                     onChange={(e) => setQaTitle(e.target.value)}
                     placeholder={qaType === 'task' ? "Task name..." : "Thought / URL capture..."}
                     required
-                    className="w-full bg-[#F7F5F2] border border-[#6C7278]/40 px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg border border-secondary/40 px-2.5 py-1.5 text-xs focus:outline-none focus:border-tertiary font-sans"
                   />
                   
                   {qaType === 'task' && (
@@ -556,7 +556,7 @@ export default function DashboardHome() {
                       <select
                         value={qaProjId}
                         onChange={(e) => setQaProjId(e.target.value)}
-                        className="bg-white border border-[#6C7278]/40 px-1.5 py-1 focus:outline-none w-full text-xs"
+                        className="bg-surface border border-secondary/40 px-1.5 py-1 focus:outline-none w-full text-xs"
                       >
                         <option value="">Standalone (None)</option>
                         {projects.map((p) => (
@@ -566,7 +566,7 @@ export default function DashboardHome() {
                       <select
                         value={qaCategory}
                         onChange={(e) => setQaCategory(e.target.value as Task['category'])}
-                        className="bg-white border border-[#6C7278]/40 px-1.5 py-1 focus:outline-none w-full text-xs"
+                        className="bg-surface border border-secondary/40 px-1.5 py-1 focus:outline-none w-full text-xs"
                       >
                         <option value="Work">Work</option>
                         <option value="Personal">Personal</option>
@@ -583,9 +583,9 @@ export default function DashboardHome() {
                       value={qaNotes}
                       onChange={(e) => setQaNotes(e.target.value)}
                       placeholder={qaType === 'task' ? "Description (optional)..." : "Notes / URL detail..."}
-                      className="flex-1 bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1.5 text-xs focus:outline-none focus:border-[#B8422E] font-sans"
+                      className="flex-1 bg-neutral-bg border border-secondary/40 px-2 py-1.5 text-xs focus:outline-none focus:border-tertiary font-sans"
                     />
-                    <button type="submit" className="bg-[#1A1C1E] text-white hover:bg-[#B8422E] px-4 py-1.5 uppercase font-bold tracking-wider shrink-0 transition-colors rounded-sm cursor-pointer">
+                    <button type="submit" className="bg-primary text-white hover:bg-tertiary px-4 py-1.5 uppercase font-bold tracking-wider shrink-0 transition-colors rounded-sm cursor-pointer">
                       ADD
                     </button>
                   </div>
@@ -594,9 +594,9 @@ export default function DashboardHome() {
             </div>
           </section>
         ) : (
-          <div className="bg-[#F7F5F2]/45 border border-dashed border-[#6C7278]/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[300px]">
-            <span className="font-label text-xs text-[#6C7278] uppercase tracking-widest block mb-2">Focus Widget Hidden</span>
-            <button onClick={() => toggleWidget('focusEngine')} className="text-xs text-[#B8422E] underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
+          <div className="bg-neutral-bg/45 border border-dashed border-secondary/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[300px]">
+            <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Focus Widget Hidden</span>
+            <button onClick={() => toggleWidget('focusEngine')} className="text-xs text-tertiary underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
           </div>
         )}
 
@@ -606,18 +606,18 @@ export default function DashboardHome() {
         <div className="space-y-8 flex flex-col justify-start">
           {/* Projects & Academy Progress Widget */}
           {widgetsVisibility.sectorsSkills ? (
-            <section className="bg-white border border-[#6C7278] p-6 flex flex-col justify-start space-y-6 rounded-sm flex-1">
+            <section className="bg-surface border border-secondary p-6 flex flex-col justify-start space-y-6 rounded-sm flex-1">
               <div>
-                <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2">
                   Sectors & Skills
                 </span>
-                <h3 className="font-display text-2xl font-medium text-[#1A1C1E] border-b border-[#6C7278]/20 pb-2">
+                <h3 className="font-display text-2xl font-medium text-primary border-b border-secondary/20 pb-2">
                   Projects & Learning
                 </h3>
 
                 {/* Projects list */}
                 <div className="mt-4 space-y-4">
-                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block">
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider block">
                     Active Projects
                   </span>
                   
@@ -625,16 +625,16 @@ export default function DashboardHome() {
                     const projTasks = tasks.filter((t) => t.project_id === proj.id);
                     const progress = getWeightedProgress(projTasks);
                     return (
-                      <div key={proj.id} className="border-b border-[#6C7278]/10 pb-3">
+                      <div key={proj.id} className="border-b border-secondary/10 pb-3">
                         <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-sans text-xs font-semibold text-[#1A1C1E] truncate hover:text-[#B8422E]">
+                          <span className="font-sans text-xs font-semibold text-primary truncate hover:text-tertiary">
                             <Link href={`/projects?projectId=${proj.id}`}>{proj.name}</Link>
                           </span>
-                          <span className="font-label text-xs font-bold text-[#B8422E]">{progress}%</span>
+                          <span className="font-label text-xs font-bold text-tertiary">{progress}%</span>
                         </div>
-                        <div className="w-full bg-[#6C7278]/10 h-1.5 rounded-none overflow-hidden">
+                        <div className="w-full bg-secondary/10 h-1.5 rounded-none overflow-hidden">
                           <div
-                            className="bg-[#1A1C1E] h-full transition-all duration-300"
+                            className="bg-primary h-full transition-all duration-300"
                             style={{ width: `${progress}%` }}
                           ></div>
                         </div>
@@ -645,7 +645,7 @@ export default function DashboardHome() {
 
                 {/* Academy Course Progress */}
                 <div className="mt-6 space-y-4">
-                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block">
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider block">
                     Learning Progress
                   </span>
 
@@ -660,16 +660,16 @@ export default function DashboardHome() {
                       : 0;
 
                     return (
-                      <div key={course.id} className="border-b border-[#6C7278]/10 pb-3">
+                      <div key={course.id} className="border-b border-secondary/10 pb-3">
                         <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-sans text-xs font-semibold text-[#1A1C1E] truncate hover:text-[#B8422E]">
+                          <span className="font-sans text-xs font-semibold text-primary truncate hover:text-tertiary">
                             <Link href={`/academy?courseId=${course.id}`}>{course.title}</Link>
                           </span>
-                          <span className="font-label text-xs font-bold text-[#B8422E]">{progress}%</span>
+                          <span className="font-label text-xs font-bold text-tertiary">{progress}%</span>
                         </div>
-                        <div className="w-full bg-[#6C7278]/10 h-1.5 rounded-none overflow-hidden">
+                        <div className="w-full bg-secondary/10 h-1.5 rounded-none overflow-hidden">
                           <div
-                            className="bg-[#1A1C1E] h-full transition-all duration-300"
+                            className="bg-primary h-full transition-all duration-300"
                             style={{ width: `${progress}%` }}
                           ></div>
                         </div>
@@ -682,7 +682,7 @@ export default function DashboardHome() {
               <div className="pt-2">
                 <Link
                   href="/habits"
-                  className="w-full flex items-center justify-between border border-[#1A1C1E] hover:bg-[#1A1C1E] hover:text-white transition-all py-2.5 px-4 font-label text-xs tracking-wider uppercase"
+                  className="w-full flex items-center justify-between border border-primary hover:bg-primary hover:text-white transition-all py-2.5 px-4 font-label text-xs tracking-wider uppercase"
                 >
                   <span>Track Habits & Health</span>
                   <ChevronRight className="h-4 w-4" />
@@ -690,24 +690,24 @@ export default function DashboardHome() {
               </div>
             </section>
           ) : (
-            <div className="bg-[#F7F5F2]/45 border border-dashed border-[#6C7278]/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[200px] flex-1">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-widest block mb-2">Sectors Widget Hidden</span>
-              <button onClick={() => toggleWidget('sectorsSkills')} className="text-xs text-[#B8422E] underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
+            <div className="bg-neutral-bg/45 border border-dashed border-secondary/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[200px] flex-1">
+              <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Sectors Widget Hidden</span>
+              <button onClick={() => toggleWidget('sectorsSkills')} className="text-xs text-tertiary underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
             </div>
           )}
 
           {/* Daily Reflections / Journal Prompt Widget */}
           {widgetsVisibility.dailyReflections ? (
-            <section className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
+            <section className="bg-surface border border-secondary p-6 rounded-sm space-y-4">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
                 Daily Reflections
               </span>
 
               {todayJournal ? (
-                <div className="space-y-3 bg-[#F7F5F2]/45 border border-[#6C7278]/15 p-3 rounded-sm">
+                <div className="space-y-3 bg-neutral-bg/45 border border-secondary/15 p-3 rounded-sm">
                   <div className="flex items-center justify-between">
                     <span className="font-label text-xs text-emerald-700 font-bold uppercase tracking-wide">✓ Completed Today</span>
-                    <Link href="/journal" className="font-label text-xs text-[#B8422E] hover:underline uppercase font-bold tracking-wider">Full Log</Link>
+                    <Link href="/journal" className="font-label text-xs text-tertiary hover:underline uppercase font-bold tracking-wider">Full Log</Link>
                   </div>
                   <p className="font-sans text-xs text-[#2C2D30] italic line-clamp-3 leading-relaxed">
                     {todayJournal.free_text || 'Morning intentions or reflections logged without diary notes.'}
@@ -716,8 +716,8 @@ export default function DashboardHome() {
               ) : (
                 <form onSubmit={handleQuickReflectionSubmit} className="space-y-3 font-label text-xs">
                   <div className="flex justify-between items-baseline">
-                    <span className="font-sans text-xs text-[#6C7278] italic">No reflections logged today.</span>
-                    <Link href="/journal" className="font-label text-xs text-[#B8422E] hover:underline uppercase font-bold tracking-wider">Full Editor</Link>
+                    <span className="font-sans text-xs text-secondary italic">No reflections logged today.</span>
+                    <Link href="/journal" className="font-label text-xs text-tertiary hover:underline uppercase font-bold tracking-wider">Full Editor</Link>
                   </div>
                   <textarea
                     value={quickReflection}
@@ -725,12 +725,12 @@ export default function DashboardHome() {
                     placeholder="Log a quick daily thought or reflection here..."
                     required
                     rows={3}
-                    className="w-full bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1.5 text-xs text-[#1A1C1E] focus:outline-none focus:border-[#B8422E] font-sans resize-none"
+                    className="w-full bg-neutral-bg border border-secondary/40 px-2 py-1.5 text-xs text-primary focus:outline-none focus:border-tertiary font-sans resize-none"
                   />
                   <button
                     type="submit"
                     disabled={isLoggingReflection || !quickReflection.trim()}
-                    className="w-full bg-[#1A1C1E] text-white hover:bg-[#B8422E] py-2 uppercase font-bold tracking-widest text-xs transition-colors disabled:opacity-40 rounded-sm cursor-pointer"
+                    className="w-full bg-primary text-white hover:bg-tertiary py-2 uppercase font-bold tracking-widest text-xs transition-colors disabled:opacity-40 rounded-sm cursor-pointer"
                   >
                     {isLoggingReflection ? 'LOGGING...' : 'LOG REFLECTION'}
                   </button>
@@ -738,9 +738,9 @@ export default function DashboardHome() {
               )}
             </section>
           ) : (
-            <div className="bg-[#F7F5F2]/45 border border-dashed border-[#6C7278]/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[150px]">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-widest block mb-2">Reflections Widget Hidden</span>
-              <button onClick={() => toggleWidget('dailyReflections')} className="text-xs text-[#B8422E] underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
+            <div className="bg-neutral-bg/45 border border-dashed border-secondary/30 p-6 flex flex-col justify-center items-center text-center rounded-sm min-h-[150px]">
+              <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Reflections Widget Hidden</span>
+              <button onClick={() => toggleWidget('dailyReflections')} className="text-xs text-tertiary underline font-bold uppercase tracking-wider cursor-pointer">Restore Widget</button>
             </div>
           )}
         </div>

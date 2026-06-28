@@ -88,7 +88,7 @@ export const useTaskProject = () => {
 const MOCK_PROJECTS: Project[] = [
   { id: 'p1', area: 'Business', name: 'Launch Heritage Platform', description: 'Architectural dashboard for personal management.', color: '#B8422E', client: 'Internal / Self', gain: 'High efficiency life engine', deadline: new Date(Date.now() + 86400000 * 30).toISOString(), status: 'active' },
   { id: 'p2', area: 'Health', name: 'Marathon 2026 Training', description: 'Sub-4 hour marathon preparation program.', color: '#6C7278', client: 'Self', gain: 'Excellent cardiovascular health', deadline: new Date(Date.now() + 86400000 * 120).toISOString(), status: 'active' },
-  { id: 'p3', area: 'Personal', name: 'Build Heritage Library', description: 'Read 24 books focusing on history & architecture.', color: '#1A1C1E', client: 'Acme Reading Club', gain: '24 books depth & knowledge', deadline: new Date(Date.now() + 86400000 * 200).toISOString(), status: 'active' }
+  { id: 'p3', area: 'Personal', name: 'Build Heritage Library', description: 'Read 24 books focusing on history & architecture.', color: 'var(--primary)', client: 'Acme Reading Club', gain: '24 books depth & knowledge', deadline: new Date(Date.now() + 86400000 * 200).toISOString(), status: 'active' }
 ];
 
 const MOCK_TASKS: Task[] = [

@@ -64,6 +64,23 @@ export default function RootLayout({
       className={`${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${zemach.variable} h-full antialiased`}
     >
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const stored = localStorage.getItem('theme');
+                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  if (stored === 'dark' || (!stored && prefersDark)) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `
+          }}
+        />
         {process.env.NODE_ENV !== 'production' && (
           <script
             dangerouslySetInnerHTML={{
@@ -82,7 +99,7 @@ export default function RootLayout({
           />
         )}
       </head>
-      <body className="min-h-full bg-[#F7F5F2] flex flex-col font-sans">
+      <body className="min-h-full bg-neutral-bg flex flex-col font-sans">
         <ClientWrapper>{children}</ClientWrapper>
       </body>
     </html>

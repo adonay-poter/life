@@ -488,30 +488,30 @@ function AcademyContent() {
   };
 
   const renderMarkdown = (text: string) => {
-    if (!text) return <p className="italic text-[#6C7278]">Empty notepad. Input notes on edit view...</p>;
+    if (!text) return <p className="italic text-secondary">Empty notepad. Input notes on edit view...</p>;
     
     const lines = text.split('\n');
     return lines.map((line, idx) => {
       if (line.startsWith('# ')) {
-        return <h4 key={idx} className="font-display text-lg font-bold text-[#1A1C1E] mt-3 mb-2">{renderMarkdownInline(line.slice(2))}</h4>;
+        return <h4 key={idx} className="font-display text-lg font-bold text-primary mt-3 mb-2">{renderMarkdownInline(line.slice(2))}</h4>;
       }
       if (line.startsWith('## ')) {
-        return <h5 key={idx} className="font-display text-md font-bold text-[#1A1C1E] mt-2 mb-1.5">{renderMarkdownInline(line.slice(3))}</h5>;
+        return <h5 key={idx} className="font-display text-md font-bold text-primary mt-2 mb-1.5">{renderMarkdownInline(line.slice(3))}</h5>;
       }
       if (line.startsWith('### ')) {
-        return <h6 key={idx} className="font-sans text-xs font-bold text-[#1A1C1E] mt-2 mb-1">{renderMarkdownInline(line.slice(4))}</h6>;
+        return <h6 key={idx} className="font-sans text-xs font-bold text-primary mt-2 mb-1">{renderMarkdownInline(line.slice(4))}</h6>;
       }
       if (line.startsWith('- ') || line.startsWith('* ')) {
-        return <li key={idx} className="font-sans text-xs text-[#1A1C1E] ml-4 list-disc mt-1">{renderMarkdownInline(line.slice(2))}</li>;
+        return <li key={idx} className="font-sans text-xs text-primary ml-4 list-disc mt-1">{renderMarkdownInline(line.slice(2))}</li>;
       }
       if (line.startsWith('> ')) {
         return (
-          <blockquote key={idx} className="border-l-2 border-[#B8422E] pl-3 py-1 bg-[#F7F5F2] font-sans text-xs italic text-[#6C7278] my-2">
+          <blockquote key={idx} className="border-l-2 border-tertiary pl-3 py-1 bg-neutral-bg font-sans text-xs italic text-secondary my-2">
             {renderMarkdownInline(line.slice(2))}
           </blockquote>
         );
       }
-      return <p key={idx} className="font-sans text-xs text-[#1A1C1E] min-h-[1em] leading-relaxed mt-1.5">{renderMarkdownInline(line)}</p>;
+      return <p key={idx} className="font-sans text-xs text-primary min-h-[1em] leading-relaxed mt-1.5">{renderMarkdownInline(line)}</p>;
     });
   };
 
@@ -555,18 +555,18 @@ function AcademyContent() {
   if (loading) {
     return (
       <div className="space-y-12 animate-pulse">
-        <header className="border-b-2 border-[#6C7278]/20 pb-4">
-          <div className="h-8 bg-[#6C7278]/15 w-48 rounded-sm mb-2" />
-          <div className="h-4 bg-[#6C7278]/10 w-80 rounded-sm" />
+        <header className="border-b-2 border-secondary/20 pb-4">
+          <div className="h-8 bg-secondary/15 w-48 rounded-sm mb-2" />
+          <div className="h-4 bg-secondary/10 w-80 rounded-sm" />
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-4">
-              <div className="h-4 bg-[#6C7278]/15 w-1/4 rounded-sm" />
-              <div className="h-6 bg-[#6C7278]/15 w-3/4 rounded-sm" />
-              <div className="h-16 bg-[#6C7278]/10 w-full rounded-sm" />
-              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
+            <div key={n} className="bg-surface border border-secondary/20 p-6 rounded-sm space-y-4">
+              <div className="h-4 bg-secondary/15 w-1/4 rounded-sm" />
+              <div className="h-6 bg-secondary/15 w-3/4 rounded-sm" />
+              <div className="h-16 bg-secondary/10 w-full rounded-sm" />
+              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
             </div>
           ))}
         </div>
@@ -578,43 +578,43 @@ function AcademyContent() {
     <div className="space-y-12">
       {/* Header / Navigation state */}
       {!selectedCourseId ? (
-        <header className="border-b-2 border-[#1A1C1E] pb-4 flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4">
+        <header className="border-b-2 border-primary pb-4 flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4">
           <div>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
+            <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
               THE ACADEMY
             </h2>
-            <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+            <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
               Course Matrices &bull; Spaced Repetition Flashcards
             </p>
           </div>
         </header>
       ) : (
-        <header className="border-b-2 border-[#1A1C1E] pb-4 flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4 w-full">
+        <header className="border-b-2 border-primary pb-4 flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4 w-full">
           <div className="flex items-center space-x-3 w-full md:w-auto">
             <button
               onClick={() => {
                 setSelectedCourseId(null);
                 setSelectedModuleId(null);
               }}
-              className="text-[#6C7278] hover:text-[#1A1C1E] transition-all p-1 cursor-pointer"
+              className="text-secondary hover:text-primary transition-all p-1 cursor-pointer"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="truncate max-w-full">
-              <h2 className="font-display text-2xl font-bold tracking-tight text-[#1A1C1E] truncate max-w-xs md:max-w-md lg:max-w-lg">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-primary truncate max-w-xs md:max-w-md lg:max-w-lg">
                 {activeCourse?.title}
               </h2>
-              <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.25em]">
+              <p className="font-label text-xs text-secondary uppercase tracking-[0.25em]">
                 STUDIO WORKSPACE &bull; {activeCourse?.category}
               </p>
             </div>
           </div>
 
-          <div className="flex border border-[#6C7278] font-label text-xs uppercase tracking-wider select-none shrink-0 self-end">
+          <div className="flex border border-secondary font-label text-xs uppercase tracking-wider select-none shrink-0 self-end">
             <button
               onClick={() => setAcademyTab('matrix')}
               className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer ${
-                academyTab === 'matrix' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
+                academyTab === 'matrix' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -622,8 +622,8 @@ function AcademyContent() {
             </button>
             <button
               onClick={() => setAcademyTab('flashcards')}
-              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-[#6C7278] cursor-pointer ${
-                academyTab === 'flashcards' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] hover:bg-[#F7F5F2]'
+              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-secondary cursor-pointer ${
+                academyTab === 'flashcards' ? 'bg-primary text-white' : 'text-primary hover:bg-neutral-bg'
               }`}
             >
               <HelpCircle className="h-3.5 w-3.5" />
@@ -641,13 +641,13 @@ function AcademyContent() {
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="relative w-full md:w-72">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-[#6C7278]" />
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
               <input
                 type="text"
                 placeholder="Search matrices..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-white border border-[#6C7278]/40 rounded-sm text-xs focus:outline-none focus:border-[#1A1C1E]"
+                className="w-full pl-9 pr-4 py-2 bg-surface border border-secondary/40 rounded-sm text-xs focus:outline-none focus:border-primary"
               />
             </div>
             <button
@@ -661,50 +661,50 @@ function AcademyContent() {
 
           {/* Add Course Form */}
           {showAddCourse && (
-            <form onSubmit={handleAddCourse} className="bg-white border border-[#6C7278] p-6 rounded-sm space-y-4 font-label text-xs">
-              <span className="block font-bold text-sm uppercase text-[#1A1C1E] border-b border-[#6C7278]/25 pb-2">
+            <form onSubmit={handleAddCourse} className="bg-surface border border-secondary p-6 rounded-sm space-y-4 font-label text-xs">
+              <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
                 Configure New Skill Matrix
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-[#6C7278]">Course / Matrix Title</label>
+                  <label className="block text-xs uppercase text-secondary">Course / Matrix Title</label>
                   <input
                     type="text"
                     value={newCourseTitle}
                     onChange={(e) => setNewCourseTitle(e.target.value)}
                     placeholder="e.g. History of Modern Architecture"
                     required
-                    className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                    className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-[#6C7278]">Category (Skill Class)</label>
+                  <label className="block text-xs uppercase text-secondary">Category (Skill Class)</label>
                   <input
                     type="text"
                     value={newCourseCategory}
                     onChange={(e) => setNewCourseCategory(e.target.value)}
                     placeholder="e.g. Design, Philosophy, Technology"
-                    className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                    className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-[#6C7278]">Skill Roadmap Summary</label>
+                <label className="block text-xs uppercase text-secondary">Skill Roadmap Summary</label>
                 <textarea
                   value={newCourseDesc}
                   onChange={(e) => setNewCourseDesc(e.target.value)}
                   rows={2}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
                 />
               </div>
               <div className="flex space-x-3 pt-2">
-                <button type="submit" className="flex-1 bg-[#1A1C1E] text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm">
+                <button type="submit" className="flex-1 bg-primary text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm">
                   Save Skill Matrix
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowAddCourse(false)}
-                  className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] uppercase text-xs tracking-wider cursor-pointer rounded-sm"
+                  className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg uppercase text-xs tracking-wider cursor-pointer rounded-sm"
                 >
                   Cancel
                 </button>
@@ -714,15 +714,15 @@ function AcademyContent() {
 
           {/* Courses grid */}
           {courses.length === 0 ? (
-            <div className="text-center py-20 bg-white border border-[#6C7278]/25 rounded-sm">
-              <BookOpen className="h-12 w-12 text-[#6C7278]/40 mx-auto mb-4 animate-pulse" />
-              <h3 className="font-display text-lg font-bold text-[#1A1C1E] mb-2">No skill matrices yet</h3>
-              <p className="font-sans text-xs text-[#6C7278] max-w-sm mx-auto mb-6">
+            <div className="text-center py-20 bg-surface border border-secondary/25 rounded-sm">
+              <BookOpen className="h-12 w-12 text-secondary/40 mx-auto mb-4 animate-pulse" />
+              <h3 className="font-display text-lg font-bold text-primary mb-2">No skill matrices yet</h3>
+              <p className="font-sans text-xs text-secondary max-w-sm mx-auto mb-6">
                 Create a skill matrix to start organizing your courses, modules, lessons, and flashcards.
               </p>
               <button
                 onClick={() => setShowAddCourse(true)}
-                className="bg-[#1A1C1E] text-white px-5 py-2 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-[#1A1C1E]/90 transition-all rounded-sm"
+                className="bg-primary text-white px-5 py-2 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-primary/90 transition-all rounded-sm"
               >
                 Create one to begin
               </button>
@@ -740,29 +740,29 @@ function AcademyContent() {
                   return (
                     <div
                       key={course.id}
-                      className="bg-white border border-[#6C7278]/40 p-5 flex flex-col justify-between space-y-6 rounded-sm relative group hover:border-[#1A1C1E] transition-all shadow-sm hover:shadow-md"
+                      className="bg-surface border border-secondary/40 p-5 flex flex-col justify-between space-y-6 rounded-sm relative group hover:border-primary transition-all shadow-sm hover:shadow-md"
                     >
                       <div className="space-y-2">
-                        <span className="font-label text-xs bg-[#6C7278]/20 px-1.5 py-0.5 text-[#1A1C1E] uppercase tracking-wide">
+                        <span className="font-label text-xs bg-secondary/20 px-1.5 py-0.5 text-primary uppercase tracking-wide">
                           {course.category}
                         </span>
-                        <h4 className="font-display text-lg font-bold text-[#1A1C1E] tracking-tight line-clamp-1">
+                        <h4 className="font-display text-lg font-bold text-primary tracking-tight line-clamp-1">
                           {course.title}
                         </h4>
                         {course.description && (
-                          <p className="font-sans text-xs text-[#6C7278] line-clamp-2 leading-relaxed">
+                          <p className="font-sans text-xs text-secondary line-clamp-2 leading-relaxed">
                             {course.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="border-t border-[#6C7278]/20 pt-4 flex flex-col space-y-3">
+                      <div className="border-t border-secondary/20 pt-4 flex flex-col space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block">
+                            <span className="font-label text-xs text-secondary uppercase tracking-wider block">
                               Completion
                             </span>
-                            <span className="font-display text-md font-semibold text-[#B8422E]">
+                            <span className="font-display text-md font-semibold text-tertiary">
                               {progress}%
                             </span>
                           </div>
@@ -775,16 +775,16 @@ function AcademyContent() {
                                 setSelectedModuleId(modules[0].id);
                               }
                             }}
-                            className="border border-[#1A1C1E] hover:bg-[#1A1C1E] hover:text-white transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
+                            className="border border-primary hover:bg-primary hover:text-white transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
                           >
                             ENTER STUDIO
                           </button>
                         </div>
                         
                         {/* Animated Progress Bar */}
-                        <div className="w-full bg-[#6C7278]/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-secondary/10 h-1.5 rounded-full overflow-hidden">
                           <div 
-                            className="bg-[#B8422E] h-full transition-all duration-500 ease-out rounded-full"
+                            className="bg-tertiary h-full transition-all duration-500 ease-out rounded-full"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -800,7 +800,7 @@ function AcademyContent() {
                             setEditCourseCategory(course.category || '');
                             setEditCourseModalOpen(true);
                           }}
-                          className="text-[#6C7278] hover:text-[#1A1C1E] cursor-pointer"
+                          className="text-secondary hover:text-primary cursor-pointer"
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
@@ -809,7 +809,7 @@ function AcademyContent() {
                             setItemToDelete({ id: course.id, title: course.title, type: 'course' });
                             setDeleteModalOpen(true);
                           }}
-                          className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer"
+                          className="text-secondary hover:text-tertiary cursor-pointer"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -826,12 +826,12 @@ function AcademyContent() {
            ========================================== */
         <div className="space-y-6">
           {/* Mobile tab switcher for split-screen */}
-          <div className="flex lg:hidden border border-[#6C7278] font-label text-xs">
+          <div className="flex lg:hidden border border-secondary font-label text-xs">
             <button
               type="button"
               onClick={() => setMobileStudioTab('index')}
               className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer ${
-                mobileStudioTab === 'index' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'
+                mobileStudioTab === 'index' ? 'bg-primary text-white' : 'text-primary bg-surface'
               }`}
             >
               Index
@@ -839,8 +839,8 @@ function AcademyContent() {
             <button
               type="button"
               onClick={() => setMobileStudioTab('notepad')}
-              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer border-l border-[#6C7278] ${
-                mobileStudioTab === 'notepad' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'
+              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer border-l border-secondary ${
+                mobileStudioTab === 'notepad' ? 'bg-primary text-white' : 'text-primary bg-surface'
               }`}
             >
               Studio Notepad
@@ -850,21 +850,21 @@ function AcademyContent() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px]">
             
             {/* LEFT SIDE: HIERARCHICAL INDEX CHECKLIST */}
-            <section className={`bg-white border border-[#6C7278] p-6 rounded-sm space-y-6 max-h-[600px] overflow-y-auto shadow-sm ${
+            <section className={`bg-surface border border-secondary p-6 rounded-sm space-y-6 max-h-[600px] overflow-y-auto shadow-sm ${
               mobileStudioTab !== 'index' ? 'hidden lg:block' : ''
             }`}>
-            <div className="border-b border-[#6C7278]/20 pb-2">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block mb-2">
+            <div className="border-b border-secondary/20 pb-2">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2">
                 Modules & Lessons Index
               </span>
               <div className="relative w-full">
-                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-[#6C7278]" />
+                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-secondary" />
                 <input
                   type="text"
                   placeholder="Search modules or lessons..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-4 py-1.5 bg-[#F7F5F2]/50 border border-[#6C7278]/30 rounded-sm text-xs focus:outline-none focus:border-[#1A1C1E]"
+                  className="w-full pl-8 pr-4 py-1.5 bg-neutral-bg/50 border border-secondary/30 rounded-sm text-xs focus:outline-none focus:border-primary"
                 />
               </div>
             </div>
@@ -895,7 +895,7 @@ function AcademyContent() {
                     <div
                       key={mod.id}
                       className={`p-4 border transition-all rounded-sm ${
-                        isSelected ? 'border-[#1A1C1E] bg-[#F7F5F2]/40 shadow-sm' : 'border-[#6C7278]/25 bg-white'
+                        isSelected ? 'border-primary bg-neutral-bg/40 shadow-sm' : 'border-secondary/25 bg-surface'
                       }`}
                     >
                       <div className="flex justify-between items-baseline mb-3 group/mod">
@@ -905,7 +905,7 @@ function AcademyContent() {
                               type="text"
                               value={editModuleName}
                               onChange={(e) => setEditModuleName(e.target.value)}
-                              className="flex-grow bg-white border border-[#6C7278] px-2 py-0.5 font-display text-sm text-[#1A1C1E] focus:outline-none"
+                              className="flex-grow bg-surface border border-secondary px-2 py-0.5 font-display text-sm text-primary focus:outline-none"
                             />
                             <div className="flex gap-1">
                               <button
@@ -915,13 +915,13 @@ function AcademyContent() {
                                   setEditingModuleId(null);
                                   showToast('Module title updated.', 'success');
                                 }}
-                                className="bg-[#1A1C1E] text-white px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
+                                className="bg-primary text-white px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
                               >
                                 Save
                               </button>
                               <button
                                 onClick={() => setEditingModuleId(null)}
-                                className="border border-[#6C7278] px-2 py-0.5 text-[10px] uppercase rounded-sm cursor-pointer"
+                                className="border border-secondary px-2 py-0.5 text-[10px] uppercase rounded-sm cursor-pointer"
                               >
                                 Cancel
                               </button>
@@ -934,7 +934,7 @@ function AcademyContent() {
                                 setSelectedModuleId(mod.id);
                                 setMobileStudioTab('notepad');
                               }}
-                              className="font-display text-md font-bold text-[#1A1C1E] hover:text-[#B8422E] cursor-pointer truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]"
+                              className="font-display text-md font-bold text-primary hover:text-tertiary cursor-pointer truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]"
                             >
                               {mod.title}
                             </h5>
@@ -945,7 +945,7 @@ function AcademyContent() {
                                   setEditingModuleId(mod.id);
                                   setEditModuleName(mod.title);
                                 }}
-                                className="text-[#6C7278] hover:text-[#1A1C1E] p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-primary p-0.5 cursor-pointer"
                               >
                                 <Edit3 className="h-3 w-3" />
                               </button>
@@ -954,26 +954,26 @@ function AcademyContent() {
                                   setItemToDelete({ id: mod.id, title: mod.title, type: 'module' });
                                   setDeleteModalOpen(true);
                                 }}
-                                className="text-[#6C7278] hover:text-[#B8422E] p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-tertiary p-0.5 cursor-pointer"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={() => handleReorderModule(mod.id, 'up')}
-                                className="text-[#6C7278] hover:text-[#1A1C1E] p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-primary p-0.5 cursor-pointer"
                               >
                                 <ArrowUp className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={() => handleReorderModule(mod.id, 'down')}
-                                className="text-[#6C7278] hover:text-[#1A1C1E] p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-primary p-0.5 cursor-pointer"
                               >
                                 <ArrowDown className="h-3 w-3" />
                               </button>
                             </div>
                           </div>
                         )}
-                        <span className="font-label text-[10px] text-[#6C7278] uppercase shrink-0 bg-[#6C7278]/10 px-1.5 py-0.5 rounded-sm">
+                        <span className="font-label text-[10px] text-secondary uppercase shrink-0 bg-secondary/10 px-1.5 py-0.5 rounded-sm">
                           Module {mod.order_index}
                         </span>
                       </div>
@@ -981,21 +981,21 @@ function AcademyContent() {
                       {/* Lessons checklist */}
                       <div className="space-y-2 mb-4">
                         {modLessons.map((l) => (
-                          <div key={l.id} className="flex items-center justify-between p-2 bg-white border border-[#6C7278]/15 rounded-sm group/les">
+                          <div key={l.id} className="flex items-center justify-between p-2 bg-surface border border-secondary/15 rounded-sm group/les">
                             {editingLessonId === l.id ? (
                               <div className="flex-grow flex flex-col gap-1.5 font-label text-xs w-full">
                                 <input
                                   type="text"
                                   value={editLessonName}
                                   onChange={(e) => setEditLessonName(e.target.value)}
-                                  className="w-full bg-white border border-[#6C7278]/50 px-2 py-1 focus:outline-none"
+                                  className="w-full bg-surface border border-secondary/50 px-2 py-1 focus:outline-none"
                                   placeholder="Lesson title"
                                 />
                                 <input
                                   type="text"
                                   value={editLessonLink}
                                   onChange={(e) => setEditLessonLink(e.target.value)}
-                                  className="w-full bg-white border border-[#6C7278]/50 px-2 py-1 focus:outline-none"
+                                  className="w-full bg-surface border border-secondary/50 px-2 py-1 focus:outline-none"
                                   placeholder="Link (optional)"
                                 />
                                 <div className="flex gap-1.5 justify-end mt-1">
@@ -1011,13 +1011,13 @@ function AcademyContent() {
                                       setEditingLessonId(null);
                                       showToast('Lesson updated.', 'success');
                                     }}
-                                    className="bg-[#1A1C1E] text-white px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
+                                    className="bg-primary text-white px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
                                   >
                                     Save
                                   </button>
                                   <button
                                     onClick={() => setEditingLessonId(null)}
-                                    className="border border-[#6C7278] px-2 py-0.5 text-[10px] uppercase rounded-sm cursor-pointer"
+                                    className="border border-secondary px-2 py-0.5 text-[10px] uppercase rounded-sm cursor-pointer"
                                   >
                                     Cancel
                                   </button>
@@ -1028,7 +1028,7 @@ function AcademyContent() {
                                 <div className="flex items-center space-x-2 flex-grow min-w-0">
                                   <button
                                     onClick={() => toggleLessonCompleted(l.id, !l.completed)}
-                                    className="text-[#6C7278] hover:text-[#B8422E] shrink-0 cursor-pointer active:scale-95 transition-transform duration-150"
+                                    className="text-secondary hover:text-tertiary shrink-0 cursor-pointer active:scale-95 transition-transform duration-150"
                                   >
                                     {l.completed ? (
                                       <CheckSquare className="h-4 w-4 text-emerald-700 animate-in zoom-in-75 duration-200" />
@@ -1036,7 +1036,7 @@ function AcademyContent() {
                                       <Square className="h-4 w-4" />
                                     )}
                                   </button>
-                                  <span className={`font-sans text-xs text-[#1A1C1E] truncate ${l.completed ? 'line-through text-[#6C7278] opacity-70' : ''}`}>
+                                  <span className={`font-sans text-xs text-primary truncate ${l.completed ? 'line-through text-secondary opacity-70' : ''}`}>
                                     {l.title}
                                   </span>
                                 </div>
@@ -1047,7 +1047,7 @@ function AcademyContent() {
                                       href={l.link}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-[#6C7278] hover:text-[#B8422E]"
+                                      className="text-secondary hover:text-tertiary"
                                     >
                                       <ExternalLink className="h-3 w-3" />
                                     </a>
@@ -1060,7 +1060,7 @@ function AcademyContent() {
                                         setEditLessonName(l.title);
                                         setEditLessonLink(l.link || '');
                                       }}
-                                      className="text-[#6C7278] hover:text-[#1A1C1E] p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer"
                                     >
                                       <Edit3 className="h-3 w-3" />
                                     </button>
@@ -1069,19 +1069,19 @@ function AcademyContent() {
                                         setItemToDelete({ id: l.id, title: l.title, type: 'lesson' });
                                         setDeleteModalOpen(true);
                                       }}
-                                      className="text-[#6C7278] hover:text-[#B8422E] p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-tertiary p-0.5 cursor-pointer"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </button>
                                     <button
                                       onClick={() => handleReorderLesson(l.id, 'up')}
-                                      className="text-[#6C7278] hover:text-[#1A1C1E] p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer"
                                     >
                                       <ArrowUp className="h-3 w-3" />
                                     </button>
                                     <button
                                       onClick={() => handleReorderLesson(l.id, 'down')}
-                                      className="text-[#6C7278] hover:text-[#1A1C1E] p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer"
                                     >
                                       <ArrowDown className="h-3 w-3" />
                                     </button>
@@ -1095,25 +1095,25 @@ function AcademyContent() {
 
                       {/* Add Lesson Input */}
                       {isSelected && (
-                        <div className="mt-3 pt-3 border-t border-[#6C7278]/15 space-y-2 font-label text-xs">
+                        <div className="mt-3 pt-3 border-t border-secondary/15 space-y-2 font-label text-xs">
                           <div className="flex flex-col sm:flex-row gap-2">
                             <input
                               type="text"
                               value={newLessonName}
                               onChange={(e) => setNewLessonName(e.target.value)}
                               placeholder="Add Lesson Title..."
-                              className="flex-grow bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1 text-xs focus:outline-none"
+                              className="flex-grow bg-neutral-bg border border-secondary/40 px-2 py-1 text-xs focus:outline-none"
                             />
                             <input
                               type="text"
                               value={newLessonLink}
                               onChange={(e) => setNewLessonLink(e.target.value)}
                               placeholder="Link (optional)..."
-                              className="flex-grow bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1 text-xs focus:outline-none"
+                              className="flex-grow bg-neutral-bg border border-secondary/40 px-2 py-1 text-xs focus:outline-none"
                             />
                             <button
                               onClick={() => handleAddLesson(mod.id)}
-                              className="bg-[#1A1C1E] text-white px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
+                              className="bg-primary text-white px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
                             >
                               Add
                             </button>
@@ -1126,19 +1126,19 @@ function AcademyContent() {
             </div>
 
             {/* Add Module controller */}
-            <div className="pt-4 border-t border-[#6C7278]/20 font-label text-xs">
-              <span className="block text-xs uppercase text-[#6C7278] mb-2 font-bold">New Module</span>
+            <div className="pt-4 border-t border-secondary/20 font-label text-xs">
+              <span className="block text-xs uppercase text-secondary mb-2 font-bold">New Module</span>
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newModuleName}
                   onChange={(e) => setNewModuleName(e.target.value)}
                   placeholder="Module name..."
-                  className="flex-grow bg-[#F7F5F2] border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none"
+                  className="flex-grow bg-neutral-bg border border-secondary/40 px-3 py-1.5 focus:outline-none"
                 />
                 <button
                   onClick={() => selectedCourseId && handleAddModule(selectedCourseId)}
-                  className="bg-[#1A1C1E] text-white px-4 py-1.5 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
+                  className="bg-primary text-white px-4 py-1.5 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
                 >
                   Create Module
                 </button>
@@ -1147,15 +1147,15 @@ function AcademyContent() {
           </section>
 
           {/* RIGHT SIDE: INTEGRATED MARKDOWN NOTES NOTEPAD */}
-          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between min-h-[500px] shadow-sm ${
+          <section className={`bg-surface border border-secondary p-6 rounded-sm flex flex-col justify-between min-h-[500px] shadow-sm ${
             mobileStudioTab !== 'notepad' ? 'hidden lg:block' : ''
           }`}>
             {activeModule ? (
               <div className="space-y-4 flex-grow flex flex-col justify-between h-full">
-                <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-2">
+                <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
                   <div className="truncate pr-4 flex-grow">
-                    <span className="font-label text-xs text-[#6C7278] uppercase">Studio Notepad</span>
-                    <h5 className="font-display text-md font-bold text-[#1A1C1E] truncate max-w-xs sm:max-w-md lg:max-w-lg">
+                    <span className="font-label text-xs text-secondary uppercase">Studio Notepad</span>
+                    <h5 className="font-display text-md font-bold text-primary truncate max-w-xs sm:max-w-md lg:max-w-lg">
                       {activeModule.title}
                     </h5>
                   </div>
@@ -1165,19 +1165,19 @@ function AcademyContent() {
                     <div className="relative">
                       <button
                         onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-                        className="p-1 border border-[#6C7278] hover:bg-[#F7F5F2] transition-all text-[#1A1C1E] flex items-center justify-center cursor-pointer rounded-sm"
+                        className="p-1 border border-secondary hover:bg-neutral-bg transition-all text-primary flex items-center justify-center cursor-pointer rounded-sm"
                         title="Version History"
                       >
                         <History className="h-3.5 w-3.5" />
                       </button>
                       
                       {showHistoryDropdown && (
-                        <div className="absolute right-0 mt-1 w-64 bg-white border border-[#6C7278] shadow-lg rounded-sm z-50 text-[11px] max-h-48 overflow-y-auto">
-                          <span className="block p-2 font-bold border-b border-[#6C7278]/20 bg-[#F7F5F2] uppercase text-[10px]">
+                        <div className="absolute right-0 mt-1 w-64 bg-surface border border-secondary shadow-lg rounded-sm z-50 text-[11px] max-h-48 overflow-y-auto">
+                          <span className="block p-2 font-bold border-b border-secondary/20 bg-neutral-bg uppercase text-[10px]">
                             Notes Version History
                           </span>
                           {notesHistory.length === 0 ? (
-                            <p className="p-3 text-center text-[#6C7278] italic">No saved history yet</p>
+                            <p className="p-3 text-center text-secondary italic">No saved history yet</p>
                           ) : (
                             notesHistory.map((historyItem: any, hIdx: number) => (
                               <button
@@ -1187,15 +1187,15 @@ function AcademyContent() {
                                   setShowHistoryDropdown(false);
                                   showToast('Notes restored to historical version.', 'info');
                                 }}
-                                className="w-full text-left p-2 border-b border-[#6C7278]/10 hover:bg-[#F7F5F2] flex flex-col justify-start"
+                                className="w-full text-left p-2 border-b border-secondary/10 hover:bg-neutral-bg flex flex-col justify-start"
                               >
-                                <span className="font-bold text-[#1A1C1E]">
+                                <span className="font-bold text-primary">
                                   {hIdx === 0 ? 'Current Session' : `Version ${notesHistory.length - hIdx}`}
                                 </span>
-                                <span className="text-[9px] text-[#6C7278]">
+                                <span className="text-[9px] text-secondary">
                                   {new Date(historyItem.timestamp).toLocaleString()}
                                 </span>
-                                <span className="text-[9px] text-[#6C7278] truncate w-full mt-0.5">
+                                <span className="text-[9px] text-secondary truncate w-full mt-0.5">
                                   {historyItem.notes.slice(0, 40) || '(empty)'}
                                 </span>
                               </button>
@@ -1205,17 +1205,17 @@ function AcademyContent() {
                       )}
                     </div>
 
-                    <div className="flex border border-[#6C7278] font-label text-xs">
+                    <div className="flex border border-secondary font-label text-xs">
                       <button
                         onClick={() => setIsNotePreview(false)}
-                        className={`px-2 py-1 flex items-center space-x-1 cursor-pointer ${!isNotePreview ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E]'}`}
+                        className={`px-2 py-1 flex items-center space-x-1 cursor-pointer ${!isNotePreview ? 'bg-primary text-white' : 'text-primary'}`}
                       >
                         <Edit3 className="h-3 w-3" />
                         <span>EDIT</span>
                       </button>
                       <button
                         onClick={() => setIsNotePreview(true)}
-                        className={`px-2 py-1 flex items-center space-x-1 border-l border-[#6C7278] cursor-pointer ${isNotePreview ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E]'}`}
+                        className={`px-2 py-1 flex items-center space-x-1 border-l border-secondary cursor-pointer ${isNotePreview ? 'bg-primary text-white' : 'text-primary'}`}
                       >
                         <Eye className="h-3 w-3" />
                         <span>PREVIEW</span>
@@ -1231,24 +1231,24 @@ function AcademyContent() {
                       value={localNotes}
                       onChange={(e) => setLocalNotes(e.target.value)}
                       placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                      className="w-full flex-grow min-h-[350px] lg:min-h-[450px] bg-[#F7F5F2]/45 border border-[#6C7278]/30 px-4 py-3 text-xs text-[#1A1C1E] focus:outline-none focus:border-[#B8422E] font-mono resize-none leading-relaxed"
+                      className="w-full flex-grow min-h-[350px] lg:min-h-[450px] bg-neutral-bg/45 border border-secondary/30 px-4 py-3 text-xs text-primary focus:outline-none focus:border-tertiary font-mono resize-none leading-relaxed"
                     />
                   ) : (
-                    <div className="w-full flex-grow min-h-[350px] lg:min-h-[450px] bg-white border border-[#6C7278]/15 px-4 py-3 overflow-y-auto space-y-2 border-heritage rounded-sm">
+                    <div className="w-full flex-grow min-h-[350px] lg:min-h-[450px] bg-surface border border-secondary/15 px-4 py-3 overflow-y-auto space-y-2 border-heritage rounded-sm">
                       {renderMarkdown(localNotes)}
                     </div>
                   )}
                 </div>
 
-                <div className="border-t border-[#6C7278]/20 pt-3 flex justify-between items-center text-xs font-label text-[#6C7278]">
+                <div className="border-t border-secondary/20 pt-3 flex justify-between items-center text-xs font-label text-secondary">
                   <span>{isSavingNotes ? 'Saving...' : 'Notes auto-saved to backend'}</span>
                   <span className="font-mono">Markdown syntax supported</span>
                 </div>
               </div>
             ) : (
               <div className="text-center py-24 flex-grow flex flex-col justify-center">
-                <BookOpen className="h-10 w-10 text-[#6C7278]/40 mx-auto mb-2" />
-                <p className="font-sans text-xs text-[#6C7278] italic">No active module selected. Select a module from index hierarchy.</p>
+                <BookOpen className="h-10 w-10 text-secondary/40 mx-auto mb-2" />
+                <p className="font-sans text-xs text-secondary italic">No active module selected. Select a module from index hierarchy.</p>
               </div>
             )}
           </section>
@@ -1262,20 +1262,20 @@ function AcademyContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Flashcard Study Desk (Deck queue viewer) */}
-          <section className="lg:col-span-2 bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between min-h-[400px] shadow-sm">
+          <section className="lg:col-span-2 bg-surface border border-secondary p-6 rounded-sm flex flex-col justify-between min-h-[400px] shadow-sm">
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-[#6C7278]/20 pb-2">
-                <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-secondary/20 pb-2">
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
                   Leitner Review Station ({dueCards.length} cards due)
                 </span>
                 <div className="relative w-full sm:w-48">
-                  <Search className="absolute left-2 top-2 h-3 w-3 text-[#6C7278]" />
+                  <Search className="absolute left-2 top-2 h-3 w-3 text-secondary" />
                   <input
                     type="text"
                     placeholder="Search deck..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-7 pr-3 py-1 bg-[#F7F5F2]/50 border border-[#6C7278]/30 rounded-sm text-[10px] focus:outline-none focus:border-[#1A1C1E]"
+                    className="w-full pl-7 pr-3 py-1 bg-neutral-bg/50 border border-secondary/30 rounded-sm text-[10px] focus:outline-none focus:border-primary"
                   />
                 </div>
               </div>
@@ -1297,39 +1297,39 @@ function AcademyContent() {
                     >
                       {/* Front Side */}
                       <div
-                        className="absolute inset-0 w-full h-full border border-[#6C7278] bg-[#F7F5F2] flex flex-col justify-center p-6 rounded-sm shadow-sm"
+                        className="absolute inset-0 w-full h-full border border-secondary bg-neutral-bg flex flex-col justify-center p-6 rounded-sm shadow-sm"
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden'
                         }}
                       >
-                        <span className="absolute top-3 left-3 font-label text-[10px] text-[#6C7278] uppercase">
+                        <span className="absolute top-3 left-3 font-label text-[10px] text-secondary uppercase">
                           Box {activeCard.box} &bull; Question
                         </span>
-                        <p className="font-display text-sm text-center text-[#1A1C1E] leading-relaxed font-semibold px-4">
+                        <p className="font-display text-sm text-center text-primary leading-relaxed font-semibold px-4">
                           {activeCard.front}
                         </p>
-                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-[#6C7278] uppercase tracking-wider">
+                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-secondary uppercase tracking-wider">
                           Click Card to Flip
                         </span>
                       </div>
 
                       {/* Back Side */}
                       <div
-                        className="absolute inset-0 w-full h-full border border-[#6C7278] bg-[#F7F5F2] flex flex-col justify-center p-6 rounded-sm shadow-sm"
+                        className="absolute inset-0 w-full h-full border border-secondary bg-neutral-bg flex flex-col justify-center p-6 rounded-sm shadow-sm"
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                           transform: 'rotateY(180deg)'
                         }}
                       >
-                        <span className="absolute top-3 left-3 font-label text-[10px] text-[#6C7278] uppercase">
+                        <span className="absolute top-3 left-3 font-label text-[10px] text-secondary uppercase">
                           Box {activeCard.box} &bull; Answer
                         </span>
-                        <p className="font-display text-sm text-center text-[#1A1C1E] leading-relaxed font-semibold px-4">
+                        <p className="font-display text-sm text-center text-primary leading-relaxed font-semibold px-4">
                           {activeCard.back}
                         </p>
-                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-[#6C7278] uppercase tracking-wider">
+                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-secondary uppercase tracking-wider">
                           Click Card to Flip
                         </span>
                       </div>
@@ -1367,7 +1367,7 @@ function AcademyContent() {
                           }
                           showToast('Marked incorrect.', 'error');
                         }}
-                        className="flex-1 bg-[#B8422E] hover:bg-[#B8422E]/90 text-white py-2 uppercase font-bold tracking-wider rounded-sm cursor-pointer"
+                        className="flex-1 bg-tertiary hover:bg-tertiary/90 text-white py-2 uppercase font-bold tracking-wider rounded-sm cursor-pointer"
                       >
                         Incorrect (Box 1)
                       </button>
@@ -1376,27 +1376,27 @@ function AcademyContent() {
                 </div>
               ) : (
                 <div className="text-center py-24">
-                  <span className="font-display text-md italic text-[#6C7278] block">No cards due for review.</span>
-                  <span className="font-sans text-xs text-[#6C7278] mt-1 block">Leitner box intervals satisfied. Add flashcards below.</span>
+                  <span className="font-display text-md italic text-secondary block">No cards due for review.</span>
+                  <span className="font-sans text-xs text-secondary mt-1 block">Leitner box intervals satisfied. Add flashcards below.</span>
                 </div>
               )}
             </div>
 
             {/* Deck queue list footer */}
             {dueCards.length > 1 && (
-              <div className="flex justify-between items-center pt-4 border-t border-[#6C7278]/20 font-label text-xs">
+              <div className="flex justify-between items-center pt-4 border-t border-secondary/20 font-label text-xs">
                 <button
                   disabled={activeFlashcardIndex === 0}
                   onClick={() => { setActiveFlashcardIndex(prev => prev - 1); setIsFlipped(false); }}
-                  className="text-[#6C7278] disabled:opacity-30 uppercase cursor-pointer"
+                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer"
                 >
                   &larr; Prev Card
                 </button>
-                <span className="text-[#6C7278]">Card {activeFlashcardIndex + 1} of {dueCards.length}</span>
+                <span className="text-secondary">Card {activeFlashcardIndex + 1} of {dueCards.length}</span>
                 <button
                   disabled={activeFlashcardIndex === dueCards.length - 1}
                   onClick={() => { setActiveFlashcardIndex(prev => prev + 1); setIsFlipped(false); }}
-                  className="text-[#6C7278] disabled:opacity-30 uppercase cursor-pointer"
+                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer"
                 >
                   Next Card &rarr;
                 </button>
@@ -1408,46 +1408,46 @@ function AcademyContent() {
           <div className="space-y-6">
             
             {/* Statistics */}
-            <section className="bg-white border border-[#6C7278] p-5 rounded-sm space-y-4 font-label text-xs shadow-sm">
-              <span className="block text-xs uppercase text-[#6C7278] font-bold border-b border-[#6C7278]/20 pb-1">
+            <section className="bg-surface border border-secondary p-5 rounded-sm space-y-4 font-label text-xs shadow-sm">
+              <span className="block text-xs uppercase text-secondary font-bold border-b border-secondary/20 pb-1">
                 Deck Statistics
               </span>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-[#F7F5F2] p-2.5 border border-[#6C7278]/15 rounded-sm">
-                  <span className="block text-[9px] text-[#6C7278] uppercase">Total Cards</span>
-                  <span className="text-md font-bold font-display text-[#1A1C1E]">{totalCards}</span>
+                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
+                  <span className="block text-[9px] text-secondary uppercase">Total Cards</span>
+                  <span className="text-md font-bold font-display text-primary">{totalCards}</span>
                 </div>
-                <div className="bg-[#F7F5F2] p-2.5 border border-[#6C7278]/15 rounded-sm">
-                  <span className="block text-[9px] text-[#6C7278] uppercase">Mastery Rate</span>
-                  <span className="text-md font-bold font-display text-[#B8422E]">{masteryRate}%</span>
+                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
+                  <span className="block text-[9px] text-secondary uppercase">Mastery Rate</span>
+                  <span className="text-md font-bold font-display text-tertiary">{masteryRate}%</span>
                 </div>
-                <div className="bg-[#F7F5F2] p-2.5 border border-[#6C7278]/15 rounded-sm">
-                  <span className="block text-[9px] text-[#6C7278] uppercase">Accuracy Rate</span>
+                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
+                  <span className="block text-[9px] text-secondary uppercase">Accuracy Rate</span>
                   <span className="text-md font-bold font-display text-emerald-800">{totalReviews > 0 ? `${accuracyRate}%` : '0%'}</span>
                 </div>
-                <div className="bg-[#F7F5F2] p-2.5 border border-[#6C7278]/15 rounded-sm">
-                  <span className="block text-[9px] text-[#6C7278] uppercase">Total Reviews</span>
-                  <span className="text-md font-bold font-display text-[#1A1C1E]">{totalReviews}</span>
+                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
+                  <span className="block text-[9px] text-secondary uppercase">Total Reviews</span>
+                  <span className="text-md font-bold font-display text-primary">{totalReviews}</span>
                 </div>
               </div>
               
               <div className="space-y-1.5">
-                <span className="block text-[10px] text-[#6C7278] uppercase font-bold">Leitner Box Distribution</span>
+                <span className="block text-[10px] text-secondary uppercase font-bold">Leitner Box Distribution</span>
                 <div className="flex items-center space-x-1">
                   {boxCounts.map((count, i) => {
                     const pct = totalCards > 0 ? (count / totalCards) * 100 : 0;
                     return (
                       <div key={i} className="flex-grow flex flex-col items-center">
-                        <div className="w-full bg-[#F7F5F2] h-12 rounded-sm relative border border-[#6C7278]/15 flex items-end">
+                        <div className="w-full bg-neutral-bg h-12 rounded-sm relative border border-secondary/15 flex items-end">
                           <div 
-                            className="w-full bg-[#B8422E]/80 rounded-t-sm transition-all duration-300"
+                            className="w-full bg-tertiary/80 rounded-t-sm transition-all duration-300"
                             style={{ height: `${pct}%` }}
                           />
-                          <span className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[9px] text-[#1A1C1E]">
+                          <span className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[9px] text-primary">
                             {count}
                           </span>
                         </div>
-                        <span className="text-[9px] text-[#6C7278] uppercase mt-1">B{i+1}</span>
+                        <span className="text-[9px] text-secondary uppercase mt-1">B{i+1}</span>
                       </div>
                     );
                   })}
@@ -1456,14 +1456,14 @@ function AcademyContent() {
             </section>
 
             {/* Flashcard Add Panel */}
-            <section className="bg-white border border-[#6C7278] p-6 rounded-sm shadow-sm">
-              <div className="flex justify-between items-center mb-4 border-b border-[#6C7278]/20 pb-2">
-                <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] font-bold">
+            <section className="bg-surface border border-secondary p-6 rounded-sm shadow-sm">
+              <div className="flex justify-between items-center mb-4 border-b border-secondary/20 pb-2">
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-bold">
                   {isBulkImport ? 'Bulk Import' : 'Add Flashcard'}
                 </span>
                 <button
                   onClick={() => setIsBulkImport(!isBulkImport)}
-                  className="text-[#6C7278] hover:text-[#1A1C1E] text-[10px] uppercase font-bold flex items-center space-x-1 cursor-pointer"
+                  className="text-secondary hover:text-primary text-[10px] uppercase font-bold flex items-center space-x-1 cursor-pointer"
                 >
                   <Upload className="h-3 w-3" />
                   <span>{isBulkImport ? 'Single' : 'Bulk'}</span>
@@ -1473,12 +1473,12 @@ function AcademyContent() {
               {!isBulkImport ? (
                 <form onSubmit={handleAddFlashcardSubmit} className="space-y-4 font-label text-xs">
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-[#6C7278]">Module Source</label>
+                    <label className="block text-xs uppercase text-secondary">Module Source</label>
                     <select
                       value={fcModuleId}
                       onChange={(e) => setFcModuleId(e.target.value)}
                       required
-                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none font-sans"
                     >
                       <option value="">-- Choose Module --</option>
                       {courseModules
@@ -1490,26 +1490,26 @@ function AcademyContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-[#6C7278]">Front Question</label>
+                    <label className="block text-xs uppercase text-secondary">Front Question</label>
                     <textarea
                       value={fcQuestion}
                       onChange={(e) => setFcQuestion(e.target.value)}
                       rows={2}
                       placeholder="e.g. What is a Service Worker lifecycle?"
                       required
-                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-[#6C7278]">Back Answer</label>
+                    <label className="block text-xs uppercase text-secondary">Back Answer</label>
                     <textarea
                       value={fcAnswer}
                       onChange={(e) => setFcAnswer(e.target.value)}
                       rows={2}
                       placeholder="e.g. Install, Activate, Idle, Fetch"
                       required
-                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
                     />
                   </div>
 
@@ -1524,12 +1524,12 @@ function AcademyContent() {
               ) : (
                 <form onSubmit={handleBulkImportSubmit} className="space-y-4 font-label text-xs">
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-[#6C7278]">Module Source</label>
+                    <label className="block text-xs uppercase text-secondary">Module Source</label>
                     <select
                       value={fcModuleId}
                       onChange={(e) => setFcModuleId(e.target.value)}
                       required
-                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none font-sans"
                     >
                       <option value="">-- Choose Module --</option>
                       {courseModules
@@ -1541,16 +1541,16 @@ function AcademyContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-[#6C7278]">Paste CSV or TSV (one card per line)</label>
+                    <label className="block text-xs uppercase text-secondary">Paste CSV or TSV (one card per line)</label>
                     <textarea
                       value={bulkText}
                       onChange={(e) => setBulkText(e.target.value)}
                       rows={6}
                       placeholder="Question 1, Answer 1&#10;Question 2, Answer 2&#10;Or use tab-separation from spreadsheet"
                       required
-                      className="w-full bg-[#F7F5F2] border border-[#6C7278] px-3 py-1.5 focus:outline-none font-mono"
+                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-mono"
                     />
-                    <p className="text-[9px] text-[#6C7278] mt-1">Format: Front / Question, Back / Answer</p>
+                    <p className="text-[9px] text-secondary mt-1">Format: Front / Question, Back / Answer</p>
                   </div>
 
                   <button
@@ -1567,14 +1567,14 @@ function AcademyContent() {
 
           {/* Flashcard list footer directory */}
           {courseCards.length > 0 && (
-            <section className="lg:col-span-3 bg-white border border-[#6C7278] p-6 rounded-sm space-y-4 shadow-sm">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/20 pb-1">
+            <section className="lg:col-span-3 bg-surface border border-secondary p-6 rounded-sm space-y-4 shadow-sm">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-secondary/20 pb-1">
                 Deck Cards Directory ({courseCards.length} cards)
               </span>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs font-label">
                   <thead>
-                    <tr className="border-b border-[#6C7278]/30 text-[#6C7278] uppercase">
+                    <tr className="border-b border-secondary/30 text-secondary uppercase">
                       <th className="py-2 font-semibold">Front (Question)</th>
                       <th className="py-2 font-semibold">Back (Answer)</th>
                       <th className="py-2 font-semibold text-center">Box</th>
@@ -1583,9 +1583,9 @@ function AcademyContent() {
                       <th className="py-2 text-right font-semibold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#6C7278]/10 font-sans">
+                  <tbody className="divide-y divide-secondary/10 font-sans">
                     {courseCards.map(fc => (
-                      <tr key={fc.id} className="hover:bg-[#F7F5F2]/30">
+                      <tr key={fc.id} className="hover:bg-neutral-bg/30">
                         <td className="py-2.5 pr-4 truncate max-w-xs">{fc.front}</td>
                         <td className="py-2.5 pr-4 truncate max-w-xs">{fc.back}</td>
                         <td className="py-2.5 font-mono text-center">{fc.box}</td>
@@ -1601,7 +1601,7 @@ function AcademyContent() {
                               setItemToDelete({ id: fc.id, title: fc.front, type: 'flashcard' });
                               setDeleteModalOpen(true);
                             }}
-                            className="text-[#6C7278] hover:text-[#B8422E] cursor-pointer"
+                            className="text-secondary hover:text-tertiary cursor-pointer"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -1619,38 +1619,38 @@ function AcademyContent() {
 
       {/* Edit Course Modal */}
       {editCourseModalOpen && courseToEdit && (
-        <div className="fixed inset-0 bg-[#1A1C1E]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white border border-[#6C7278] p-6 rounded-sm w-full max-w-lg space-y-4 font-label text-xs shadow-xl">
-            <span className="block font-bold text-sm uppercase text-[#1A1C1E] border-b border-[#6C7278]/25 pb-2">
+        <div className="fixed inset-0 bg-primary/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-lg space-y-4 font-label text-xs shadow-xl">
+            <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
               Edit Skill Matrix
             </span>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-[#6C7278]">Course / Matrix Title</label>
+                <label className="block text-xs uppercase text-secondary">Course / Matrix Title</label>
                 <input
                   type="text"
                   value={editCourseTitle}
                   onChange={(e) => setEditCourseTitle(e.target.value)}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-[#6C7278]">Category (Skill Class)</label>
+                <label className="block text-xs uppercase text-secondary">Category (Skill Class)</label>
                 <input
                   type="text"
                   value={editCourseCategory}
                   onChange={(e) => setEditCourseCategory(e.target.value)}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-[#6C7278]">Skill Roadmap Summary</label>
+              <label className="block text-xs uppercase text-secondary">Skill Roadmap Summary</label>
               <textarea
                 value={editCourseDesc}
                 onChange={(e) => setEditCourseDesc(e.target.value)}
                 rows={3}
-                className="w-full bg-[#F7F5F2] border border-[#6C7278] px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
               />
             </div>
             <div className="flex space-x-3 pt-2">
@@ -1667,7 +1667,7 @@ function AcademyContent() {
                     setCourseToEdit(null);
                   }
                 }}
-                className="flex-1 bg-[#1A1C1E] text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm"
+                className="flex-1 bg-primary text-white py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm"
               >
                 Save Changes
               </button>
@@ -1676,7 +1676,7 @@ function AcademyContent() {
                   setEditCourseModalOpen(false);
                   setCourseToEdit(null);
                 }}
-                className="px-4 py-2 border border-[#6C7278] text-[#1A1C1E] hover:bg-[#F7F5F2] uppercase text-xs tracking-wider cursor-pointer rounded-sm"
+                className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg uppercase text-xs tracking-wider cursor-pointer rounded-sm"
               >
                 Cancel
               </button>
@@ -1724,8 +1724,8 @@ function AcademyContent() {
 export default function AcademyPage() {
   return (
     <Suspense fallback={
-      <div className="bg-white border border-[#6C7278]/30 py-16 text-center rounded-sm">
-        <p className="font-sans text-sm text-[#6C7278] italic">Loading Academy Studio...</p>
+      <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
+        <p className="font-sans text-sm text-secondary italic">Loading Academy Studio...</p>
       </div>
     }>
       <AcademyContent />

@@ -315,25 +315,25 @@ export default function JournalPage() {
   if (loading) {
     return (
       <div className="space-y-12 animate-pulse">
-        <header className="border-b-2 border-[#6C7278]/20 pb-4">
-          <div className="h-8 bg-[#6C7278]/15 w-48 rounded-sm mb-2" />
-          <div className="h-4 bg-[#6C7278]/10 w-80 rounded-sm" />
+        <header className="border-b-2 border-secondary/20 pb-4">
+          <div className="h-8 bg-secondary/15 w-48 rounded-sm mb-2" />
+          <div className="h-4 bg-secondary/10 w-80 rounded-sm" />
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-6">
-            <div className="h-4 bg-[#6C7278]/15 w-32 rounded-sm" />
+          <div className="lg:col-span-2 bg-surface border border-secondary/20 p-6 rounded-sm space-y-6">
+            <div className="h-4 bg-secondary/15 w-32 rounded-sm" />
             <div className="space-y-4">
-              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
-              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
-              <div className="h-24 bg-[#6C7278]/10 w-full rounded-sm" />
+              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
+              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
+              <div className="h-24 bg-secondary/10 w-full rounded-sm" />
             </div>
           </div>
           <div className="space-y-8 lg:col-span-1">
-            <div className="bg-white border border-[#6C7278]/20 p-6 rounded-sm space-y-4">
-              <div className="h-4 bg-[#6C7278]/15 w-24 rounded-sm" />
-              <div className="h-8 bg-[#6C7278]/10 w-full rounded-sm" />
-              <div className="h-16 bg-[#6C7278]/10 w-full rounded-sm" />
+            <div className="bg-surface border border-secondary/20 p-6 rounded-sm space-y-4">
+              <div className="h-4 bg-secondary/15 w-24 rounded-sm" />
+              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
+              <div className="h-16 bg-secondary/10 w-full rounded-sm" />
             </div>
           </div>
         </div>
@@ -344,37 +344,37 @@ export default function JournalPage() {
   return (
     <div className="space-y-12">
       {/* Header */}
-      <header className="border-b-2 border-[#1A1C1E] pb-4 flex justify-between items-baseline">
+      <header className="border-b-2 border-primary pb-4 flex justify-between items-baseline">
         <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-[#1A1C1E]">
+          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
             THE CHRONICLES
           </h2>
-          <p className="font-label text-xs text-[#6C7278] uppercase tracking-[0.2em] mt-0.5">
+          <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
             Morning Intentions &bull; Evening Reflections &bull; Journal
           </p>
         </div>
       </header>
 
       {/* Mobile view Tab Selector */}
-      <div className="flex lg:hidden border border-[#6C7278] font-label text-xs">
+      <div className="flex lg:hidden border border-secondary font-label text-xs">
         <button
           type="button"
           onClick={() => setMobileTab('editor')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'editor' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'editor' ? 'bg-primary text-white' : 'text-primary bg-surface'}`}
         >
           Editor
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('metrics')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-[#6C7278] cursor-pointer ${mobileTab === 'metrics' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-secondary cursor-pointer ${mobileTab === 'metrics' ? 'bg-primary text-white' : 'text-primary bg-surface'}`}
         >
           Insights
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('timeline')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'timeline' ? 'bg-[#1A1C1E] text-white' : 'text-[#1A1C1E] bg-white'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'timeline' ? 'bg-primary text-white' : 'text-primary bg-surface'}`}
         >
           Timeline
         </button>
@@ -385,22 +385,22 @@ export default function JournalPage() {
         {/* ==========================================
             COLUMN 1 & 2: ACTIVE JOURNAL WRITER
            ========================================== */}
-        <section className={`lg:col-span-2 bg-white border border-[#6C7278] p-6 rounded-sm space-y-6 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+        <section className={`lg:col-span-2 bg-surface border border-secondary p-6 rounded-sm space-y-6 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
           <form onSubmit={handleSaveJournal} className="space-y-6">
             
             {/* Header select date bar */}
-            <div className="flex justify-between items-center border-b border-[#6C7278]/25 pb-3">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] font-semibold">
+            <div className="flex justify-between items-center border-b border-secondary/25 pb-3">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-semibold">
                 Journal Entry Editor
               </span>
 
               <div className="flex items-center space-x-2 font-label text-xs">
-                <Calendar className="h-4 w-4 text-[#B8422E]" />
+                <Calendar className="h-4 w-4 text-tertiary" />
                 <input
                   type="date"
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="bg-[#F7F5F2] border border-[#6C7278] px-2 py-1 font-sans focus:outline-none"
+                  className="bg-neutral-bg border border-secondary px-2 py-1 font-sans focus:outline-none"
                 />
               </div>
             </div>
@@ -408,8 +408,8 @@ export default function JournalPage() {
             {/* Morning Intentions */}
             <div className="space-y-3">
               <div className="flex items-baseline space-x-2">
-                <span className="font-display text-lg font-bold text-[#1A1C1E]">I. Morning Intentions</span>
-                <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; What would make today great?</span>
+                <span className="font-display text-lg font-bold text-primary">I. Morning Intentions</span>
+                <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; What would make today great?</span>
               </div>
 
               <div className="space-y-2 font-label text-xs">
@@ -418,33 +418,33 @@ export default function JournalPage() {
                   value={mIntention1}
                   onChange={(e) => { setMIntention1(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="1. e.g. Execute clean SQL migrations successfully"
-                  className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                  className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                 />
                 <input
                   type="text"
                   value={mIntention2}
                   onChange={(e) => { setMIntention2(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="2. e.g. Interval running outdoors 35 minutes"
-                  className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                  className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                 />
                 <input
                   type="text"
                   value={mIntention3}
                   onChange={(e) => { setMIntention3(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="3. e.g. Read draft of design system standard"
-                  className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                  className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                 />
               </div>
             </div>
 
             {/* Evening Reflections */}
-            <div className="space-y-4 pt-4 border-t border-[#6C7278]/25">
+            <div className="space-y-4 pt-4 border-t border-secondary/25">
               
               {/* Learned items */}
               <div className="space-y-3">
                 <div className="flex items-baseline space-x-2">
-                  <span className="font-display text-lg font-bold text-[#1A1C1E]">II. Evening Lessons</span>
-                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; What did I learn today?</span>
+                  <span className="font-display text-lg font-bold text-primary">II. Evening Lessons</span>
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; What did I learn today?</span>
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
@@ -453,21 +453,21 @@ export default function JournalPage() {
                     value={eLearned1}
                     onChange={(e) => { setELearned1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Next.js fonts load as local stylesheet resources"
-                    className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                   />
                   <input
                     type="text"
                     value={eLearned2}
                     onChange={(e) => { setELearned2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Flat designs require clean negative spaces to feel premium"
-                    className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                   />
                   <input
                     type="text"
                     value={eLearned3}
                     onChange={(e) => { setELearned3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Leitner card deck reviews work best daily"
-                    className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                   />
                 </div>
               </div>
@@ -475,8 +475,8 @@ export default function JournalPage() {
               {/* Improvements */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-baseline space-x-2">
-                  <span className="font-display text-md font-bold text-[#1A1C1E]">III. Refinements</span>
-                  <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; What could have been better?</span>
+                  <span className="font-display text-md font-bold text-primary">III. Refinements</span>
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; What could have been better?</span>
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
@@ -485,21 +485,21 @@ export default function JournalPage() {
                     value={eBetter1}
                     onChange={(e) => { setEBetter1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Avoid starting tasks past 9 PM"
-                    className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                   />
                   <input
                     type="text"
                     value={eBetter2}
                     onChange={(e) => { setEBetter2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Set reminders for hydration goals"
-                    className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                   />
                   <input
                     type="text"
                     value={eBetter3}
                     onChange={(e) => { setEBetter3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Keep card answers shorter for Leitner system"
-                    className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-3 py-1.5 focus:outline-none focus:border-[#B8422E] font-sans"
+                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
                   />
                 </div>
               </div>
@@ -507,23 +507,23 @@ export default function JournalPage() {
             </div>
 
             {/* Free Notes Diary */}
-            <div className="space-y-3 pt-4 border-t border-[#6C7278]/25">
+            <div className="space-y-3 pt-4 border-t border-secondary/25">
               <div className="flex items-baseline space-x-2">
-                <span className="font-display text-lg font-bold text-[#1A1C1E]">IV. Daily Log</span>
-                <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider">&mdash; Free thoughts and reflections</span>
+                <span className="font-display text-lg font-bold text-primary">IV. Daily Log</span>
+                <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; Free thoughts and reflections</span>
               </div>
               <textarea
                 value={freeText}
                 onChange={(e) => { setFreeText(e.target.value); setSaveStatus('dirty'); }}
                 rows={5}
                 placeholder="Write freely here..."
-                className="w-full bg-[#F7F5F2]/45 border border-[#6C7278]/40 px-4 py-3 text-xs text-[#1A1C1E] focus:outline-none focus:border-[#B8422E] font-sans resize-none leading-relaxed"
+                className="w-full bg-neutral-bg/45 border border-secondary/40 px-4 py-3 text-xs text-primary focus:outline-none focus:border-tertiary font-sans resize-none leading-relaxed"
               />
             </div>
 
             {/* The single primary Terracotta red Reserved action button */}
             <div className="flex items-center justify-between gap-4">
-              <span className="font-label text-xs uppercase tracking-wider text-[#6C7278]">
+              <span className="font-label text-xs uppercase tracking-wider text-secondary">
                 {saveStatus === 'saved' && '• Saved'}
                 {saveStatus === 'saving' && '• Saving...'}
                 {saveStatus === 'dirty' && '• Unsaved changes'}
@@ -546,10 +546,10 @@ export default function JournalPage() {
         <div className={`space-y-8 lg:col-span-1 ${mobileTab === 'editor' ? 'hidden lg:block' : ''}`}>
           
           {/* DAILY INSIGHTS & METRICS PANEL */}
-          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm space-y-6 shadow-sm ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
-            <div className="border-b border-[#6C7278]/25 pb-2 flex items-center space-x-2">
-              <Activity className="h-4 w-4 text-[#B8422E]" />
-              <span className="font-label text-xs text-[#1A1C1E] uppercase tracking-[0.15em] font-bold">
+          <section className={`bg-surface border border-secondary p-6 rounded-sm space-y-6 shadow-sm ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
+            <div className="border-b border-secondary/25 pb-2 flex items-center space-x-2">
+              <Activity className="h-4 w-4 text-tertiary" />
+              <span className="font-label text-xs text-primary uppercase tracking-[0.15em] font-bold">
                 Day Insights & Metrics
               </span>
             </div>
@@ -557,8 +557,8 @@ export default function JournalPage() {
             {/* Mood Selector */}
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
-                <span className="font-label text-xs text-[#6C7278] uppercase font-bold">Daily Mood</span>
-                <span className="font-display text-sm font-semibold text-[#B8422E]">
+                <span className="font-label text-xs text-secondary uppercase font-bold">Daily Mood</span>
+                <span className="font-display text-sm font-semibold text-tertiary">
                   {mood === 1 && '1 - Terrible'}
                   {mood === 2 && '2 - Bad'}
                   {mood === 3 && '3 - Okay'}
@@ -573,7 +573,7 @@ export default function JournalPage() {
                     type="button"
                     onClick={() => handleMetricChange(val, sleepHours, waterIntake)}
                     className={`flex-1 py-1 text-center font-label text-xs uppercase border rounded-[2px] transition-all cursor-pointer ${
-                      mood === val ? 'bg-[#1A1C1E] text-white border-[#1A1C1E]' : 'border-[#6C7278]/30 text-[#6C7278] hover:border-[#1A1C1E] hover:text-[#1A1C1E]'
+                      mood === val ? 'bg-primary text-white border-primary' : 'border-secondary/30 text-secondary hover:border-primary hover:text-primary'
                     }`}
                   >
                     {val}
@@ -586,8 +586,8 @@ export default function JournalPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 font-label text-xs">
                 <div className="flex items-center space-x-1.5">
-                  <Moon className="h-3.5 w-3.5 text-[#B8422E]" />
-                  <span className="uppercase text-[#6C7278] font-bold">Sleep (Hrs)</span>
+                  <Moon className="h-3.5 w-3.5 text-tertiary" />
+                  <span className="uppercase text-secondary font-bold">Sleep (Hrs)</span>
                 </div>
                 <input
                   type="number"
@@ -596,13 +596,13 @@ export default function JournalPage() {
                   step="0.5"
                   value={sleepHours}
                   onChange={(e) => handleMetricChange(mood, parseFloat(e.target.value) || 0, waterIntake)}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1.5 font-sans focus:outline-none focus:border-[#B8422E]"
+                  className="w-full bg-neutral-bg border border-secondary/40 px-2 py-1.5 font-sans focus:outline-none focus:border-tertiary"
                 />
               </div>
               <div className="space-y-1.5 font-label text-xs">
                 <div className="flex items-center space-x-1.5">
-                  <Droplet className="h-3.5 w-3.5 text-[#B8422E]" />
-                  <span className="uppercase text-[#6C7278] font-bold">Water (L)</span>
+                  <Droplet className="h-3.5 w-3.5 text-tertiary" />
+                  <span className="uppercase text-secondary font-bold">Water (L)</span>
                 </div>
                 <input
                   type="number"
@@ -611,22 +611,22 @@ export default function JournalPage() {
                   step="0.25"
                   value={waterIntake}
                   onChange={(e) => handleMetricChange(mood, sleepHours, parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278]/40 px-2 py-1.5 font-sans focus:outline-none focus:border-[#B8422E]"
+                  className="w-full bg-neutral-bg border border-secondary/40 px-2 py-1.5 font-sans focus:outline-none focus:border-tertiary"
                 />
               </div>
             </div>
 
             {/* Habits tracker for this day */}
-            <div className="space-y-2.5 pt-4 border-t border-[#6C7278]/20">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block font-bold">
+            <div className="space-y-2.5 pt-4 border-t border-secondary/20">
+              <span className="font-label text-xs text-secondary uppercase tracking-wider block font-bold">
                 Habits Tracker
               </span>
-              <div className="space-y-2.5 bg-[#F7F5F2]/45 p-3 border border-[#6C7278]/15 rounded-sm">
+              <div className="space-y-2.5 bg-neutral-bg/45 p-3 border border-secondary/15 rounded-sm">
                 {habits.filter(h => !h.is_archived).map((habit) => {
                   const checked = getHabitStatus(habit.id);
                   return (
-                    <label key={habit.id} className="flex items-center justify-between font-sans text-xs text-[#1A1C1E] cursor-pointer">
-                      <span className={checked ? 'line-through text-[#6C7278]' : ''}>
+                    <label key={habit.id} className="flex items-center justify-between font-sans text-xs text-primary cursor-pointer">
+                      <span className={checked ? 'line-through text-secondary' : ''}>
                         {habit.name}
                         {habit.type === 'numeric' && ` (Goal: ${habit.goal}${habit.unit || ''})`}
                       </span>
@@ -634,52 +634,52 @@ export default function JournalPage() {
                         type="checkbox"
                         checked={checked}
                         onChange={() => handleHabitToggle(habit.id, checked)}
-                        className="h-4 w-4 accent-[#B8422E] cursor-pointer"
+                        className="h-4 w-4 accent-tertiary cursor-pointer"
                       />
                     </label>
                   );
                 })}
                 {habits.filter(h => !h.is_archived).length === 0 && (
-                  <p className="font-sans text-xs text-[#6C7278] italic text-center">No active habits configured.</p>
+                  <p className="font-sans text-xs text-secondary italic text-center">No active habits configured.</p>
                 )}
               </div>
             </div>
 
             {/* Completed Tasks on this Day */}
-            <div className="space-y-2 pt-4 border-t border-[#6C7278]/20">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-wider block font-bold">
+            <div className="space-y-2 pt-4 border-t border-secondary/20">
+              <span className="font-label text-xs text-secondary uppercase tracking-wider block font-bold">
                 Tasks Completed Today
               </span>
-              <div className="space-y-2 bg-[#F7F5F2]/45 p-3 border border-[#6C7278]/15 rounded-sm max-h-36 overflow-y-auto">
+              <div className="space-y-2 bg-neutral-bg/45 p-3 border border-secondary/15 rounded-sm max-h-36 overflow-y-auto">
                 {completedTasks.map((task) => (
-                  <div key={task.id} className="flex items-center space-x-2 text-xs font-sans text-[#1A1C1E]">
-                    <CheckCircle className="h-3.5 w-3.5 text-[#B8422E] shrink-0" />
+                  <div key={task.id} className="flex items-center space-x-2 text-xs font-sans text-primary">
+                    <CheckCircle className="h-3.5 w-3.5 text-tertiary shrink-0" />
                     <span className="truncate">{task.name}</span>
                   </div>
                 ))}
                 {completedTasks.length === 0 && (
-                  <p className="font-sans text-xs text-[#6C7278] italic text-center">No tasks completed today.</p>
+                  <p className="font-sans text-xs text-secondary italic text-center">No tasks completed today.</p>
                 )}
               </div>
             </div>
           </section>
 
           {/* HISTORICAL TIMELINE PANEL */}
-          <section className={`bg-white border border-[#6C7278] p-6 rounded-sm flex flex-col justify-between max-h-[500px] shadow-sm ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
+          <section className={`bg-surface border border-secondary p-6 rounded-sm flex flex-col justify-between max-h-[500px] shadow-sm ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
             <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
-              <span className="font-label text-xs text-[#6C7278] uppercase tracking-[0.15em] block border-b border-[#6C7278]/25 pb-1">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-secondary/25 pb-1">
                 Historical Timeline
               </span>
 
               {/* Search Input Bar */}
               <div className="relative font-label text-xs">
-                <Search className="h-4 w-4 text-[#6C7278] absolute left-3 top-2.5" />
+                <Search className="h-4 w-4 text-secondary absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search past logs..."
-                  className="w-full bg-[#F7F5F2] border border-[#6C7278] pl-9 pr-3 py-2 focus:outline-none focus:border-[#B8422E] font-sans"
+                  className="w-full bg-neutral-bg border border-secondary pl-9 pr-3 py-2 focus:outline-none focus:border-tertiary font-sans"
                 />
               </div>
 
@@ -701,27 +701,27 @@ export default function JournalPage() {
                         // Auto-toggle back to editor on mobile when selecting a past date
                         setMobileTab('editor');
                       }}
-                      className={`p-3 border border-[#6C7278]/35 rounded-sm hover:border-[#1A1C1E] cursor-pointer transition-all flex justify-between items-center ${
-                        selectedDateStr === entry.date ? 'bg-[#F7F5F2] border-[#1A1C1E]' : 'bg-white'
+                      className={`p-3 border border-secondary/35 rounded-sm hover:border-primary cursor-pointer transition-all flex justify-between items-center ${
+                        selectedDateStr === entry.date ? 'bg-neutral-bg border-primary' : 'bg-surface'
                       }`}
                     >
                       <div>
-                        <span className="font-label text-xs font-bold text-[#1A1C1E] block">
+                        <span className="font-label text-xs font-bold text-primary block">
                           {formattedLogDate.toUpperCase()}
                         </span>
                         {entry.morning_intentions[0] && (
-                          <span className="font-sans text-xs text-[#6C7278] line-clamp-1 mt-1 italic">
+                          <span className="font-sans text-xs text-secondary line-clamp-1 mt-1 italic">
                             &ldquo;{entry.morning_intentions[0]}&rdquo;
                           </span>
                         )}
                       </div>
-                      <ChevronRight className="h-4 w-4 text-[#6C7278] shrink-0 ml-2" />
+                      <ChevronRight className="h-4 w-4 text-secondary shrink-0 ml-2" />
                     </div>
                   );
                 })}
 
                 {filteredLogs.length === 0 && (
-                  <p className="font-sans text-xs text-[#6C7278] italic text-center py-12">No matching logs found.</p>
+                  <p className="font-sans text-xs text-secondary italic text-center py-12">No matching logs found.</p>
                 )}
               </div>
             </div>
