@@ -8,6 +8,7 @@ import MobileNav from '@/components/MobileNav';
 import PomodoroFloating from '@/components/PomodoroFloating';
 import PWARegister from '@/components/pwa-register';
 import SkeletonLoader from '@/components/SkeletonLoader';
+import PageTransition from '@/components/PageTransition';
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
@@ -35,9 +36,9 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
           <Sidebar />
           <MobileNav />
 
-          {/* Main Content Area */}
-          <main className="animate-page-enter flex-1 flex flex-col min-h-screen overflow-x-hidden px-4 py-6 md:p-12 pb-24 md:pb-12 max-w-7xl mx-auto w-full">
-            {children}
+          {/* Main Content Area — PageTransition re-mounts on every route change */}
+          <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden px-4 py-6 md:p-12 pb-24 md:pb-12 max-w-7xl mx-auto w-full">
+            <PageTransition>{children}</PageTransition>
           </main>
 
           {/* Global Floating Widget */}
