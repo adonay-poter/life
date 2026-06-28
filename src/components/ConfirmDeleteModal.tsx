@@ -66,7 +66,7 @@ export default function ConfirmDeleteModal({
     <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/45 backdrop-blur-[2px]" 
+        className="fixed inset-0 bg-black/45 backdrop-blur-[2px] animate-backdrop" 
         onClick={onClose}
       />
       
@@ -76,7 +76,7 @@ export default function ConfirmDeleteModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-modal-title"
-        className="relative bg-surface border-2 border-primary p-6 max-w-sm w-full shadow-2xl rounded-none flex flex-col space-y-4"
+        className="animate-modal relative bg-surface border-2 border-primary p-6 max-w-sm w-full shadow-2xl rounded-none flex flex-col space-y-4"
       >
         <div className="flex items-start space-x-3">
           <div className="bg-[#FFEBEE] p-2 text-tertiary shrink-0 border border-[#FFCDD2]">
@@ -100,7 +100,7 @@ export default function ConfirmDeleteModal({
             type="button"
             data-autofocus
             onClick={onClose}
-            className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg transition-colors rounded-sm cursor-pointer"
+            className="btn-press px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg rounded-sm cursor-pointer"
           >
             Cancel
           </button>
@@ -110,7 +110,7 @@ export default function ConfirmDeleteModal({
               onConfirm();
               onClose();
             }}
-            className="px-4 py-2 bg-tertiary text-on-primary hover:bg-tertiary/90 transition-colors border border-tertiary rounded-sm cursor-pointer"
+            className="btn-press px-4 py-2 bg-tertiary text-on-primary hover:bg-tertiary/90 border border-tertiary rounded-sm cursor-pointer"
           >
             Delete
           </button>

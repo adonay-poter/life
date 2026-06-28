@@ -199,14 +199,14 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/45 backdrop-blur-sm p-4 animate-backdrop"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-surface border-2 border-primary rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-sans relative">
+      <div className="animate-modal bg-surface border-2 border-primary rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-sans relative">
         
         {/* Header */}
         <div className="border-b border-secondary/25 p-5 flex justify-between items-start">

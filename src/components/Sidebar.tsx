@@ -143,7 +143,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-secondary h-screen sticky top-0 flex flex-col justify-between py-6 transition-all duration-300 hidden md:flex shrink-0 self-start`}>
+    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-secondary h-screen sticky top-0 flex flex-col justify-between py-6 sidebar-transition hidden md:flex shrink-0 self-start`}>
       {/* Upper Logo & Nav Section */}
       <div className="space-y-8">
         <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-secondary pb-3`}>
@@ -167,7 +167,7 @@ export default function Sidebar() {
             <ThemeToggle />
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-secondary hover:text-primary p-1 transition-all rounded-sm hover:bg-neutral-bg cursor-pointer"
+              className="text-secondary hover:text-primary p-1 rounded-sm hover:bg-neutral-bg cursor-pointer btn-press"
               title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -177,20 +177,21 @@ export default function Sidebar() {
 
         {/* Navigation Menu */}
         <nav className="space-y-1">
-          {menuItems.map((item) => {
+          {menuItems.map((item, i) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center ${
+                className={`nav-link stagger-item flex items-center ${
                   isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-3'
-                } text-sm font-label tracking-wide transition-all-custom rounded-sm relative group ${
+                } text-sm font-label tracking-wide rounded-sm relative group ${
                   isActive
                     ? 'bg-primary text-on-primary'
                     : 'text-primary hover:bg-neutral-bg border border-transparent hover:border-secondary/25'
                 }`}
+                style={{ '--stagger-i': i } as React.CSSProperties}
                 title={isCollapsed ? item.name : undefined}
               >
                 <Icon className="h-4 w-4 shrink-0" />

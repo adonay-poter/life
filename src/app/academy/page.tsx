@@ -1231,10 +1231,10 @@ function AcademyContent() {
                       value={localNotes}
                       onChange={(e) => setLocalNotes(e.target.value)}
                       placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                      className="w-full flex-grow min-h-[350px] lg:min-h-[450px] bg-neutral-bg/45 border border-secondary/30 px-4 py-3 text-xs text-primary focus:outline-none focus:border-tertiary font-mono resize-none leading-relaxed"
+                      className="w-full flex-grow h-[350px] lg:h-[450px] bg-neutral-bg/45 border border-secondary/30 px-4 py-3 text-xs text-primary focus:outline-none focus:border-tertiary font-mono resize-none leading-relaxed"
                     />
                   ) : (
-                    <div className="w-full flex-grow min-h-[350px] lg:min-h-[450px] bg-surface border border-secondary/15 px-4 py-3 overflow-y-auto space-y-2 border-heritage rounded-sm">
+                    <div className="w-full flex-grow h-[350px] lg:h-[450px] bg-surface border border-secondary/15 px-4 py-3 overflow-y-auto space-y-2 border-heritage rounded-sm">
                       {renderMarkdown(localNotes)}
                     </div>
                   )}

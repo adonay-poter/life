@@ -33,7 +33,7 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="text-secondary hover:text-primary p-1 transition-all rounded-sm hover:bg-neutral-bg cursor-pointer flex items-center justify-center"
+      className="btn-press text-secondary hover:text-primary p-1 rounded-sm hover:bg-neutral-bg cursor-pointer flex items-center justify-center"
       title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
       aria-label="Toggle theme"
     >

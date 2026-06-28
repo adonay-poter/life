@@ -73,7 +73,147 @@ body {
 
 /* Smooth transitions for navigation and lists */
 .transition-all-custom {
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===================================================
+   ANIMATION SYSTEM
+   =================================================== */
+
+/* --- Page / view enter --- */
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-page-enter {
+  animation: page-enter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Fade in (backdrop, overlays) --- */
+@keyframes fade-in-overlay {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.animate-backdrop {
+  animation: fade-in-overlay 0.2s ease both;
+}
+
+/* --- Modal slide up --- */
+@keyframes modal-slide-up {
+  from { opacity: 0; transform: translateY(24px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
+}
+.animate-modal {
+  animation: modal-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Bottom drawer slide up (mobile) --- */
+@keyframes drawer-slide-up {
+  from { opacity: 0; transform: translateY(100%); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-drawer {
+  animation: drawer-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Notification dropdown slide down --- */
+@keyframes dropdown-slide-down {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+}
+.animate-dropdown {
+  animation: dropdown-slide-down 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: top right;
+}
+
+/* --- Sidebar collapse / expand --- */
+.sidebar-transition {
+  transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+              padding 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Interactive press feedback --- */
+.btn-press {
+  transition: transform 0.12s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity  0.12s ease,
+              background-color 0.2s ease,
+              border-color 0.2s ease,
+              color 0.2s ease;
+}
+.btn-press:active {
+  transform: scale(0.94);
+  opacity: 0.85;
+}
+
+/* --- Nav link active indicator --- */
+.nav-link {
+  position: relative;
+  transition: background-color 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease,
+              transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-link:hover {
+  transform: translateX(2px);
+}
+.nav-link:active {
+  transform: scale(0.97) translateX(1px);
+}
+
+/* --- Bottom mobile nav tab press --- */
+.mobile-tab {
+  transition: color 0.2s ease, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mobile-tab:active {
+  transform: scale(0.88);
+}
+
+/* --- Icon rotate on toggle (theme, collapse) --- */
+.icon-rotate-enter {
+  animation: icon-rotate-in 0.25s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+@keyframes icon-rotate-in {
+  from { opacity: 0; transform: rotate(-90deg) scale(0.7); }
+  to   { opacity: 1; transform: rotate(0deg)   scale(1); }
+}
+
+/* --- Badge pulse for new notifications --- */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.3); }
+}
+.animate-badge-pulse {
+  animation: badge-pulse 1.8s ease-in-out infinite;
+}
+
+/* --- List item stagger (applied via CSS custom property) --- */
+.stagger-item {
+  animation: page-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--stagger-i, 0) * 40ms);
+}
+
+/* --- Reduced motion: disable all non-essential animations --- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-enter,
+  .animate-backdrop,
+  .animate-modal,
+  .animate-drawer,
+  .animate-dropdown,
+  .stagger-item {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+  .btn-press:active,
+  .nav-link:hover,
+  .nav-link:active,
+  .mobile-tab:active,
+  .btn-tertiary:active {
+    transform: none;
+  }
+  .sidebar-transition {
+    transition: none;
+  }
 }
 
 /* Flat solid borders matching Heritage guidelines */
@@ -91,10 +231,15 @@ body {
   font-weight: 600;
   font-size: var(--text-xs);
   letter-spacing: 0.05em;
-  transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease,
+              transform 0.12s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .btn-tertiary:hover {
   opacity: 0.9;
+}
+.btn-tertiary:active {
+  transform: scale(0.95);
+  opacity: 0.8;
 }
 
 /* Make form elements sitewide slightly larger for easier interaction */

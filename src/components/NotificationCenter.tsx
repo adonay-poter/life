@@ -162,19 +162,19 @@ export default function NotificationCenter() {
     <div className="relative flex items-center" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 text-secondary hover:text-primary transition-colors cursor-pointer"
+        className="btn-press relative p-2 text-secondary hover:text-primary transition-colors cursor-pointer"
         title="Notification Center"
       >
         <Bell className="h-5 w-5" />
         {activeAlerts.length > 0 && (
-          <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-tertiary text-[8px] font-bold text-on-primary ring-2 ring-white">
+          <span className="animate-badge-pulse absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-tertiary text-[8px] font-bold text-on-primary ring-2 ring-white">
             {activeAlerts.length}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute top-full right-0 md:right-auto md:left-0 mt-2 w-80 bg-surface border border-secondary shadow-lg rounded-sm z-50 overflow-hidden">
+        <div className="animate-dropdown absolute top-full right-0 md:right-auto md:left-0 mt-2 w-80 bg-surface border border-secondary shadow-lg rounded-sm z-50 overflow-hidden">
           <div className="flex justify-between items-center p-3 border-b border-secondary/20 bg-neutral-bg">
             <span className="font-label text-xs uppercase tracking-widest text-primary font-bold">
               Notifications

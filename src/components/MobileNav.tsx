@@ -119,8 +119,8 @@ export default function MobileNav() {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex flex-col items-center justify-center w-12 py-1 transition-all-custom rounded-sm ${
-                isActive ? 'text-tertiary' : 'text-secondary active:text-primary'
+              className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-sm ${
+                isActive ? 'text-tertiary' : 'text-secondary'
               }`}
             >
               <Icon className="h-5 w-5" />
@@ -132,8 +132,8 @@ export default function MobileNav() {
         {/* More Button */}
         <button
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-          className={`flex flex-col items-center justify-center w-12 py-1 transition-all-custom rounded-sm cursor-pointer ${
-            isDrawerOpen ? 'text-tertiary' : 'text-secondary active:text-primary'
+          className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-sm cursor-pointer ${
+            isDrawerOpen ? 'text-tertiary' : 'text-secondary'
           }`}
         >
           <Menu className="h-5 w-5" />
@@ -146,19 +146,19 @@ export default function MobileNav() {
         <>
           {/* Backdrop */}
           <div
-            className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] md:hidden"
+            className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] md:hidden animate-backdrop"
             onClick={() => setIsDrawerOpen(false)}
           />
           
           {/* Drawer Card */}
-          <div className="fixed bottom-14 left-0 right-0 bg-surface border-t-2 border-primary p-5 shadow-2xl z-[9999] md:hidden rounded-t-none">
+          <div className="fixed bottom-14 left-0 right-0 bg-surface border-t-2 border-primary p-5 shadow-2xl z-[9999] md:hidden rounded-t-none animate-drawer">
             <div className="flex justify-between items-center border-b border-secondary/25 pb-3 mb-4 font-label">
               <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-semibold">
                 More Sectors
               </span>
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="text-secondary hover:text-primary p-1 cursor-pointer"
+                className="text-secondary hover:text-primary p-1 cursor-pointer btn-press"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -169,7 +169,7 @@ export default function MobileNav() {
                 { name: 'Projects', href: '/projects', icon: FolderKanban, desc: 'Sectors & boards' },
                 { name: 'Academy', href: '/academy', icon: GraduationCap, desc: 'Courses & cards' },
                 { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily log' },
-              ].map((item) => {
+              ].map((item, i) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -177,11 +177,12 @@ export default function MobileNav() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsDrawerOpen(false)}
-                    className={`flex flex-col items-center justify-center p-4 border rounded-sm transition-all text-center ${
+                    className={`btn-press flex flex-col items-center justify-center p-4 border rounded-sm text-center ${
                       isActive
                         ? 'bg-primary text-on-primary border-primary'
                         : 'bg-neutral-bg/45 border-secondary/20 hover:border-primary'
                     }`}
+                    style={{ '--stagger-i': i } as React.CSSProperties}
                   >
                     <Icon className="h-6 w-6 mb-1.5 shrink-0" />
                     <span className="font-label text-xs uppercase font-bold tracking-wide">
