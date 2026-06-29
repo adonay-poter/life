@@ -86,7 +86,7 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
       if (!searchRes.ok) throw new Error('Search failed');
       const searchData = await searchRes.json();
       recordUsage(searchData.tokens || 0);
-      const { urls } = searchData;
+      const { urls, preExtracted } = searchData;
       
       if (!urls || urls.length === 0) {
         throw new Error('No sources found for this topic.');
@@ -96,29 +96,38 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
       setProgressMsg(`Found ${urls.length} sources. Extracting content...`);
 
       // 2. Extract content from URLs
-      setProgress(30);
-      setProgressMsg(`Extracting content from ${urls.length} sources...`);
-      
-      const extractPromises = urls.map(async (url: string) => {
-        try {
-          const extractRes = await fetch('/api/research/extract', {
-            method: 'POST',
-            body: JSON.stringify({ url }),
-            headers: { 'Content-Type': 'application/json' },
-            signal: AbortSignal.timeout(6000)
-          });
-          if (extractRes.ok) {
-            const { content } = await extractRes.json();
-            return `\n\n--- Source: ${url} ---\n\n${content}`;
+      let researchContent = '';
+      if (preExtracted && preExtracted.length > 0) {
+        setProgress(40);
+        setProgressMsg('Using search highlights for content...');
+        researchContent = preExtracted
+          .map((item: any) => `\n\n--- Source: ${item.url} (${item.title}) ---\n\n${item.content}`)
+          .join('');
+      } else {
+        setProgress(30);
+        setProgressMsg(`Extracting content from ${urls.length} sources...`);
+        
+        const extractPromises = urls.map(async (url: string) => {
+          try {
+            const extractRes = await fetch('/api/research/extract', {
+              method: 'POST',
+              body: JSON.stringify({ url }),
+              headers: { 'Content-Type': 'application/json' },
+              signal: AbortSignal.timeout(6000)
+            });
+            if (extractRes.ok) {
+              const { content } = await extractRes.json();
+              return `\n\n--- Source: ${url} ---\n\n${content}`;
+            }
+          } catch (e) {
+            console.warn('Failed to extract:', url, e);
           }
-        } catch (e) {
-          console.warn('Failed to extract:', url, e);
-        }
-        return '';
-      });
+          return '';
+        });
 
-      const extractedResults = await Promise.all(extractPromises);
-      const researchContent = extractedResults.filter(Boolean).join('');
+        const extractedResults = await Promise.all(extractPromises);
+        researchContent = extractedResults.filter(Boolean).join('');
+      }
 
       if (researchContent.length < 100) {
         throw new Error('Could not extract enough content from sources.');

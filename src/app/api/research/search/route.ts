@@ -13,6 +13,45 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'GEMINI_API_KEY is missing' }, { status: 500 });
     }
 
+    const exaApiKey = process.env.EXA_API_KEY;
+    if (exaApiKey) {
+      try {
+        const exaResponse = await fetch('https://api.exa.ai/search', {
+          method: 'POST',
+          headers: {
+            'x-api-key': exaApiKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            query: topic,
+            type: 'auto',
+            numResults: 5,
+            contents: {
+              highlights: true
+            }
+          }),
+          signal: AbortSignal.timeout(6000)
+        });
+        
+        if (exaResponse.ok) {
+          const exaData = await exaResponse.json();
+          const results = exaData.results || [];
+          if (results.length > 0) {
+            const uniqueUrls = results.map((r: any) => r.url);
+            const preExtracted = results.map((r: any) => {
+              const highlightsText = Array.isArray(r.highlights) ? r.highlights.join('\n...\n') : (r.highlight || '');
+              return { url: r.url, title: r.title, content: highlightsText };
+            });
+            return NextResponse.json({ urls: uniqueUrls, preExtracted });
+          }
+        } else {
+          console.warn(`Exa API returned status ${exaResponse.status}, falling back...`);
+        }
+      } catch (e) {
+        console.warn('Exa search failed, falling back...', e);
+      }
+    }
+
     // Primary Search: DuckDuckGo HTML (extremely reliable, fast, no API quota consumption)
     let uniqueUrls: string[] = [];
     
