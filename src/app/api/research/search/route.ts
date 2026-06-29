@@ -22,7 +22,8 @@ export async function POST(request: Request) {
         {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-          }
+          },
+          signal: AbortSignal.timeout(2000)
         }
       );
       
@@ -109,7 +110,7 @@ Return a list of the 3-5 best absolute URLs containing the best information to l
   }
 }
 
-async function fetchGeminiWithRetry(url: string, options: RequestInit, retries = 5, initialDelay = 4000) {
+async function fetchGeminiWithRetry(url: string, options: RequestInit, retries = 2, initialDelay = 1000) {
   let delay = initialDelay;
   let lastResponse: Response | null = null;
   let lastError: any;

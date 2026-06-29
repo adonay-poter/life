@@ -68,7 +68,7 @@ Answer:`;
   }
 }
 
-async function fetchGeminiWithRetry(url: string, options: RequestInit, retries = 5, initialDelay = 4000) {
+async function fetchGeminiWithRetry(url: string, options: RequestInit, retries = 2, initialDelay = 1000) {
   let delay = initialDelay;
   let lastResponse: Response | null = null;
   let lastError: any;

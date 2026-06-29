@@ -96,25 +96,29 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
       setProgressMsg(`Found ${urls.length} sources. Extracting content...`);
 
       // 2. Extract content from URLs
-      let researchContent = '';
-      for (let i = 0; i < urls.length; i++) {
-        setProgress(20 + Math.floor((30 * (i + 1)) / urls.length));
-        setProgressMsg(`Extracting source ${i + 1} of ${urls.length}...`);
-        
+      setProgress(30);
+      setProgressMsg(`Extracting content from ${urls.length} sources...`);
+      
+      const extractPromises = urls.map(async (url: string) => {
         try {
           const extractRes = await fetch('/api/research/extract', {
             method: 'POST',
-            body: JSON.stringify({ url: urls[i] }),
-            headers: { 'Content-Type': 'application/json' }
+            body: JSON.stringify({ url }),
+            headers: { 'Content-Type': 'application/json' },
+            signal: AbortSignal.timeout(6000)
           });
           if (extractRes.ok) {
             const { content } = await extractRes.json();
-            researchContent += `\n\n--- Source: ${urls[i]} ---\n\n${content}`;
+            return `\n\n--- Source: ${url} ---\n\n${content}`;
           }
         } catch (e) {
-          console.warn('Failed to extract:', urls[i]);
+          console.warn('Failed to extract:', url, e);
         }
-      }
+        return '';
+      });
+
+      const extractedResults = await Promise.all(extractPromises);
+      const researchContent = extractedResults.filter(Boolean).join('');
 
       if (researchContent.length < 100) {
         throw new Error('Could not extract enough content from sources.');
