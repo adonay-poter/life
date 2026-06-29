@@ -166,6 +166,10 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
       // 5. Generate Modules and Notes sequentially
       const modulesToCreate = outline.modules || [];
       for (let i = 0; i < modulesToCreate.length; i++) {
+        if (i > 0) {
+          // Add a 1.5-second pacing delay to prevent hitting Gemini's RPM rate limits
+          await new Promise((resolve) => setTimeout(resolve, 1500));
+        }
         const mod = modulesToCreate[i];
         setProgress(60 + Math.floor((40 * i) / modulesToCreate.length));
         setProgressMsg(`Writing notes for module: ${mod.title}...`);

@@ -42,7 +42,30 @@ export async function POST(request: Request) {
         uniqueUrls = Array.from(new Set(matches)).slice(0, 5);
       }
     } catch (e) {
-      console.warn('DuckDuckGo search failed, falling back to Gemini Search Grounding...', e);
+      console.warn('DuckDuckGo search failed, falling back to Wikipedia search...', e);
+    }
+
+    // Fallback 1: Wikipedia Search (100% free, open, fast, and does not consume Gemini API quotas)
+    if (uniqueUrls.length === 0) {
+      try {
+        const wikiResponse = await fetch(
+          `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(topic)}&utf8=&format=json`,
+          { signal: AbortSignal.timeout(2000) }
+        );
+        if (wikiResponse.ok) {
+          const wikiData = await wikiResponse.json();
+          const searchResults = wikiData.query?.search || [];
+          const wikiUrls = searchResults
+            .slice(0, 3)
+            .map((result: any) => `https://en.wikipedia.org/wiki/${encodeURIComponent(result.title.replace(/ /g, '_'))}`);
+          if (wikiUrls.length > 0) {
+            uniqueUrls = wikiUrls;
+            console.log('Fallback: Found Wikipedia sources:', uniqueUrls);
+          }
+        }
+      } catch (e) {
+        console.warn('Wikipedia fallback search failed:', e);
+      }
     }
 
     let totalTokens = 0;
