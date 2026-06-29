@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useAuth } from '@/context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
 import {
@@ -18,11 +19,13 @@ import {
   Cloud,
   CloudOff,
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 export default function MobileNav() {
   const pathname = usePathname();
+  const { signOut } = useAuth();
   const { isOnline, tasks, habits, habitRecords, lessons } = useDashboard();
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -195,6 +198,18 @@ export default function MobileNav() {
                 );
               })}
             </div>
+
+            {/* Log Out Button */}
+            <button
+              onClick={() => {
+                setIsDrawerOpen(false);
+                signOut();
+              }}
+              className="w-full mt-4 py-3 border border-tertiary/40 hover:border-tertiary text-tertiary bg-neutral-bg/30 hover:bg-tertiary/5 font-label text-xs uppercase tracking-wider font-semibold rounded-sm cursor-pointer flex items-center justify-center space-x-2 btn-press"
+            >
+              <LogOut className="h-4 w-4 shrink-0" />
+              <span>Log Out</span>
+            </button>
           </div>
         </>
       )}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { useAuth } from '@/context/AuthContext';
 import NotificationCenter from './NotificationCenter';
 import ThemeToggle from './ThemeToggle';
 import {
@@ -19,11 +20,13 @@ import {
   WifiOff,
   RefreshCw,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  LogOut
 } from 'lucide-react';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { signOut } = useAuth();
   const {
     isOnline,
     syncPending,
@@ -242,6 +245,23 @@ export default function Sidebar() {
             </div>
           </div>
         )}
+
+        {/* Log Out Button */}
+        <button
+          onClick={signOut}
+          className={`flex items-center ${
+            isCollapsed ? 'justify-center p-2.5 w-10 h-10' : 'space-x-3 px-4 py-2.5 w-full'
+          } text-sm font-label tracking-wide rounded-sm text-secondary hover:text-tertiary hover:bg-neutral-bg border border-transparent hover:border-secondary/25 cursor-pointer relative group btn-press`}
+          title={isCollapsed ? 'Log Out' : undefined}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!isCollapsed && <span>Log Out</span>}
+          {isCollapsed && (
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+              Log Out
+            </div>
+          )}
+        </button>
 
         {/* Connection & Sync Status Indicators */}
         {!isCollapsed ? (
