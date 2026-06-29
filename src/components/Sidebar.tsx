@@ -143,7 +143,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-secondary h-screen sticky top-0 flex flex-col justify-between py-6 sidebar-transition hidden md:flex shrink-0 self-start`}>
+    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-secondary h-screen sticky top-0 flex flex-col justify-between py-6 sidebar-transition hidden md:flex shrink-0 self-start z-40`}>
       {/* Upper Logo & Nav Section */}
       <div className="space-y-8">
         <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-secondary pb-3`}>
