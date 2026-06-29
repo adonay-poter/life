@@ -503,49 +503,300 @@ function AcademyContent() {
   // ==========================================
   const renderMarkdownInline = (text: string) => {
     if (!text) return '';
-    const parts = [];
-    let lastIndex = 0;
-    const boldRegex = /\*\*(.*?)\*\*/g;
-    let match;
-    while ((match = boldRegex.exec(text)) !== null) {
-      if (match.index > lastIndex) {
-        parts.push(text.slice(lastIndex, match.index));
+    
+    // Build array of formatted text parts using flatMap passes
+    let parts: { type: 'text' | 'bold' | 'italic' | 'code' | 'footnote' | 'link'; content: string; url?: string }[] = [
+      { type: 'text', content: text }
+    ];
+
+    // 1. Parse Footnotes [[^1]] or [^1]
+    parts = parts.flatMap(part => {
+      if (part.type !== 'text') return [part];
+      const res: typeof parts = [];
+      const regex = /(?:\[\[\^|\[\^)(.*?)(?:\]\]|\])/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part.content)) !== null) {
+        if (match.index > lastIndex) {
+          res.push({ type: 'text', content: part.content.slice(lastIndex, match.index) });
+        }
+        res.push({ type: 'footnote', content: match[1] });
+        lastIndex = regex.lastIndex;
       }
-      parts.push(<strong key={match.index} className="font-bold">{match[1]}</strong>);
-      lastIndex = boldRegex.lastIndex;
-    }
-    if (lastIndex < text.length) {
-      parts.push(text.slice(lastIndex));
-    }
-    return parts.length > 0 ? parts : text;
+      if (lastIndex < part.content.length) {
+        res.push({ type: 'text', content: part.content.slice(lastIndex) });
+      }
+      return res;
+    });
+
+    // 2. Parse Inline Code `code`
+    parts = parts.flatMap(part => {
+      if (part.type !== 'text') return [part];
+      const res: typeof parts = [];
+      const regex = /`(.*?)`/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part.content)) !== null) {
+        if (match.index > lastIndex) {
+          res.push({ type: 'text', content: part.content.slice(lastIndex, match.index) });
+        }
+        res.push({ type: 'code', content: match[1] });
+        lastIndex = regex.lastIndex;
+      }
+      if (lastIndex < part.content.length) {
+        res.push({ type: 'text', content: part.content.slice(lastIndex) });
+      }
+      return res;
+    });
+
+    // 3. Parse Bold **bold**
+    parts = parts.flatMap(part => {
+      if (part.type !== 'text') return [part];
+      const res: typeof parts = [];
+      const regex = /\*\*(.*?)\*\*/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part.content)) !== null) {
+        if (match.index > lastIndex) {
+          res.push({ type: 'text', content: part.content.slice(lastIndex, match.index) });
+        }
+        res.push({ type: 'bold', content: match[1] });
+        lastIndex = regex.lastIndex;
+      }
+      if (lastIndex < part.content.length) {
+        res.push({ type: 'text', content: part.content.slice(lastIndex) });
+      }
+      return res;
+    });
+
+    // 4. Parse Italic *italic* or _italic_
+    parts = parts.flatMap(part => {
+      if (part.type !== 'text') return [part];
+      const res: typeof parts = [];
+      const regex = /\*(.*?)\*|_(.*?)_/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part.content)) !== null) {
+        if (match.index > lastIndex) {
+          res.push({ type: 'text', content: part.content.slice(lastIndex, match.index) });
+        }
+        res.push({ type: 'italic', content: match[1] || match[2] });
+        lastIndex = regex.lastIndex;
+      }
+      if (lastIndex < part.content.length) {
+        res.push({ type: 'text', content: part.content.slice(lastIndex) });
+      }
+      return res;
+    });
+
+    // 5. Parse Links [text](url)
+    parts = parts.flatMap(part => {
+      if (part.type !== 'text') return [part];
+      const res: typeof parts = [];
+      const regex = /\[(.*?)\]\((.*?)\)/g;
+      let lastIndex = 0;
+      let match;
+      while ((match = regex.exec(part.content)) !== null) {
+        if (match.index > lastIndex) {
+          res.push({ type: 'text', content: part.content.slice(lastIndex, match.index) });
+        }
+        res.push({ type: 'link', content: match[1], url: match[2] });
+        lastIndex = regex.lastIndex;
+      }
+      if (lastIndex < part.content.length) {
+        res.push({ type: 'text', content: part.content.slice(lastIndex) });
+      }
+      return res;
+    });
+
+    return parts.map((part, index) => {
+      switch (part.type) {
+        case 'bold':
+          return <strong key={index} className="font-bold text-primary">{part.content}</strong>;
+        case 'italic':
+          return <em key={index} className="italic text-primary">{part.content}</em>;
+        case 'code':
+          return <code key={index} className="bg-neutral-bg/70 px-1 py-0.5 rounded font-mono text-[10px] text-tertiary border border-secondary/15">{part.content}</code>;
+        case 'footnote':
+          return <sup key={index} className="text-[9px] font-bold text-tertiary ml-0.5 select-none" title={`Reference Reference ${part.content}`}>[{part.content}]</sup>;
+        case 'link':
+          return <a key={index} href={part.url} target="_blank" rel="noopener noreferrer" className="text-tertiary hover:underline">{part.content}</a>;
+        default:
+          return part.content;
+      }
+    });
   };
 
   const renderMarkdown = (text: string) => {
     if (!text) return <p className="italic text-secondary">Empty notepad. Input notes on edit view...</p>;
     
     const lines = text.split('\n');
-    return lines.map((line, idx) => {
-      if (line.startsWith('# ')) {
-        return <h4 key={idx} className="font-display text-lg font-bold text-primary mt-3 mb-2">{renderMarkdownInline(line.slice(2))}</h4>;
+    const elements: React.ReactNode[] = [];
+    
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // 1. Code Block
+      if (line.trim().startsWith('```')) {
+        const codeLines: string[] = [];
+        i++;
+        while (i < lines.length && !lines[i].trim().startsWith('```')) {
+          codeLines.push(lines[i]);
+          i++;
+        }
+        elements.push(
+          <pre key={`code-${i}`} className="bg-neutral-bg/60 border border-secondary/20 p-3 rounded-sm font-mono text-[11px] text-primary overflow-x-auto my-3 leading-relaxed whitespace-pre">
+            <code>{codeLines.join('\n')}</code>
+          </pre>
+        );
+        i++; // skip ending ```
+        continue;
       }
-      if (line.startsWith('## ')) {
-        return <h5 key={idx} className="font-display text-md font-bold text-primary mt-2 mb-1.5">{renderMarkdownInline(line.slice(3))}</h5>;
+
+      // 2. Table Block
+      if (line.trim().startsWith('|')) {
+        const tableLines: string[] = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          tableLines.push(lines[i]);
+          i++;
+        }
+        
+        if (tableLines.length > 0) {
+          const parsedRows = tableLines.map(row => {
+            return row.split('|')
+              .map(cell => cell.trim())
+              .filter((_, idx, arr) => idx > 0 && idx < arr.length - 1);
+          });
+
+          let hasHeader = false;
+          let headerRow: string[] = [];
+          let dataRows = parsedRows;
+
+          if (tableLines.length > 1 && tableLines[1].includes('-')) {
+            hasHeader = true;
+            headerRow = parsedRows[0];
+            dataRows = parsedRows.slice(2);
+          }
+
+          elements.push(
+            <div key={`table-${i}`} className="overflow-x-auto my-3 border border-secondary/25 rounded-sm">
+              <table className="w-full text-left border-collapse text-[11px] font-sans">
+                {hasHeader && (
+                  <thead>
+                    <tr className="bg-neutral-bg/40 border-b border-secondary/35">
+                      {headerRow.map((cell, cIdx) => (
+                        <th key={cIdx} className="px-3 py-2 font-bold text-primary border-r border-secondary/15 last:border-r-0">
+                          {renderMarkdownInline(cell)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                )}
+                <tbody>
+                  {dataRows.map((row, rIdx) => (
+                    <tr key={rIdx} className="border-b border-secondary/10 last:border-b-0 hover:bg-neutral-bg/10">
+                      {row.map((cell, cIdx) => (
+                        <td key={cIdx} className="px-3 py-2 text-primary border-r border-secondary/10 last:border-r-0">
+                          {renderMarkdownInline(cell)}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
+        continue;
       }
-      if (line.startsWith('### ')) {
-        return <h6 key={idx} className="font-sans text-xs font-bold text-primary mt-2 mb-1">{renderMarkdownInline(line.slice(4))}</h6>;
-      }
-      if (line.startsWith('- ') || line.startsWith('* ')) {
-        return <li key={idx} className="font-sans text-xs text-primary ml-4 list-disc mt-1">{renderMarkdownInline(line.slice(2))}</li>;
-      }
-      if (line.startsWith('> ')) {
-        return (
-          <blockquote key={idx} className="border-l-2 border-tertiary pl-3 py-1 bg-neutral-bg font-sans text-xs italic text-secondary my-2">
-            {renderMarkdownInline(line.slice(2))}
+
+      // 3. Blockquote
+      if (line.trim().startsWith('>')) {
+        const quoteLines: string[] = [];
+        while (i < lines.length && lines[i].trim().startsWith('>')) {
+          quoteLines.push(lines[i].trim().slice(1).trim());
+          i++;
+        }
+        elements.push(
+          <blockquote key={`quote-${i}`} className="border-l-2 border-tertiary pl-3 py-1 bg-neutral-bg/50 font-sans text-xs italic text-secondary my-3">
+            {quoteLines.map((ql, qIdx) => (
+              <p key={qIdx} className="my-0.5">{renderMarkdownInline(ql)}</p>
+            ))}
           </blockquote>
         );
+        continue;
       }
-      return <p key={idx} className="font-sans text-xs text-primary min-h-[1em] leading-relaxed mt-1.5">{renderMarkdownInline(line)}</p>;
-    });
+
+      // 4. Bullets (List)
+      if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
+        const listItems: string[] = [];
+        while (i < lines.length && (lines[i].trim().startsWith('-') || lines[i].trim().startsWith('*'))) {
+          listItems.push(lines[i].trim().slice(1).trim());
+          i++;
+        }
+        elements.push(
+          <ul key={`list-${i}`} className="list-disc pl-5 my-2 text-xs space-y-1">
+            {listItems.map((item, lIdx) => (
+              <li key={lIdx} className="text-primary font-sans">
+                {renderMarkdownInline(item)}
+              </li>
+            ))}
+          </ul>
+        );
+        continue;
+      }
+
+      // 5. Headings
+      if (line.startsWith('# ')) {
+        elements.push(
+          <h4 key={i} className="font-display text-lg font-bold text-primary mt-4 mb-2 border-b border-secondary/15 pb-1">
+            {renderMarkdownInline(line.slice(2))}
+          </h4>
+        );
+        i++;
+        continue;
+      }
+      if (line.startsWith('## ')) {
+        elements.push(
+          <h5 key={i} className="font-display text-md font-bold text-primary mt-3.5 mb-1.5">
+            {renderMarkdownInline(line.slice(3))}
+          </h5>
+        );
+        i++;
+        continue;
+      }
+      if (line.startsWith('### ')) {
+        elements.push(
+          <h6 key={i} className="font-sans text-xs font-bold text-primary mt-3 mb-1">
+            {renderMarkdownInline(line.slice(4))}
+          </h6>
+        );
+        i++;
+        continue;
+      }
+
+      // 6. Horizontal Rule
+      if (line.trim() === '---' || line.trim() === '***' || line.trim() === '___') {
+        elements.push(<hr key={i} className="my-4 border-t border-secondary/25" />);
+        i++;
+        continue;
+      }
+
+      // 7. Regular paragraph
+      if (line.trim() !== '') {
+        elements.push(
+          <p key={i} className="font-sans text-xs text-primary min-h-[1em] leading-relaxed my-2">
+            {renderMarkdownInline(line)}
+          </p>
+        );
+      } else {
+        elements.push(<div key={i} className="h-2" />);
+      }
+      i++;
+    }
+
+    return elements;
   };
 
   // Find due flashcards
