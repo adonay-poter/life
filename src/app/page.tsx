@@ -11,10 +11,7 @@ import {
   RefreshCw, 
   SlidersHorizontal, 
   Eye, 
-  EyeOff, 
-  Check, 
-  X, 
-  Timer
+  EyeOff
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSystem } from '@/context/SystemContext';
@@ -50,7 +47,6 @@ export default function DashboardHome() {
     dailyReflections: true,
   });
   const [showConfig, setShowConfig] = useState(false);
-  const [isVisibilityLoaded, setIsVisibilityLoaded] = useState(false);
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -62,7 +58,6 @@ export default function DashboardHome() {
         console.warn('Failed to parse dashboard widgets visibility:', err);
       }
     }
-    setIsVisibilityLoaded(true);
   }, []);
 
   const toggleWidget = (key: keyof typeof widgetsVisibility) => {

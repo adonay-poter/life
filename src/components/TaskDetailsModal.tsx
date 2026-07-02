@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDashboard, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
@@ -67,7 +67,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
     }
   }, [activeTask]);
 
-  const handleSaveTaskEdit = async () => {
+  const handleSaveTaskEdit = useCallback(async () => {
     if (!activeTask) return;
     if (!editTaskName.trim()) {
       showToast('Task name cannot be empty.', 'error');
@@ -86,7 +86,18 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
     showToast('Task updated successfully.', 'success');
     setIsEditingTask(false);
-  };
+  }, [
+    activeTask,
+    editTaskCategory,
+    editTaskDesc,
+    editTaskDueDate,
+    editTaskName,
+    editTaskPriority,
+    editTaskProjId,
+    editTaskRecurring,
+    showToast,
+    updateTask
+  ]);
 
   // Keyboard escape & saving shortcut listeners
   useEffect(() => {
@@ -117,7 +128,9 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
     editTaskPriority,
     editTaskDueDate,
     editTaskRecurring,
-    deleteConfirmOpen
+    deleteConfirmOpen,
+    handleSaveTaskEdit,
+    onClose
   ]);
 
   if (!activeTask) return null;
@@ -538,6 +551,14 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   className="bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
                 >
                   <span>+1 Session</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStartFocusSession(activeTask.id)}
+                  className="bg-primary text-on-primary hover:bg-tertiary font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
+                >
+                  <Play className="h-3 w-3 fill-current" />
+                  <span>Start Focus</span>
                 </button>
               </div>
             </div>

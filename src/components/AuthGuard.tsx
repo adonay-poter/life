@@ -13,7 +13,6 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -31,29 +30,12 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
     setLoading(true);
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-        if (error) throw error;
-        
-        // If user already exists, Supabase sign up might not return an error but return empty identities.
-        if (data.user && data.user.identities?.length === 0) {
-          showToast('An account with this email already exists. Please sign in.', 'error');
-          setIsSignUp(false);
-        } else {
-          showToast('Account created successfully! You can now sign in.', 'success');
-          setIsSignUp(false);
-        }
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
-        showToast('Successfully signed in.', 'success');
-      }
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      showToast('Successfully signed in.', 'success');
     } catch (err: any) {
       console.error(err);
       showToast(err.message || 'Authentication failed. Please check your credentials.', 'error');
@@ -80,7 +62,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
         </div>
 
         <h2 className="font-display text-2xl font-medium text-primary text-center mb-6">
-          {isSignUp ? 'Create Account' : 'Access Dashboard'}
+          Access Dashboard
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -120,7 +102,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 id="current-password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
-                autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -150,24 +132,10 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 <span>Processing...</span>
               </>
             ) : (
-              <span>{isSignUp ? 'Register' : 'Sign In'}</span>
+              <span>Sign In</span>
             )}
           </button>
         </form>
-
-        {/* Toggle Mode Link */}
-        <div className="mt-8 pt-6 border-t border-secondary/20 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsSignUp(!isSignUp);
-              setPassword('');
-            }}
-            className="font-label text-xs uppercase tracking-wider text-secondary hover:text-primary transition-colors cursor-pointer"
-          >
-            {isSignUp ? 'Already have an account? Sign In' : 'Need an account? Register'}
-          </button>
-        </div>
       </div>
     </div>
   );

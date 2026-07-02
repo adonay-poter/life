@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 export const LIMITS = {
   RPD: 20,
@@ -52,7 +52,7 @@ export function useRateLimit() {
 
   // Calculate current usage
   // eslint-disable-next-line react-hooks/purity
-  const now = useMemo(() => Date.now(), [requests]);
+  const now = Date.now();
   const oneMinuteAgo = now - 60 * 1000;
   const oneDayAgo = now - 24 * 60 * 60 * 1000;
 

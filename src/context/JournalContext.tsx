@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
-import { useToast } from './ToastContext';
 
 export interface JournalEntry {
   date: string; // YYYY-MM-DD
@@ -55,7 +54,6 @@ const MOCK_JOURNAL_ENTRIES: JournalEntry[] = [
 ];
 
 export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { showToast } = useToast();
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();

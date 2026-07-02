@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
-import { useToast } from './ToastContext';
 
 export interface Habit {
   id: string;
@@ -89,7 +88,6 @@ const MOCK_DAILY_LOGS: DailyLog[] = [
 ];
 
 export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { showToast } = useToast();
   const [habits, setHabits] = useState<Habit[]>([]);
   const [habitRecords, setHabitRecords] = useState<HabitRecord[]>([]);
   const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);

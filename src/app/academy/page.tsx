@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { useDashboard, Course, CourseModule, Lesson, Flashcard } from '@/context/DashboardContext';
+import { useDashboard, CourseModule, Lesson } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import ResearchModal from '@/components/ResearchModal';
@@ -104,12 +104,13 @@ function AcademyContent() {
 
   // Sync external changes to notes (e.g. from AI Research Agent)
   useEffect(() => {
-    if (activeModule && activeModule.notes !== undefined) {
+    const activeModuleNotes = activeModule?.notes;
+    if (activeModuleNotes !== undefined) {
       // If the notes changed in the database, and it's not the same as what we just saved,
       // it means it was updated externally (like by the Research Agent)
-      if (activeModule.notes !== lastSavedNotesRef.current && activeModule.notes !== localNotes) {
-        setLocalNotes(activeModule.notes);
-        lastSavedNotesRef.current = activeModule.notes;
+      if (activeModuleNotes !== lastSavedNotesRef.current && activeModuleNotes !== notesRef.current) {
+        setLocalNotes(activeModuleNotes);
+        lastSavedNotesRef.current = activeModuleNotes;
       }
     }
   }, [activeModule?.notes]);
@@ -279,11 +280,14 @@ function AcademyContent() {
     selectedModuleId,
     activeModule,
     localNotes,
+    newModuleModalOpen,
     deleteModalOpen,
     editCourseModalOpen,
     editingModuleId,
     editingLessonId,
-    showAddCourse
+    showAddCourse,
+    showToast,
+    updateModuleNotes
   ]);
 
   // Clear search on tab/course change
@@ -348,7 +352,7 @@ function AcademyContent() {
     try {
       new URL(clean);
       return { isValid: true, formatted: clean };
-    } catch (_) {
+    } catch {
       return { isValid: false, formatted: url };
     }
   };

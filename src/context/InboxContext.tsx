@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useSystem } from './SystemContext';
-import { useToast } from './ToastContext';
 
 export interface InboxItem {
   id: string;
@@ -53,7 +52,6 @@ const MOCK_INBOX: InboxItem[] = [
 ];
 
 export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { showToast } = useToast();
   const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();

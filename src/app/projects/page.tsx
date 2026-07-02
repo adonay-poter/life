@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import { useDashboard, Project, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
-import { getLocalDateString } from '@/utils/dateUtils';
 import { 
   Plus, 
   Trash2, 

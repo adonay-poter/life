@@ -6,7 +6,6 @@ import { useDashboard, Project, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import TaskDetailsModal from '@/components/TaskDetailsModal';
-import { getLocalDateString } from '@/utils/dateUtils';
 import Link from 'next/link';
 import {
   ArrowLeft,
@@ -18,13 +17,9 @@ import {
   Edit3,
   Plus,
   SlidersHorizontal,
-  Check,
   X,
   Play,
-  Timer,
   AlertCircle,
-  CheckCircle2,
-  Circle,
   Pin
 } from 'lucide-react';
 
@@ -134,7 +129,6 @@ function ProjectDetailContent() {
   };
   
   const progress = getProgress();
-  const isOverdue = project.deadline && new Date(project.deadline) < new Date() && project.status !== 'completed';
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

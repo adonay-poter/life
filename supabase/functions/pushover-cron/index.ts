@@ -1,12 +1,13 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-Deno.serve(async (req) => {
+Deno.serve(async () => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     
-    const pushoverUserKey = "uqxeu2iz4e3oe2pyyz1ah2hmt4ua63";
-    const pushoverApiToken = "ai2r1f1xc5fwtssbxdacryk4bicwbs";
+    const pushoverUserKey = Deno.env.get("PUSHOVER_USER_KEY") || "";
+    const pushoverApiToken = Deno.env.get("PUSHOVER_API_TOKEN") || "";
+    const dashboardUrl = Deno.env.get("DASHBOARD_URL") || "https://hulu-dashboard.vercel.app";
 
     if (!supabaseUrl || !supabaseKey) {
       throw new Error("Missing Supabase credentials");
@@ -52,7 +53,7 @@ Deno.serve(async (req) => {
     const cardsCount = flashcards?.length || 0;
     const inboxCount = inbox?.length || 0;
 
-    let messages = [];
+    const messages = [];
     if (overdueCount > 0) messages.push(`${overdueCount} Overdue Task(s)`);
     if (cardsCount > 0) messages.push(`${cardsCount} Flashcard(s) Due`);
     if (inboxCount > 10) messages.push(`Inbox Overflow: ${inboxCount} items`);
@@ -72,7 +73,7 @@ Deno.serve(async (req) => {
     form.append("user", pushoverUserKey);
     form.append("title", "Hulu Dashboard Alerts");
     form.append("message", summary);
-    form.append("url", "https://hulu-dashboard.vercel.app"); // Adjust to actual URL
+    form.append("url", dashboardUrl);
     form.append("url_title", "Open Dashboard");
 
     const response = await fetch("https://api.pushover.net/1/messages.json", {

@@ -46,7 +46,9 @@ Designed around the **Heritage** style guide:
    Open `.env.local` and add your:
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `GEMINI_API_KEY` (if you are utilizing optional AI scraper utilities)
+   - `GEMINI_API_KEY` (for optional AI research/tagging utilities)
+   - `EXA_API_KEY` (optional, improves research search quality)
+   - `PUSHOVER_USER_KEY`, `PUSHOVER_API_TOKEN`, and `DASHBOARD_URL` (if deploying the Pushover cron function)
 
 3. **Install Dependencies:**
    ```bash
@@ -73,6 +75,7 @@ The easiest way to deploy this dashboard is through the **[Vercel Platform](http
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `GEMINI_API_KEY`
+   - `EXA_API_KEY` (optional)
 3. Click **Deploy**. Vercel will automatically build and deploy the Next.js app on every push to your `main` branch.
 
 ### GitHub Actions (CI)

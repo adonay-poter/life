@@ -1,29 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Fraunces, Public_Sans, Space_Grotesk } from 'next/font/google';
 import localFont from 'next/font/local';
 import './globals.css';
 import ClientWrapper from '@/components/ClientWrapper';
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
-
-const publicSans = Public_Sans({
-  subsets: ['latin'],
-  variable: '--font-public-sans',
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
-  weight: ['400', '500', '600', '700'],
-  display: 'swap',
-});
 
 const zemach = localFont({
   src: '../../Zemach_Regular_eafc59f80a.otf',
@@ -61,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} ${zemach.variable} h-full antialiased`}
+      className={`${zemach.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>

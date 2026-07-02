@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
-import { Search, Calendar, ChevronRight, Activity, Smile, Moon, Droplet, CheckCircle } from 'lucide-react';
+import { Search, Calendar, ChevronRight, Activity, Moon, Droplet, CheckCircle } from 'lucide-react';
 
 export default function JournalPage() {
   const {
@@ -54,6 +54,8 @@ export default function JournalPage() {
   const [hasAutoSaved, setHasAutoSaved] = useState(false);
 
   const prevDateRef = useRef(selectedDateStr);
+  const saveStatusRef = useRef(saveStatus);
+  const updateJournalEntryRef = useRef(updateJournalEntry);
   const formValuesRef = useRef({
     mIntention1,
     mIntention2,
@@ -66,6 +68,14 @@ export default function JournalPage() {
     eBetter3,
     freeText,
   });
+
+  useEffect(() => {
+    saveStatusRef.current = saveStatus;
+  }, [saveStatus]);
+
+  useEffect(() => {
+    updateJournalEntryRef.current = updateJournalEntry;
+  }, [updateJournalEntry]);
 
   // Keep formValuesRef synced
   useEffect(() => {
@@ -95,19 +105,20 @@ export default function JournalPage() {
   ]);
 
   // Helper to save a specific date entry
-  const saveEntryForDate = (dateStr: string, values: typeof formValuesRef.current) => {
+  const saveEntryForDate = useCallback((dateStr: string, values: typeof formValuesRef.current) => {
     const morning = [values.mIntention1, values.mIntention2, values.mIntention3].filter((s) => s.trim().length > 0);
     const learned = [values.eLearned1, values.eLearned2, values.eLearned3].filter((s) => s.trim().length > 0);
     const better = [values.eBetter1, values.eBetter2, values.eBetter3].filter((s) => s.trim().length > 0);
-    updateJournalEntry(dateStr, morning, learned, better, values.freeText);
-  };
+    updateJournalEntryRef.current(dateStr, morning, learned, better, values.freeText);
+  }, []);
 
   // Load data and handle date transition saving
   useEffect(() => {
     const prevDate = prevDateRef.current;
+    const currentSaveStatus = saveStatusRef.current;
     
     // 1. If switching dates and form is dirty, flush previous date's changes
-    if (prevDate && prevDate !== selectedDateStr && saveStatus === 'dirty') {
+    if (prevDate && prevDate !== selectedDateStr && currentSaveStatus === 'dirty') {
       saveEntryForDate(prevDate, formValuesRef.current);
     }
 
@@ -115,7 +126,7 @@ export default function JournalPage() {
     const entry = journalEntries.find((j) => j.date === selectedDateStr);
     const dateChanged = prevDate !== selectedDateStr;
 
-    if (dateChanged || saveStatus === 'saved') {
+    if (dateChanged || currentSaveStatus === 'saved') {
       if (dateChanged) setHasAutoSaved(false);
       if (entry) {
         setMIntention1(entry.morning_intentions[0] || '');
@@ -147,7 +158,7 @@ export default function JournalPage() {
     }
 
     prevDateRef.current = selectedDateStr;
-  }, [selectedDateStr, journalEntries]);
+  }, [selectedDateStr, journalEntries, saveEntryForDate]);
 
   // Load metrics for the selected date
   useEffect(() => {
@@ -214,7 +225,7 @@ export default function JournalPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedDateStr, hasAutoSaved]);
+  }, [selectedDateStr, hasAutoSaved, saveEntryForDate, showToast]);
 
   // Debounced auto-save effect
   useEffect(() => {
@@ -246,6 +257,7 @@ export default function JournalPage() {
     freeText,
     selectedDateStr,
     hasAutoSaved,
+    saveEntryForDate,
     showToast
   ]);
 
@@ -256,7 +268,7 @@ export default function JournalPage() {
         saveEntryForDate(prevDateRef.current, formValuesRef.current);
       }
     };
-  }, [saveStatus]);
+  }, [saveStatus, saveEntryForDate]);
 
   // Warning before unload if there are unsaved changes
   useEffect(() => {

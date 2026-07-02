@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense, useCallback } from 'react';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
@@ -68,7 +68,6 @@ function InboxPageContent() {
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -134,7 +133,7 @@ function InboxPageContent() {
     setActiveDropdownId(null);
   }
 
-  async function handleSaveEdit(id: string) {
+  const handleSaveEdit = useCallback(async (id: string) => {
     if (!editTitle.trim()) return;
 
     let finalUrl = editUrl;
@@ -166,7 +165,7 @@ function InboxPageContent() {
       console.error('Failed to update inbox item:', err);
       showToast('Failed to save changes. Please try again.', 'error');
     }
-  }
+  }, [editContent, editTags, editTitle, editType, editUrl, showToast, updateInboxItem]);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -225,7 +224,7 @@ function InboxPageContent() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingItemId, editTitle, editType, editUrl, editContent, editTags, convertingItemId, deleteModalOpen, activeDropdownId]);
+  }, [editingItemId, handleSaveEdit, convertingItemId, deleteModalOpen, activeDropdownId]);
 
   // Handle click outside dropdown and Escape key
   useEffect(() => {
@@ -666,8 +665,6 @@ function InboxPageContent() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          onFocus={() => setIsSearchFocused(true)}
-          onBlur={() => setIsSearchFocused(false)}
           placeholder="Search all inboxes globally by title, content, URL, or tag..."
           className="w-full bg-transparent text-sm text-primary focus:outline-none font-sans"
         />
@@ -879,8 +876,6 @@ function InboxPageContent() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setIsSearchFocused(false)}
             placeholder="Search globally..."
             className="w-full bg-transparent text-sm text-primary focus:outline-none font-sans"
           />
@@ -966,6 +961,13 @@ function InboxPageContent() {
                                   <GraduationCap className="h-3.5 w-3.5 text-secondary" />
                                   <span>Send to Academy</span>
                                 </button>
+                                <button
+                                  onClick={() => startEditing(item)}
+                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
+                                >
+                                  <Pencil className="h-3.5 w-3.5 text-secondary" />
+                                  <span>Edit Item</span>
+                                </button>
 
                                 {item.status === 'knowledge' ? (
                                   <button
@@ -1039,6 +1041,7 @@ function InboxPageContent() {
                               {/* Favicon */}
                               <div className="h-4 w-4 rounded-sm bg-neutral-bg flex items-center justify-center overflow-hidden shrink-0 border border-secondary/20">
                                 {item.url && (
+                                  // eslint-disable-next-line @next/next/no-img-element
                                   <img
                                     src={`https://www.google.com/s2/favicons?domain=${new URL(item.url.startsWith('http') ? item.url : 'https://' + item.url).hostname}&sz=16`}
                                     alt="favicon"

@@ -3,7 +3,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
-import { useToast } from './ToastContext';
 
 export interface Course {
   id: string;
@@ -95,7 +94,6 @@ const MOCK_FLASHCARDS: Flashcard[] = [
 ];
 
 export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { showToast } = useToast();
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseModules, setCourseModules] = useState<CourseModule[]>([]);
   const [lessons, setLessons] = useState<Lesson[]>([]);

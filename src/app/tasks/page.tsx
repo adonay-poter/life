@@ -2,8 +2,7 @@
 
 import React, { useState, useRef, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useDashboard, Task, Project } from '@/context/DashboardContext';
+import { useDashboard, Task } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
@@ -18,7 +17,6 @@ import {
   CheckSquare, 
   AlertCircle,
   Tag,
-  Check,
   X,
   Play,
   FolderKanban,
@@ -38,7 +36,6 @@ function TasksContent() {
     addTask,
     updateTask,
     updateTaskStatus,
-    updateTaskPomodoro,
     togglePinTask,
     deleteTask
   } = useDashboard();
@@ -55,7 +52,6 @@ function TasksContent() {
   };
 
   const searchParams = useSearchParams();
-  const initialTab = searchParams ? (searchParams.get('tab') as 'kanban' | 'calendar' | 'today') : null;
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'kanban' | 'calendar' | 'today'>('kanban');

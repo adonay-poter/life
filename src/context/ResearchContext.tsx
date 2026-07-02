@@ -147,7 +147,7 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
         try {
           const errData = await outlineRes.json();
           if (errData.error) errMsg += `: ${errData.error}`;
-        } catch(e) {}
+        } catch {}
         throw new Error(errMsg);
       }
       const outlineData = await outlineRes.json();

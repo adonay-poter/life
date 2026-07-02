@@ -9,6 +9,9 @@
   --surface: #FFFFFF;
   --on-primary: #FFFFFF;
   --heatmap-zero: #EAE8E4;
+  --font-fraunces: Georgia, "Times New Roman", serif;
+  --font-public-sans: Arial, Helvetica, sans-serif;
+  --font-space-grotesk: "Courier New", Courier, monospace;
 }
 
 .dark {
@@ -284,5 +287,4 @@ form textarea {
   --tw-enter-translate-y: -1rem;
   animation-name: enter;
 }
-
 
