@@ -25,6 +25,14 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import PageShell from '@/components/ui/PageShell';
+import SectionHeader from '@/components/ui/SectionHeader';
+import EditorialCard from '@/components/ui/EditorialCard';
+import { PrimaryButton, SecondaryButton, IconButton } from '@/components/ui/Buttons';
+import { Input, Textarea, Select } from '@/components/ui/Inputs';
+import StatusBadge from '@/components/ui/StatusBadge';
+import EmptyState from '@/components/ui/EmptyState';
+
 const PROJECT_COLORS = [
   { name: 'Terracotta', value: '#B8422E' },
   { name: 'Slate', value: '#6C7278' },
@@ -173,26 +181,26 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
   return (
     <div 
       id={`project-card-${project.id}`}
-      className={`bg-surface border border-secondary/30 border-l-4 p-6 rounded-sm flex flex-col justify-between space-y-4 hover:border-primary transition-all relative group ${
-        isTarget ? 'ring-2 ring-primary' : ''
+      className={`bg-surface border border-border border-l-4 p-6 rounded-none flex flex-col justify-between space-y-4 hover:border-primary transition-all relative group ${
+        isTarget ? 'ring-1 ring-primary' : ''
       }`}
-      style={{ borderLeftColor: project.color || '#B8422E' }}
+      style={{ borderLeftColor: project.color || 'var(--accent)' }}
     >
       {isEditing ? (
-        <form onSubmit={handleEditSubmit} className="space-y-3 font-label text-xs">
-          <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
+        <form onSubmit={handleEditSubmit} className="space-y-4 font-label text-xs">
+          <div className="flex justify-between items-center border-b border-border pb-2">
             <span className="font-bold uppercase text-primary">Edit Metadata</span>
-            <button type="button" onClick={() => setIsEditing(false)} className="text-secondary hover:text-tertiary cursor-pointer">
-              <X className="h-3.5 w-3.5" />
+            <button type="button" onClick={() => setIsEditing(false)} className="text-secondary hover:text-accent cursor-pointer btn-press">
+              <X className="h-4 w-4" />
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="block text-xs uppercase text-secondary">Sector</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Sector</label>
               <select
                 value={editArea}
                 onChange={(e) => setEditArea(e.target.value as Project['area'])}
-                className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none"
+                className="w-full bg-neutral-bg border border-border p-2 focus:outline-none rounded-none font-sans"
               >
                 <option value="Business">Business</option>
                 <option value="Health">Health</option>
@@ -202,11 +210,11 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
               </select>
             </div>
             <div className="space-y-1">
-              <label className="block text-xs uppercase text-secondary">Status</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Status</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as Project['status'])}
-                className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none"
+                className="w-full bg-neutral-bg border border-border p-2 focus:outline-none rounded-none font-sans"
               >
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -218,14 +226,14 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs uppercase text-secondary">Project Color</label>
+            <label className="block text-[10px] uppercase text-secondary font-bold">Project Color</label>
             <div className="flex flex-wrap gap-2 py-1">
               {PROJECT_COLORS.map((c) => (
                 <button
                   key={c.value}
                   type="button"
                   onClick={() => setEditColor(c.value)}
-                  className={`h-4.5 w-4.5 rounded-full transition-all border cursor-pointer ${
+                  className={`h-4.5 w-4.5 rounded-none transition-all border cursor-pointer ${
                     editColor === c.value ? 'border-primary scale-110 ring-1 ring-primary' : 'border-transparent hover:scale-105'
                   }`}
                   style={{ backgroundColor: c.value }}
@@ -236,79 +244,77 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
           </div>
 
           <div className="space-y-1">
-            <label className="block text-xs uppercase text-secondary">Project Name</label>
+            <label className="block text-[10px] uppercase text-secondary font-bold">Project Name</label>
             <input
               type="text"
               value={editName}
               onChange={(e) => setEditName(e.target.value)}
               required
-              className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
+              className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs uppercase text-secondary">Client</label>
+            <label className="block text-[10px] uppercase text-secondary font-bold">Client</label>
             <input
               type="text"
               value={editClient}
               onChange={(e) => setEditClient(e.target.value)}
-              className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
+              className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
             />
           </div>
           <div className="space-y-1">
-            <label className="block text-xs uppercase text-secondary">Gain / Payoff</label>
+            <label className="block text-[10px] uppercase text-secondary font-bold">Gain / Payoff</label>
             <input
               type="text"
               value={editGain}
               onChange={(e) => setEditGain(e.target.value)}
-              className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
+              className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
             />
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
-              <label className="block text-xs uppercase text-secondary">Start Date</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Start Date</label>
               <input
                 type="date"
                 value={editStartDate}
                 onChange={(e) => setEditStartDate(e.target.value)}
-                className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2 py-1 focus:outline-none font-sans rounded-none"
               />
             </div>
             <div className="space-y-1">
-              <label className="block text-xs uppercase text-secondary">Deadline</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Deadline</label>
               <input
                 type="date"
                 value={editDeadline}
                 onChange={(e) => setEditDeadline(e.target.value)}
-                className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2 py-1 focus:outline-none font-sans rounded-none"
               />
             </div>
           </div>
           <div className="space-y-1">
-            <label className="block text-xs uppercase text-secondary">Description</label>
+            <label className="block text-[10px] uppercase text-secondary font-bold">Description</label>
             <textarea
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
               rows={2}
-              className="w-full bg-neutral-bg border border-secondary p-1 focus:outline-none font-sans"
+              className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none resize-none"
             />
           </div>
-          <button type="submit" className="w-full bg-primary text-on-primary py-1.5 text-xs uppercase font-bold tracking-wider cursor-pointer">
+          <PrimaryButton type="submit" className="w-full">
             Apply Changes
-          </button>
+          </PrimaryButton>
         </form>
       ) : (
         <>
           <div className="space-y-3">
             {/* Top metadata tags row */}
             <div className="flex justify-between items-center">
-              <span className="font-label text-xs uppercase tracking-widest text-secondary font-bold">
+              <span className="font-label text-[10px] uppercase tracking-widest text-secondary font-bold">
                 {project.area}
               </span>
               <div className="flex items-center space-x-2">
-                <span className={`font-label text-xs border px-2 py-0.5 uppercase tracking-wider font-bold rounded-sm ${getStatusBadgeStyle(project.status)}`}>
-                  {project.status || 'active'}
-                </span>
-                <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center space-x-2 transition-opacity">
+                <StatusBadge status={project.status || 'active'} type="status" />
+                <div className="opacity-100 md:opacity-0 md:group-hover:opacity-100 flex items-center space-x-1.5 transition-opacity">
                   <button
                     type="button"
                     onClick={async () => {
@@ -316,7 +322,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                       await archiveProject(project.id, nextArchived);
                       showToast(nextArchived ? 'Project archived successfully.' : 'Project unarchived successfully.', 'success');
                     }}
-                    className={`hover:text-tertiary cursor-pointer p-0.5 ${project.is_archived ? 'text-tertiary' : 'text-secondary'}`}
+                    className={`hover:text-accent cursor-pointer p-1 rounded-none hover:bg-neutral-bg/50 btn-press ${project.is_archived ? 'text-accent' : 'text-secondary'}`}
                     title={project.is_archived ? 'Unarchive Project' : 'Archive Project'}
                   >
                     <Archive className="h-3.5 w-3.5" />
@@ -324,14 +330,16 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                   <button
                     type="button"
                     onClick={() => setIsEditing(true)}
-                    className="text-secondary hover:text-primary cursor-pointer"
+                    className="text-secondary hover:text-primary cursor-pointer p-1 rounded-none hover:bg-neutral-bg/50 btn-press"
+                    title="Edit Project"
                   >
                     <Edit3 className="h-3.5 w-3.5" />
                   </button>
                   <button
                     type="button"
                     onClick={() => onTriggerDelete(project.id, project.name)}
-                    className="text-secondary hover:text-tertiary cursor-pointer"
+                    className="text-secondary hover:text-accent cursor-pointer p-1 rounded-none hover:bg-neutral-bg/50 btn-press"
+                    title="Delete Project"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
@@ -341,7 +349,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
 
             {/* Project Name */}
             <Link href={`/projects/${project.id}`}>
-              <h4 className="font-display text-xl font-bold text-primary leading-tight hover:text-tertiary cursor-pointer transition-colors">
+              <h4 className="font-display text-xl font-bold text-primary leading-tight hover:text-accent cursor-pointer transition-colors">
                 {project.name}
               </h4>
             </Link>
@@ -354,10 +362,10 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
             )}
 
             {/* Client & Gain details */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-secondary/15 font-label text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-border font-label text-xs">
               {project.client && (
                 <div className="flex items-center space-x-1.5 text-primary">
-                  <Briefcase className="h-3.5 w-3.5 shrink-0" style={{ color: project.color || '#B8422E' }} />
+                  <Briefcase className="h-3.5 w-3.5 shrink-0" style={{ color: project.color || 'var(--accent)' }} />
                   <span className="truncate" title={project.client}>
                     Client: <strong className="font-bold">{project.client}</strong>
                   </span>
@@ -365,9 +373,9 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
               )}
               {project.gain && (
                 <div className="flex items-center space-x-1.5 text-primary">
-                  <TrendingUp className="h-3.5 w-3.5 shrink-0" style={{ color: project.color || '#B8422E' }} />
+                  <TrendingUp className="h-3.5 w-3.5 shrink-0" style={{ color: project.color || 'var(--accent)' }} />
                   <span className="truncate" title={project.gain}>
-                    Gain: <strong className="font-bold">{project.gain}</strong>
+                    Payoff: <strong className="font-bold">{project.gain}</strong>
                   </span>
                 </div>
               )}
@@ -377,7 +385,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
             {(project.start_date || project.deadline) && (
               <div className={`flex items-center space-x-1.5 font-label text-xs pt-1 ${
                 isOverdue ? 'font-bold' : 'text-secondary'
-              }`} style={{ color: isOverdue ? (project.color || '#B8422E') : undefined }}>
+              }`} style={{ color: isOverdue ? (project.color || 'var(--accent)') : undefined }}>
                 <Calendar className="h-3.5 w-3.5 shrink-0" />
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span>
@@ -386,7 +394,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                     {project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No Deadline'}
                   </span>
                   {isOverdue && (
-                    <span className="flex items-center space-x-0.5 text-xs bg-[#FFEBEE] border border-[#FFCDD2] px-1 font-bold" style={{ color: '#B8422E' }}>
+                    <span className="flex items-center space-x-0.5 text-xs bg-danger/5 border border-danger/30 px-1 font-bold text-danger">
                       <AlertCircle className="h-2.5 w-2.5" />
                       <span>OVERDUE</span>
                     </span>
@@ -397,19 +405,19 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
           </div>
 
           {/* Progress Bar & Subtask Addition Area */}
-          <div className="space-y-3 pt-3 border-t border-secondary/15">
+          <div className="space-y-3 pt-3 border-t border-border">
             <div className="flex justify-between items-center text-xs font-label">
-              <span className="text-secondary uppercase">Completed Tasks</span>
+              <span className="text-secondary uppercase font-semibold">Completed Tasks</span>
               <span className="text-primary font-bold">
                 {doneTasks.length}/{projTasks.length} ({progress}%)
               </span>
             </div>
             
             {/* Linear progress */}
-            <div className="w-full bg-secondary/15 h-1.5 rounded-none overflow-hidden">
+            <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
               <div 
                 className="h-full transition-all duration-300" 
-                style={{ width: `${progress}%`, backgroundColor: project.color || '#B8422E' }}
+                style={{ width: `${progress}%`, backgroundColor: project.color || 'var(--accent)' }}
               ></div>
             </div>
 
@@ -419,37 +427,33 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                 <button
                   type="button"
                   onClick={() => setShowTasks(!showTasks)}
-                  className="flex items-center space-x-1 font-label text-xs uppercase tracking-wider text-secondary hover:text-primary cursor-pointer"
+                  className="flex items-center space-x-1 font-label text-xs uppercase tracking-wider text-secondary hover:text-primary cursor-pointer btn-press"
                 >
                   {showTasks ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                   <span>{showTasks ? 'Hide Tasks' : `Show Tasks (${projTasks.length})`}</span>
                 </button>
 
                 {showTasks && (
-                  <div className="mt-2.5 space-y-1.5 pl-1 max-h-48 overflow-y-auto border-l border-dashed border-secondary/30">
+                  <div className="mt-2.5 space-y-1.5 pl-1 max-h-48 overflow-y-auto border-l border-dashed border-border">
                     {projTasks.map((t) => (
-                      <div key={t.id} className="flex items-center justify-between text-xs font-sans group/task">
+                      <div key={t.id} className="flex items-center justify-between text-xs font-sans group/task py-0.5">
                         <div className="flex items-center space-x-2 min-w-0">
                           <button
                             type="button"
                             onClick={() => handleToggleTaskStatus(t.id, t.status)}
-                            className="text-secondary hover:text-primary shrink-0 cursor-pointer"
+                            className="text-secondary hover:text-accent shrink-0 cursor-pointer btn-press"
                           >
                             {t.status === 'done' ? (
-                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                              <CheckCircle2 className="h-4 w-4 text-success" />
                             ) : (
                               <Circle className="h-4 w-4" />
                             )}
                           </button>
-                          <span className={`truncate ${t.status === 'done' ? 'line-through text-secondary/80' : 'text-primary'}`}>
+                          <span className={`truncate ${t.status === 'done' ? 'line-through text-secondary/70' : 'text-primary'}`}>
                             {t.name}
                           </span>
                         </div>
-                        <span className={`text-xs font-label font-bold uppercase border px-1 shrink-0 ${
-                          t.priority === 'high' ? 'border-tertiary/30 bg-[#FFEBEE] text-tertiary' : 'border-secondary/30 text-secondary'
-                        }`}>
-                          {t.priority}
-                        </span>
+                        <StatusBadge status={t.priority} type="priority" className="shrink-0" />
                       </div>
                     ))}
                   </div>
@@ -459,7 +463,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
 
             {/* QUICK TASK ADD INLINE FORM */}
             {isAddingTask ? (
-              <form onSubmit={handleQuickTaskSubmit} className="flex flex-col gap-2 pt-2 border-t border-dashed border-secondary/20 font-label text-xs">
+              <form onSubmit={handleQuickTaskSubmit} className="flex flex-col gap-2 pt-2 border-t border-dashed border-border font-label text-xs">
                 <div className="flex items-center gap-1.5">
                   <input
                     type="text"
@@ -468,12 +472,12 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                     placeholder="New task name..."
                     required
                     autoFocus
-                    className="flex-1 bg-neutral-bg border border-secondary/40 px-2 py-1 focus:outline-none font-sans"
+                    className="flex-1 bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
                   />
                   <select
                     value={quickTaskCategory}
                     onChange={(e) => setQuickTaskCategory(e.target.value as Task['category'])}
-                    className="bg-neutral-bg border border-secondary/40 px-1 py-1 focus:outline-none"
+                    className="bg-neutral-bg border border-border px-1 py-1.5 focus:outline-none rounded-none font-sans"
                   >
                     <option value="Work">Work</option>
                     <option value="Personal">Personal</option>
@@ -485,15 +489,15 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                   <button
                     type="button"
                     onClick={() => setShowAdvanced(!showAdvanced)}
-                    className={`p-1 border rounded-sm cursor-pointer transition-colors ${
-                      showAdvanced ? 'bg-primary text-on-primary border-primary' : 'border-secondary/35 text-secondary hover:text-primary'
+                    className={`p-1.5 border rounded-none cursor-pointer transition-colors btn-press ${
+                      showAdvanced ? 'bg-primary text-on-primary border-primary' : 'border-border text-secondary hover:text-primary'
                     }`}
                     title="Toggle Advanced Options"
                   >
                     <SlidersHorizontal className="h-3.5 w-3.5" />
                   </button>
 
-                  <button type="submit" className="bg-primary text-on-primary p-1 rounded-sm cursor-pointer">
+                  <button type="submit" className="bg-primary text-on-primary p-1.5 rounded-none cursor-pointer btn-press">
                     <Check className="h-3.5 w-3.5" />
                   </button>
                   <button
@@ -502,7 +506,7 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                       setIsAddingTask(false);
                       setShowAdvanced(false);
                     }}
-                    className="text-secondary cursor-pointer"
+                    className="text-secondary cursor-pointer p-1.5 btn-press"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -510,14 +514,14 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
 
                 {/* Collapsible Advanced Form Area */}
                 {showAdvanced && (
-                  <div className="bg-neutral-bg/65 p-2 border border-secondary/20 space-y-2 mt-1 rounded-sm animate-fade-in">
+                  <div className="bg-neutral-bg/65 p-2 border border-border space-y-2 mt-1 rounded-none animate-fade-in">
                     <div className="grid grid-cols-2 gap-2">
                       <div className="space-y-1">
-                        <label className="block text-xs uppercase text-secondary">Priority</label>
+                        <label className="block text-[10px] uppercase text-secondary font-bold">Priority</label>
                         <select
                           value={quickTaskPriority}
                           onChange={(e) => setQuickTaskPriority(e.target.value as Task['priority'])}
-                          className="w-full bg-surface border border-secondary/30 px-1.5 py-0.5 focus:outline-none"
+                          className="w-full bg-surface border border-border px-1.5 py-1 focus:outline-none rounded-none font-sans"
                         >
                           <option value="high">High</option>
                           <option value="medium">Medium</option>
@@ -525,23 +529,23 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
                         </select>
                       </div>
                       <div className="space-y-1">
-                        <label className="block text-xs uppercase text-secondary">Due Date</label>
+                        <label className="block text-[10px] uppercase text-secondary font-bold">Due Date</label>
                         <input
                           type="date"
                           value={quickTaskDueDate}
                           onChange={(e) => setQuickTaskDueDate(e.target.value)}
-                          className="w-full bg-surface border border-secondary/30 px-1.5 py-0.5 focus:outline-none font-sans"
+                          className="w-full bg-surface border border-border px-1.5 py-0.5 focus:outline-none font-sans rounded-none"
                         />
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-xs uppercase text-secondary">Detailed Notes / URL</label>
+                      <label className="block text-[10px] uppercase text-secondary font-bold">Detailed Notes / URL</label>
                       <input
                         type="text"
                         value={quickTaskDesc}
                         onChange={(e) => setQuickTaskDesc(e.target.value)}
                         placeholder="e.g. documentation link, extra requirements..."
-                        className="w-full bg-surface border border-secondary/30 px-1.5 py-0.5 focus:outline-none font-sans"
+                        className="w-full bg-surface border border-border px-1.5 py-1 focus:outline-none font-sans rounded-none"
                       />
                     </div>
                   </div>
@@ -551,8 +555,8 @@ function ProjectCard({ project, tasks, isTarget, onTriggerDelete }: ProjectCardP
               <button
                 type="button"
                 onClick={() => setIsAddingTask(true)}
-                className="hover:text-primary text-xs font-label uppercase font-semibold flex items-center space-x-1 cursor-pointer"
-                style={{ color: project.color || '#B8422E' }}
+                className="hover:text-primary text-xs font-label uppercase font-bold flex items-center space-x-1 cursor-pointer btn-press pt-1"
+                style={{ color: project.color || 'var(--accent)' }}
               >
                 <PlusCircle className="h-3.5 w-3.5" />
                 <span>Quick Add Task</span>
@@ -670,26 +674,20 @@ function ProjectsContent() {
   };
 
   return (
-    <div className="space-y-8">
+    <PageShell>
       {/* Header */}
-      <header className="border-b-2 border-primary pb-4 flex flex-col sm:flex-row justify-between items-baseline gap-2">
-        <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-            PROJECTS & INITIATIVES
-          </h2>
-          <p className="font-sans text-xs text-secondary mt-1 uppercase tracking-wider">
-            Sector Matrix • Progress Calculus ({projects.length} Initiatives Active)
-          </p>
-        </div>
-      </header>
+      <SectionHeader
+        title="Projects & Initiatives"
+        subtitle={`Sector Matrix • Progress Calculus (${projects.length} Initiatives Active)`}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
         {/* Left Column: Metrics & Configurator */}
         <aside className="lg:col-span-1 space-y-6 lg:sticky lg:top-6">
           
           {/* Sector Filters */}
-          <div className="bg-surface border border-secondary/30 p-4 rounded-sm space-y-2">
-            <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2 border-b border-secondary/15 pb-1">
+          <div className="bg-surface border border-border p-4 rounded-none space-y-2">
+            <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-2 border-b border-border pb-1 font-semibold">
               Select Sector
             </span>
             <div className="flex flex-wrap lg:flex-col gap-1 font-label text-xs">
@@ -697,15 +695,15 @@ function ProjectsContent() {
                 <button
                   key={area}
                   onClick={() => setSelectedAreaFilter(area)}
-                  className={`w-full text-left px-2 py-1.5 flex justify-between items-center transition-colors cursor-pointer rounded-sm ${
+                  className={`w-full text-left px-2.5 py-2 flex justify-between items-center transition-colors cursor-pointer rounded-none btn-press ${
                     selectedAreaFilter === area
-                      ? 'bg-primary text-on-primary'
+                      ? 'bg-primary text-on-primary font-bold'
                       : 'text-primary hover:bg-neutral-bg'
                   }`}
                 >
                   <span>{area.toUpperCase()}</span>
-                  <span className={`text-xs px-1.5 py-0.2 rounded-full ${
-                    selectedAreaFilter === area ? 'bg-tertiary text-on-primary' : 'bg-secondary/15 text-secondary'
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-none font-bold ${
+                    selectedAreaFilter === area ? 'bg-accent text-on-accent' : 'bg-secondary/15 text-secondary'
                   }`}>
                     {area === 'All' ? projects.filter((p) => (p.is_archived || false) === showArchived).length : getSectorCount(area)}
                   </span>
@@ -716,29 +714,29 @@ function ProjectsContent() {
 
           {/* Action Trigger */}
           {!showAddProject ? (
-            <button
+            <PrimaryButton
               onClick={() => setShowAddProject(true)}
-              className="w-full bg-tertiary text-on-primary py-3 font-label text-xs uppercase font-bold tracking-widest hover:bg-tertiary/90 transition-colors flex items-center justify-center space-x-2 rounded-sm cursor-pointer border border-tertiary"
+              className="w-full flex items-center justify-center space-x-2"
             >
               <Plus className="h-4 w-4" />
               <span>Initiate Project</span>
-            </button>
+            </PrimaryButton>
           ) : (
             /* Inline Add Project Form */
-            <form onSubmit={handleAddProjSubmit} className="bg-surface border border-primary p-5 rounded-sm space-y-4 font-label text-xs">
-              <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
+            <form onSubmit={handleAddProjSubmit} className="bg-surface border border-border p-5 rounded-none space-y-4 font-label text-xs">
+              <div className="flex justify-between items-center border-b border-border pb-2">
                 <span className="font-bold uppercase text-primary">New Project</span>
-                <button type="button" onClick={() => setShowAddProject(false)} className="text-secondary hover:text-tertiary cursor-pointer">
+                <button type="button" onClick={() => setShowAddProject(false)} className="text-secondary hover:text-accent cursor-pointer btn-press">
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Sector / Area</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Sector / Area</label>
                 <select
                   value={newProjArea}
                   onChange={(e) => setNewProjArea(e.target.value as Project['area'])}
-                  className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none"
+                  className="w-full bg-neutral-bg border border-border p-2 focus:outline-none rounded-none font-sans"
                 >
                   <option value="Business">Business</option>
                   <option value="Health">Health</option>
@@ -749,11 +747,11 @@ function ProjectsContent() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Project Status</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Project Status</label>
                 <select
                   value={newProjStatus}
                   onChange={(e) => setNewProjStatus(e.target.value as Project['status'])}
-                  className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none"
+                  className="w-full bg-neutral-bg border border-border p-2 focus:outline-none rounded-none font-sans"
                 >
                   <option value="planning">Planning</option>
                   <option value="active">Active (Standard)</option>
@@ -763,14 +761,14 @@ function ProjectsContent() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Brand Accent Color</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Brand Accent Color</label>
                 <div className="flex flex-wrap gap-2 py-1">
                   {PROJECT_COLORS.map((c) => (
                     <button
                       key={c.value}
                       type="button"
                       onClick={() => setNewProjColor(c.value)}
-                      className={`h-4.5 w-4.5 rounded-full transition-all border cursor-pointer ${
+                      className={`h-4.5 w-4.5 rounded-none transition-all border cursor-pointer ${
                         newProjColor === c.value ? 'border-primary scale-110 ring-1 ring-primary' : 'border-transparent hover:scale-105'
                       }`}
                       style={{ backgroundColor: c.value }}
@@ -781,74 +779,75 @@ function ProjectsContent() {
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Project Name *</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Project Name *</label>
                 <input
                   type="text"
                   value={newProjName}
                   onChange={(e) => setNewProjName(e.target.value)}
                   placeholder="e.g. Design Heritage CSS"
                   required
-                  className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Client / Audience</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Client / Audience</label>
                 <input
                   type="text"
                   value={newProjClient}
                   onChange={(e) => setNewProjClient(e.target.value)}
                   placeholder="e.g. Internal / Personal Growth"
-                  className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Project Payload / Gain</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Project Payload / Gain</label>
                 <input
                   type="text"
                   value={newProjGain}
                   onChange={(e) => setNewProjGain(e.target.value)}
                   placeholder="e.g. 15% efficiency boost"
-                  className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="block text-xs uppercase text-secondary">Start Date</label>
+                  <label className="block text-[10px] uppercase text-secondary font-bold">Start Date</label>
                   <input
                     type="date"
                     value={newProjStartDate}
                     onChange={(e) => setNewProjStartDate(e.target.value)}
-                    className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans text-xs"
+                    className="w-full bg-neutral-bg border border-border px-1.5 py-1 focus:outline-none font-sans text-xs rounded-none"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="block text-xs uppercase text-secondary">Target Deadline</label>
+                  <label className="block text-[10px] uppercase text-secondary font-bold">Target Deadline</label>
                   <input
                     type="date"
                     value={newProjDeadline}
                     onChange={(e) => setNewProjDeadline(e.target.value)}
-                    className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans text-xs"
+                    className="w-full bg-neutral-bg border border-border px-1.5 py-1 focus:outline-none font-sans text-xs rounded-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="block text-xs uppercase text-secondary">Description / Notes</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Description / Notes</label>
                 <textarea
                   value={newProjDesc}
                   onChange={(e) => setNewProjDesc(e.target.value)}
                   placeholder="Describe focus targets..."
                   rows={3}
-                  className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none resize-none"
                 />
               </div>
 
-              <button type="submit" className="w-full bg-primary text-on-primary py-2 text-xs uppercase font-bold tracking-wider hover:bg-primary/90 cursor-pointer">
+              {/* Only one crimson accent per screen: Save button is PrimaryButton (Crimson/Coral) */}
+              <PrimaryButton type="submit" className="w-full">
                 Save Project
-              </button>
+              </PrimaryButton>
             </form>
           )}
 
@@ -856,16 +855,16 @@ function ProjectsContent() {
 
         {/* Right Column: Projects grid display */}
         <section className="lg:col-span-3 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-secondary/25 pb-3">
-            <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 border-b border-border pb-3">
+            <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-semibold">
               {showArchived ? 'Archived Matrices' : 'Active Matrices'} ({filteredProjects.length})
             </span>
-            <div className="flex border border-secondary font-label text-[10px] uppercase tracking-wider select-none shrink-0">
+            <div className="flex border border-border font-label text-[10px] uppercase tracking-wider select-none shrink-0 rounded-none bg-background overflow-hidden">
               <button
                 type="button"
                 onClick={() => setShowArchived(false)}
-                className={`px-3 py-1.5 transition-all cursor-pointer font-bold ${
-                  !showArchived ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
+                className={`px-3 py-1.5 transition-all cursor-pointer font-bold btn-press ${
+                  !showArchived ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/55'
                 }`}
               >
                 Active
@@ -873,8 +872,8 @@ function ProjectsContent() {
               <button
                 type="button"
                 onClick={() => setShowArchived(true)}
-                className={`px-3 py-1.5 border-l border-secondary transition-all cursor-pointer font-bold ${
-                  showArchived ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
+                className={`px-3 py-1.5 border-l border-border transition-all cursor-pointer font-bold btn-press ${
+                  showArchived ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/55'
                 }`}
               >
                 Archived
@@ -895,9 +894,18 @@ function ProjectsContent() {
               ))}
             </div>
           ) : (
-            <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
-              <p className="font-sans text-sm text-secondary italic">No projects found in this sector.</p>
-            </div>
+            <EmptyState
+              title={showArchived ? "No Archived Projects" : "No Active Projects"}
+              description={showArchived ? "You have no archived projects in this sector." : "Initiate a new project to track milestones and subtasks."}
+              action={
+                !showArchived && (
+                  <PrimaryButton onClick={() => setShowAddProject(true)}>
+                    <Plus className="h-4 w-4" />
+                    <span>Initiate Project</span>
+                  </PrimaryButton>
+                )
+              }
+            />
           )}
         </section>
       </div>
@@ -918,7 +926,7 @@ function ProjectsContent() {
         itemName={projToDelete?.name || ''}
         itemType="project"
       />
-    </div>
+    </PageShell>
   );
 }
 

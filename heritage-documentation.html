@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Heritage — Personal Life Operating System Documentation</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            heritage: {
+              bg: 'var(--background)',
+              fg: 'var(--foreground)',
+              primary: 'var(--primary)',
+              secondary: 'var(--secondary)',
+              tertiary: 'var(--tertiary)',
+              surface: 'var(--surface)',
+              onPrimary: 'var(--on-primary)',
+              border: 'var(--border)',
+            }
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['"Public Sans"', 'sans-serif'],
+            mono: ['"Space Grotesk"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --background: #F7F5F2; /* Warm Limestone */
+      --foreground: #1A1C1E; /* Charcoal Ink */
+      --primary: #1A1C1E;
+      --secondary: #6C7278; /* Muted Slate */
+      --tertiary: #B8422E;  /* Crimson Accent */
+      --surface: #FFFFFF;
+      --on-primary: #FFFFFF;
+      --border: #E5E2DC;
+    }
+    
+    .dark {
+      --background: #101112; /* Slate Black */
+      --foreground: #F7F5F2; /* Warm Limestone */
+      --primary: #F7F5F2;
+      --secondary: #9BA1A6;  /* Light Slate */
+      --tertiary: #E2583E;   /* Coral Accent */
+      --surface: #1A1C1E;
+      --on-primary: #101112;
+      --border: #2D3033;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Public Sans', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .serif-title {
+      font-family: 'Fraunces', Georgia, serif;
+    }
+
+    .mono-label {
+      font-family: 'Space Grotesk', monospace;
+    }
+
+    /* Scrollbar style */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--background);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary);
+      border-radius: 2px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--tertiary);
+    }
+
+    /* Flashcard Flip CSS */
+    .flashcard-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flashcard-flipped {
+      transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+      backface-visibility: hidden;
+    }
+    .flashcard-back {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col antialiased">
+
+  <!-- Header / Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-heritage-bg border-b border-heritage-border backdrop-blur-md bg-opacity-90 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="h-8 w-8 bg-heritage-tertiary rounded flex items-center justify-center text-heritage-onPrimary font-bold serif-title">H</div>
+      <div>
+        <h1 class="serif-title text-xl font-bold tracking-tight">Heritage</h1>
+        <p class="mono-label text-xs uppercase tracking-wider text-heritage-secondary">Hulu - ሁሉ • OS Documentation</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-6">
+      <nav class="hidden lg:flex space-x-6 text-sm font-medium">
+        <a href="#philosophy" class="hover:text-heritage-tertiary transition-colors">Philosophy</a>
+        <a href="#features" class="hover:text-heritage-tertiary transition-colors">Features</a>
+        <a href="#architecture" class="hover:text-heritage-tertiary transition-colors">Architecture</a>
+        <a href="#flows" class="hover:text-heritage-tertiary transition-colors">Data Flows</a>
+        <a href="#sandbox" class="hover:text-heritage-tertiary transition-colors">Interactive Sandbox</a>
+        <a href="#setup" class="hover:text-heritage-tertiary transition-colors">Setup</a>
+      </nav>
+      
+      <button id="globalThemeToggle" class="p-2 border border-heritage-border rounded hover:bg-heritage-surface hover:border-heritage-tertiary transition-all" aria-label="Toggle Dark Mode">
+        <i class="fa-solid fa-moon text-heritage-secondary" id="themeIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar + Content Wrapper -->
+  <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+    <!-- Sidebar Navigation (Desktop only) -->
+    <aside class="hidden lg:block w-72 bg-heritage-surface border-r border-heritage-border p-6 overflow-y-auto shrink-0">
+      <div class="space-y-8">
+        <div>
+          <h3 class="mono-label text-xs uppercase text-heritage-secondary tracking-widest font-semibold mb-3">OVERVIEW</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#intro" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Introduction</a></li>
+            <li><a href="#philosophy" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Design Philosophy</a></li>
+            <li><a href="#specifications" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Style Spec</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="mono-label text-xs uppercase text-heritage-secondary tracking-widest font-semibold mb-3">CORE FEATURES</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#feat-inbox" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3"><i class="fa-solid fa-inbox mr-2"></i>Inbox (Capture)</a></li>
+            <li><a href="#feat-tasks" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3"><i class="fa-solid fa-list-check mr-2"></i>Projects & Tasks</a></li>
+            <li><a href="#feat-habits" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3"><i class="fa-solid fa-calendar-check mr-2"></i>Habits Tracker</a></li>
+            <li><a href="#feat-journal" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3"><i class="fa-solid fa-book mr-2"></i>Reflective Journal</a></li>
+            <li><a href="#feat-academy" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3"><i class="fa-solid fa-graduation-cap mr-2"></i>Academy Library</a></li>
+            <li><a href="#feat-ai" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3"><i class="fa-solid fa-robot mr-2"></i>AI Research Engine</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-heritage-secondary tracking-widest font-semibold mb-3">FLOWS & SCHEMA</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#flows" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Data pipelines</a></li>
+            <li><a href="#database" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Relational Database</a></li>
+            <li><a href="#security" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">RLS Security</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-heritage-secondary tracking-widest font-semibold mb-3">INTERACTIVE</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#sandbox" class="block py-1 text-heritage-tertiary hover:underline transition-all border-l-2 border-heritage-tertiary pl-3 font-semibold">Live Sandbox</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-heritage-secondary tracking-widest font-semibold mb-3">DEVELOPMENT</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#setup" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Local Setup</a></li>
+            <li><a href="#deploy" class="block py-1 hover:text-heritage-tertiary transition-colors border-l-2 border-transparent hover:border-heritage-tertiary pl-3">Deployment Guide</a></li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto px-6 py-8 lg:px-16 lg:py-12 space-y-16">
+      
+      <!-- Intro Section -->
+      <section id="intro" class="space-y-6">
+        <h2 class="serif-title text-4xl lg:text-5xl font-bold tracking-tight text-heritage-primary leading-tight">
+          Heritage: A Personal Life Operating System
+        </h2>
+        <div class="h-1 w-20 bg-heritage-tertiary"></div>
+        <p class="text-lg text-heritage-secondary leading-relaxed max-w-4xl">
+          Heritage (also branded as **Hulu - ሁሉ**, meaning "All" in Amharic) is a full-featured productivity dashboard. Built on next-generation web technologies, it approaches self-management through the lens of **architectural minimalism** and **journalistic gravitas**. Instead of complex, cluttered task grids, Heritage is modeled after quiet galleries and traditional morning broadsheets—inviting focus, clarity, and deep work.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg">
+            <h3 class="serif-title text-xl font-semibold mb-2">Architectural Minimalism</h3>
+            <p class="text-sm text-heritage-secondary">Stripped of gradients and visual noise. Structure is guided by white space, hard borders, and clear layouts.</p>
+          </div>
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg">
+            <h3 class="serif-title text-xl font-semibold mb-2">Journalistic Gravitas</h3>
+            <p class="text-sm text-heritage-secondary">Editorial typography using serif headers and metadata labels that make your dashboard feel like a publication of your life.</p>
+          </div>
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg">
+            <h3 class="serif-title text-xl font-semibold mb-2">Intentional Accentuation</h3>
+            <p class="text-sm text-heritage-secondary">A strict single-accent system ensuring that exactly one critical interaction point drives your focus per screen.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Design Philosophy & Specs -->
+      <section id="philosophy" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-heritage-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-heritage-primary">Design Philosophy & System Spec</h2>
+          <p class="text-heritage-secondary mt-2">The guidelines governing the look and feel of the platform.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div class="space-y-6">
+            <h3 class="serif-title text-2xl font-semibold">Core Colors</h3>
+            <p class="text-sm text-heritage-secondary">We leverage HSL values and curated flat colors. High contrast, warm background undertones, and a singular highlighted action.</p>
+            
+            <div class="space-y-4">
+              <!-- Color Chips -->
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded border border-heritage-border bg-[#F7F5F2] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Warm Limestone (Neutral Light)</h4>
+                  <p class="text-xs text-heritage-secondary">`#F7F5F2` • The light mode background foundation. Easy on the eyes, mimicking physical paper.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded border border-heritage-border bg-[#101112] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Slate Black (Neutral Dark)</h4>
+                  <p class="text-xs text-heritage-secondary">`#101112` • The dark mode background foundation. Provides maximum contrast for dark mode.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded border border-heritage-border bg-[#1A1C1E] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Charcoal Ink (Primary Text)</h4>
+                  <p class="text-xs text-heritage-secondary">`#1A1C1E` • Editorial headlines and body content in light mode. High readability.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded border border-heritage-border bg-[#B8422E] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Crimson Accent (Light Accent)</h4>
+                  <p class="text-xs text-heritage-secondary">`#B8422E` • Active links, primary checkboxes, and load-bearing interaction focus indicators.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded border border-heritage-border bg-[#E2583E] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Coral Accent (Dark Accent)</h4>
+                  <p class="text-xs text-heritage-secondary">`#E2583E` • High visibility interaction driver adapted for dark themes.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg space-y-6">
+            <h3 class="serif-title text-2xl font-semibold">The Rules of Heritage</h3>
+            <ul class="space-y-3 text-sm text-heritage-secondary">
+              <li class="flex items-start">
+                <i class="fa-solid fa-circle-check text-heritage-tertiary mt-1 mr-3 shrink-0"></i>
+                <span><strong>The Single-Accent Rule</strong>: Exactly one primary CTA button or critical checkpoint should be highlighted in Crimson/Coral on any given page. Do not dilute visual flow with multiple colors.</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa-solid fa-circle-check text-heritage-tertiary mt-1 mr-3 shrink-0"></i>
+                <span><strong>Negative Space is a Feature</strong>: White space separates concepts, not heavy horizontal dividers. Avoid cluttered margins.</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa-solid fa-circle-xmark text-red-500 mt-1 mr-3 shrink-0"></i>
+                <span><strong>Zero Gradients</strong>: The visual system is strictly flat. Color transitions are immediate, and surface textures are matte.</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa-solid fa-circle-check text-heritage-tertiary mt-1 mr-3 shrink-0"></i>
+                <span><strong>Three-Font Scale</strong>: Serif for titles (`Fraunces` / `Zemach`), geometric sans for interface details (`Space Grotesk`), and clean sans for reading logs (`Public Sans`).</span>
+              </li>
+            </ul>
+
+            <div class="p-4 border-l-4 border-heritage-tertiary bg-heritage-bg text-xs">
+              <p class="mono-label font-bold text-heritage-primary uppercase tracking-wide mb-1">Typography Mapping</p>
+              <div class="grid grid-cols-3 gap-2 mt-2">
+                <div><strong>Display Headings</strong></div>
+                <div class="col-span-2">Fraunces (Georgia Fallback)</div>
+                <div><strong>Body / Lists</strong></div>
+                <div class="col-span-2">Public Sans (Arial Fallback)</div>
+                <div><strong>Monospace Labels</strong></div>
+                <div class="col-span-2">Space Grotesk (Courier Fallback)</div>
+                <div><strong>Amharic Display</strong></div>
+                <div class="col-span-2">Zemach (Local OTF Font)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Features Encyclopedia -->
+      <section id="features" class="space-y-12 scroll-mt-6">
+        <div class="border-t border-heritage-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-heritage-primary">Features Encyclopedia</h2>
+          <p class="text-heritage-secondary mt-2">Detailed catalog of the platform's core operating engines.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <!-- Feature: Inbox -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="feat-inbox">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">📥 The Inbox Engine</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-heritage-bg border border-heritage-border text-heritage-secondary">Capture</span>
+              </div>
+              <p class="text-sm text-heritage-secondary leading-relaxed mb-4">
+                The Inbox is the absolute beginning of all data in Heritage. It is a digital inbox where you drop unstructured material so that it does not disrupt your current work focus.
+              </p>
+              <ul class="text-xs space-y-2 text-heritage-secondary mb-6">
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Item Types</strong>: Supports Quick Text, Bookmarked URLs, and Code Snippets.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Processing Flow</strong>: Allows conversion of inbox items directly into Tasks, Journal reflections, or Course reference materials.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Snooze Cycle</strong>: Unsorted thoughts can be delayed to reappear at a specific date.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-inbox" class="text-sm font-semibold text-heritage-tertiary hover:underline">Try the Inbox capture demo &rarr;</a>
+          </div>
+
+          <!-- Feature: Projects & Tasks -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="feat-tasks">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">📋 Projects & Tasks</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-heritage-bg border border-heritage-border text-heritage-secondary">Execute</span>
+              </div>
+              <p class="text-sm text-heritage-secondary leading-relaxed mb-4">
+                Heritage splits execution into macro-planning (Projects) and micro-execution (Tasks). Work areas coordinate your client commitments, deadlines, and project values.
+              </p>
+              <ul class="text-xs space-y-2 text-heritage-secondary mb-6">
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Areas</strong>: Sort projects into categories (Work, Personal, Health, Finance, relationships, etc.).</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Kanban & Calendar</strong>: Interactive view transitions to plan tasks.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Smart Pinning & Priority</strong>: Pin high-value tasks so they stay locks on the Today Widget.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Task Dependencies</strong>: Explicit child-parent configurations for subtask pipelines.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-pomodoro" class="text-sm font-semibold text-heritage-tertiary hover:underline">Test the Task Pomodoro timer &rarr;</a>
+          </div>
+
+          <!-- Feature: Habits -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="feat-habits">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">⚡ Habits Consistency</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-heritage-bg border border-heritage-border text-heritage-secondary">Track</span>
+              </div>
+              <p class="text-sm text-heritage-secondary leading-relaxed mb-4">
+                A daily habit matrix optimized for visual momentum. It provides instant visual validation of completion patterns without intrusive alerts.
+              </p>
+              <ul class="text-xs space-y-2 text-heritage-secondary mb-6">
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Dual Formats</strong>: Supports binary habits (Done/Undone) or numeric habits (e.g. tracking water in ML or sleep in hours).</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Streak Engines</strong>: Calculates consecutive check-ins to motivate consistency.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Weekly Matrix</strong>: Displays a simple, beautiful row of checkboxes with interactive state.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-habits" class="text-sm font-semibold text-heritage-tertiary hover:underline">Interact with the Habit tracker &rarr;</a>
+          </div>
+
+          <!-- Feature: Journal -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="feat-journal">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">📝 Reflective Journal</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-heritage-bg border border-heritage-border text-heritage-secondary">Reflect</span>
+              </div>
+              <p class="text-sm text-heritage-secondary leading-relaxed mb-4">
+                A structured reflecting system to review intentions. It splits the day into a morning prep phase and an evening debriefing block.
+              </p>
+              <ul class="text-xs space-y-2 text-heritage-secondary mb-6">
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Morning Intentions</strong>: Pre-populate key targets to capture focus early.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Evening Reviews</strong>: Prompts for accomplishments, failures, and lessons.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Reflective Free-Text</strong>: An inline distraction-free markdown text window.</li>
+              </ul>
+            </div>
+            <a href="#sandbox" class="text-sm font-semibold text-heritage-tertiary hover:underline">Check out the journal logs &rarr;</a>
+          </div>
+
+          <!-- Feature: Academy -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="feat-academy">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">🎓 Academy Library</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-heritage-bg border border-heritage-border text-heritage-secondary">Learn</span>
+              </div>
+              <p class="text-sm text-heritage-secondary leading-relaxed mb-4">
+                The ultimate learning workspace. Organize your study goals, capture courses, read research, and use flashcards to solidify your knowledge.
+              </p>
+              <ul class="text-xs space-y-2 text-heritage-secondary mb-6">
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Learning Outline</strong>: Courses are structured into modules, containing individual lessons.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Spaced Repetition Flashcards</strong>: Rate your card recall. Algorithms push failed flashcards into immediate review cycles.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Module Study Notes</strong>: Clean Markdown windows for summarizing information.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-flashcard" class="text-sm font-semibold text-heritage-tertiary hover:underline">Flip the interactive Flashcard &rarr;</a>
+          </div>
+
+          <!-- Feature: AI Research Engine -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="feat-ai">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">⚡ AI Research Engine</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-heritage-bg border border-heritage-border text-heritage-secondary">Automate</span>
+              </div>
+              <p class="text-sm text-heritage-secondary leading-relaxed mb-4">
+                Powered by Gemini models and Exa API, this engine transforms a single keyword or URL topic into a structured course within your Academy.
+              </p>
+              <ul class="text-xs space-y-2 text-heritage-secondary mb-6">
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Authoritative Web Search</strong>: Crawls references on Exa for valid materials.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Syllabus Synthesis</strong>: Auto-creates course outlines, modules, and lessons.</li>
+                <li><i class="fa-solid fa-check text-heritage-tertiary mr-2"></i><strong>Sequential Deep Writing</strong>: Gemini builds study guides and notes for every module.</li>
+              </ul>
+            </div>
+            <span class="text-xs text-heritage-secondary italic">Backed by rate-limiting algorithms to avoid API fatigue.</span>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Data Flows & Architecture -->
+      <section id="flows" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-heritage-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-heritage-primary">Data Flows & System Architecture</h2>
+          <p class="text-heritage-secondary mt-2">How data moves between capture, automated research, and core database components.</p>
+        </div>
+
+        <!-- SVG Flowchart -->
+        <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col items-center">
+          <h4 class="mono-label text-sm uppercase text-heritage-primary font-bold mb-6">System Pipeline Visualization</h4>
+          
+          <div class="w-full overflow-x-auto">
+            <svg class="mx-auto min-w-[700px] h-[340px]" viewBox="0 0 800 340" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Capture Node -->
+              <rect x="20" y="120" width="140" height="70" rx="4" fill="var(--surface)" stroke="var(--primary)" stroke-width="2"/>
+              <text x="90" y="150" dominant-baseline="middle" text-anchor="middle" font-family="Fraunces" font-size="16" fill="var(--foreground)" font-weight="bold">Inbox Item</text>
+              <text x="90" y="170" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="10" fill="var(--secondary)" letter-spacing="1">CAPTURE</text>
+              
+              <!-- Ingestion Dispatcher Logic -->
+              <path d="M 160 155 L 220 155" stroke="var(--secondary)" stroke-width="2" marker-end="url(#arrow)"/>
+              <circle cx="230" cy="155" r="10" fill="var(--tertiary)"/>
+              
+              <!-- Flows from Dispatcher -->
+              <!-- To Tasks -->
+              <path d="M 240 155 Q 300 80 360 80" stroke="var(--secondary)" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow)"/>
+              <rect x="360" y="45" width="150" height="60" rx="4" fill="var(--surface)" stroke="var(--secondary)" stroke-width="1.5"/>
+              <text x="435" y="70" dominant-baseline="middle" text-anchor="middle" font-family="Public Sans" font-size="14" fill="var(--foreground)" font-weight="bold">Tasks & Projects</text>
+              <text x="435" y="88" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="9" fill="var(--secondary)">EXECUTE</text>
+              
+              <!-- To Academy -->
+              <path d="M 240 155 L 350 155" stroke="var(--secondary)" stroke-width="2" marker-end="url(#arrow)"/>
+              <rect x="360" y="125" width="150" height="60" rx="4" fill="var(--surface)" stroke="var(--secondary)" stroke-width="1.5"/>
+              <text x="435" y="150" dominant-baseline="middle" text-anchor="middle" font-family="Public Sans" font-size="14" fill="var(--foreground)" font-weight="bold">Academy Courses</text>
+              <text x="435" y="168" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="9" fill="var(--secondary)">LEARN</text>
+              
+              <!-- To Journal -->
+              <path d="M 240 155 Q 300 230 360 230" stroke="var(--secondary)" stroke-width="2" stroke-dasharray="4" marker-end="url(#arrow)"/>
+              <rect x="360" y="200" width="150" height="60" rx="4" fill="var(--surface)" stroke="var(--secondary)" stroke-width="1.5"/>
+              <text x="435" y="225" dominant-baseline="middle" text-anchor="middle" font-family="Public Sans" font-size="14" fill="var(--foreground)" font-weight="bold">Daily Reflections</text>
+              <text x="435" y="243" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="9" fill="var(--secondary)">REFLECT</text>
+              
+              <!-- AI Research Loop -->
+              <rect x="580" y="115" width="180" height="80" rx="4" fill="var(--background)" stroke="var(--tertiary)" stroke-width="2"/>
+              <text x="670" y="145" dominant-baseline="middle" text-anchor="middle" font-family="Fraunces" font-size="15" fill="var(--tertiary)" font-weight="bold">AI Research Engine</text>
+              <text x="670" y="165" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="9" fill="var(--foreground)">GEMINI + EXA API</text>
+              
+              <!-- Line linking Academy to AI Research -->
+              <path d="M 510 155 L 570 155" stroke="var(--tertiary)" stroke-width="2" marker-end="url(#arrow)"/>
+              <!-- Feedback loop from AI to Academy -->
+              <path d="M 670 195 Q 510 320 435 190" stroke="var(--tertiary)" stroke-width="1.5" stroke-dasharray="2" marker-end="url(#arrow)"/>
+              <text x="560" y="275" dominant-baseline="middle" text-anchor="middle" font-family="Space Grotesk" font-size="9" fill="var(--tertiary)">Generate Syllabus & Lessons</text>
+
+              <!-- Arrow marker definitions -->
+              <defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--secondary)"/>
+                </marker>
+              </defs>
+            </svg>
+          </div>
+          <p class="text-xs text-heritage-secondary text-center mt-4 max-w-lg">
+            Unsorted Inbox capturing channels into three core operations. Concurrently, the AI research engine acts on Academy entities to generate study courses, syllabi, notes, and lessons.
+          </p>
+        </div>
+
+        <!-- Relational Database Schema -->
+        <div id="database" class="grid grid-cols-1 lg:grid-cols-2 gap-8 scroll-mt-6">
+          <div class="space-y-4">
+            <h3 class="serif-title text-2xl font-semibold">Database Schema</h3>
+            <p class="text-sm text-heritage-secondary leading-relaxed">
+              Heritage is fully persistent, backed by a relational PostgreSQL database on **Supabase**. User information is isolated at the row-level using PostgreSQL policies, ensuring that each user has access only to their specific records.
+            </p>
+            
+            <div class="bg-heritage-surface border border-heritage-border p-4 rounded-lg text-xs space-y-2">
+              <h4 class="font-bold serif-title text-sm border-b border-heritage-border pb-2 text-heritage-primary">Primary Relational Tables</h4>
+              <div class="grid grid-cols-3 gap-y-1">
+                <span class="font-semibold">`inbox_items`</span>
+                <span class="col-span-2 text-heritage-secondary">Captures text, link context, snoozed timers, and processed state.</span>
+                
+                <span class="font-semibold">`projects`</span>
+                <span class="col-span-2 text-heritage-secondary">Holds high-level projects, target area, value metrics, client details.</span>
+                
+                <span class="font-semibold">`tasks`</span>
+                <span class="col-span-2 text-heritage-secondary">Task rows referencing a project. Stores priority, dependencies, recurrences.</span>
+                
+                <span class="font-semibold">`habits`</span>
+                <span class="col-span-2 text-heritage-secondary">Tracks user habits, unit types, numerical goals, and status.</span>
+                
+                <span class="font-semibold">`habit_records`</span>
+                <span class="col-span-2 text-heritage-secondary">Log table containing daily check-in marks and values.</span>
+                
+                <span class="font-semibold">`journal_entries`</span>
+                <span class="col-span-2 text-heritage-secondary">Keyed by date. Contains reflections, intentions, mood value, and notes.</span>
+
+                <span class="font-semibold">`courses`</span>
+                <span class="col-span-2 text-heritage-secondary">Root containers for structured study subjects.</span>
+
+                <span class="font-semibold">`course_modules`</span>
+                <span class="col-span-2 text-heritage-secondary">Course chapters containing markdown notes.</span>
+
+                <span class="font-semibold">`lessons`</span>
+                <span class="col-span-2 text-heritage-secondary">Individual readings or URLs linked to a module.</span>
+
+                <span class="font-semibold">`flashcards`</span>
+                <span class="col-span-2 text-heritage-secondary">Questions, answers, and SRS parameters for spaced repetition.</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RLS Security and Policies -->
+          <div id="security" class="space-y-4 scroll-mt-6">
+            <h3 class="serif-title text-2xl font-semibold">Row-Level Security (RLS)</h3>
+            <p class="text-sm text-heritage-secondary leading-relaxed">
+              Every table in the database is protected by Row Level Security (RLS). This ensures that database interactions (SELECT, INSERT, UPDATE, DELETE) are restricted to the authenticated user.
+            </p>
+            <div class="bg-heritage-surface border border-heritage-border p-4 rounded-lg">
+              <span class="mono-label text-xs text-heritage-tertiary font-semibold uppercase">Security Hardening Statement</span>
+              <p class="text-xs text-heritage-secondary mt-2 leading-relaxed">
+                As of the latest migration, policies are locked down so that `auth.uid()` checks are verified at the db layer on every query. Access tokens are generated on the client through the Supabase client wrapper. If a session is missing or expired, the `AuthGuard` component blocks the app, redirecting to the secure auth portal.
+              </p>
+              
+              <!-- Sample SQL Policy -->
+              <pre class="bg-heritage-bg p-3 border border-heritage-border rounded text-[10px] text-heritage-secondary font-mono mt-4 overflow-x-auto">
+-- Enforcing user ownership on Tasks
+ALTER TABLE public.tasks ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own tasks" 
+  ON public.tasks
+  FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);</pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Interactive Sandbox Section -->
+      <section id="sandbox" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-heritage-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-heritage-primary">Interactive Component Sandbox</h2>
+          <p class="text-heritage-secondary mt-2">Test drive live simulated widgets built according to the Heritage UI specifications.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Interactive 1: Inbox Capture Simulator -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="sandbox-inbox">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4">📥 Live Inbox Capture</h3>
+              <form id="sandboxInboxForm" class="space-y-4">
+                <div>
+                  <label class="block text-xs mono-label uppercase text-heritage-secondary mb-1">Quick Input</label>
+                  <input type="text" id="sandboxInboxTitle" placeholder="e.g. Research Tailwind v4 design patterns" class="w-full bg-heritage-bg border border-heritage-border text-sm p-2 rounded focus:outline-none focus:border-heritage-tertiary" required>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-xs mono-label uppercase text-heritage-secondary mb-1">Type</label>
+                    <select id="sandboxInboxType" class="w-full bg-heritage-bg border border-heritage-border text-xs p-2 rounded focus:outline-none">
+                      <option value="text">Quick Thought</option>
+                      <option value="url">URL Bookmark</option>
+                      <option value="snippet">Code Snippet</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs mono-label uppercase text-heritage-secondary mb-1">Status</label>
+                    <select id="sandboxInboxStatus" class="w-full bg-heritage-bg border border-heritage-border text-xs p-2 rounded focus:outline-none">
+                      <option value="unsorted">Unsorted</option>
+                      <option value="processed">Processed</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" class="w-full bg-heritage-tertiary text-heritage-onPrimary text-xs mono-label uppercase py-2 rounded hover:opacity-90 transition-opacity">Capture Item</button>
+              </form>
+            </div>
+            
+            <div class="mt-6 border-t border-heritage-border pt-4">
+              <h4 class="mono-label text-xs uppercase text-heritage-secondary mb-2">Captured List (Simulation)</h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto" id="sandboxInboxList">
+                <div class="flex items-center justify-between p-2 bg-heritage-bg rounded text-xs">
+                  <div>
+                    <span class="font-bold">[Quick Thought]</span> Read about Spaced Repetition algorithms.
+                  </div>
+                  <span class="text-[10px] mono-label text-heritage-tertiary uppercase">Unsorted</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Interactive 2: Habits Completion Matrix -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="sandbox-habits">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4">⚡ Habit Check-In</h3>
+              <p class="text-xs text-heritage-secondary mb-4">Click checkboxes to mark a habit complete for specific weekdays. Completing habits increases your streak!</p>
+              
+              <div class="space-y-4">
+                <div class="p-3 border border-heritage-border bg-heritage-bg rounded">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-semibold text-sm">Drink Water (3L)</span>
+                    <span class="mono-label text-xs text-heritage-tertiary" id="habitStreakDisplay">Streak: 3 days</span>
+                  </div>
+                  <div class="flex justify-between items-center px-1">
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">M</span>
+                      <input type="checkbox" checked class="habit-chk accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">T</span>
+                      <input type="checkbox" checked class="habit-chk accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">W</span>
+                      <input type="checkbox" checked class="habit-chk accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">T</span>
+                      <input type="checkbox" class="habit-chk accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">F</span>
+                      <input type="checkbox" class="habit-chk accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">S</span>
+                      <input type="checkbox" class="habit-chk accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">S</span>
+                      <input type="checkbox" class="habit-chk accent-heritage-tertiary">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-3 border border-heritage-border bg-heritage-bg rounded">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-semibold text-sm">Read 10 Pages</span>
+                    <span class="mono-label text-xs text-heritage-tertiary" id="habitStreakDisplay2">Streak: 0 days</span>
+                  </div>
+                  <div class="flex justify-between items-center px-1">
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">M</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">T</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">W</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">T</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">F</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">S</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-heritage-secondary mb-1">S</span>
+                      <input type="checkbox" class="habit-chk-2 accent-heritage-tertiary">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4 text-[10px] text-heritage-secondary text-right">
+              Streak is calculated based on consecutive check-ins from Monday to Sunday.
+            </div>
+          </div>
+
+          <!-- Interactive 3: Academy Spaced Repetition Card -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="sandbox-flashcard">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-2">🎓 Spaced Repetition Card</h3>
+              <p class="text-xs text-heritage-secondary mb-4">Click to flip the flashcard to review the answer, then rate your recall correctness.</p>
+              
+              <div class="relative w-full h-48 cursor-pointer perspective" id="flashcardBox">
+                <div class="flashcard-inner w-full h-full relative rounded border border-heritage-border bg-heritage-bg p-6 flex flex-col justify-center items-center shadow-sm">
+                  <!-- Front Side -->
+                  <div class="flashcard-front absolute inset-0 p-6 flex flex-col justify-between">
+                    <span class="mono-label text-[9px] uppercase tracking-wider text-heritage-secondary">Question</span>
+                    <div class="text-center font-semibold text-sm select-none">
+                      What is the purpose of Row Level Security (RLS) in PostgreSQL databases?
+                    </div>
+                    <span class="text-[10px] text-heritage-tertiary text-center font-medium">Click Card to Flip</span>
+                  </div>
+                  <!-- Back Side -->
+                  <div class="flashcard-back absolute inset-0 p-6 flex flex-col justify-between">
+                    <span class="mono-label text-[9px] uppercase tracking-wider text-heritage-secondary">Answer Summary</span>
+                    <div class="text-center text-xs leading-relaxed select-none overflow-y-auto max-h-24">
+                      RLS allows you to restrict database row-level operations (SELECT, UPDATE, etc.) to specific authenticated users based on logical policies (like checking auth.uid() against a user_id column).
+                    </div>
+                    <div class="flex justify-center space-x-2">
+                      <button id="srsCorrect" class="px-3 py-1 bg-green-800 text-white rounded text-[10px] uppercase font-bold hover:bg-green-700">Correct</button>
+                      <button id="srsIncorrect" class="px-3 py-1 bg-red-800 text-white rounded text-[10px] uppercase font-bold hover:bg-red-700">Incorrect</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4 text-xs text-heritage-secondary flex justify-between items-center">
+              <span>Card Status: <strong class="text-heritage-tertiary" id="cardStatusLabel">To Review</strong></span>
+              <span id="srsFeedback" class="text-heritage-secondary font-mono italic"></span>
+            </div>
+          </div>
+
+          <!-- Interactive 4: Pomodoro Focus Timer -->
+          <div class="bg-heritage-surface border border-heritage-border p-6 rounded-lg flex flex-col justify-between" id="sandbox-pomodoro">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-2">⏱️ Pomodoro Focus Widget</h3>
+              <p class="text-xs text-heritage-secondary mb-4">Run structured study sessions. Keep your attention locked during intervals.</p>
+              
+              <div class="bg-heritage-bg border border-heritage-border rounded p-6 text-center">
+                <div class="serif-title text-4xl font-bold tracking-widest text-heritage-primary mb-4" id="pomodoroTimer">
+                  25:00
+                </div>
+                
+                <div class="flex justify-center space-x-3">
+                  <button id="pomoStart" class="px-4 py-2 border border-heritage-border bg-heritage-surface text-xs font-semibold hover:border-heritage-tertiary transition-colors">Start</button>
+                  <button id="pomoPause" class="px-4 py-2 border border-heritage-border bg-heritage-surface text-xs font-semibold hover:border-heritage-tertiary transition-colors">Pause</button>
+                  <button id="pomoReset" class="px-4 py-2 border border-heritage-border bg-heritage-surface text-xs font-semibold hover:border-heritage-tertiary transition-colors">Reset</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mt-4 flex justify-between text-xs text-heritage-secondary">
+              <span>Session Type: <strong id="pomoType">Focus Interval</strong></span>
+              <span id="pomoCount">Completed: 0 sessions</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Technical Setup & Deployment Guide -->
+      <section id="setup" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-heritage-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-heritage-primary">Technical Setup & Deployment Guide</h2>
+          <p class="text-heritage-secondary mt-2">Get the Heritage platform running on your local machine and deploy it to staging/production.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="space-y-6">
+            <h3 class="serif-title text-2xl font-semibold">Environment Variables</h3>
+            <p class="text-sm text-heritage-secondary leading-relaxed">
+              Environment configuration resides in a `.env.local` file at the root. Duplicate `.env.example` to start:
+            </p>
+            <pre class="bg-heritage-surface border border-heritage-border p-4 rounded text-xs font-mono text-heritage-secondary overflow-x-auto">
+# Core Supabase Connectivity
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-string
+
+# Gemini models configuration (AI Outlines, Notes writing, Q&A)
+GEMINI_API_KEY=your-gemini-api-key
+
+# Exa Web Search Integration (Web sources crawling)
+EXA_API_KEY=your-exa-api-key
+
+# Pushover Integration (Optional notifications)
+PUSHOVER_USER_KEY=your-pushover-user-key
+PUSHOVER_API_TOKEN=your-pushover-api-token
+DASHBOARD_URL=http://localhost:3000</pre>
+          </div>
+
+          <div class="space-y-6">
+            <h3 class="serif-title text-2xl font-semibold">Prerequisites & Execution</h3>
+            <p class="text-sm text-heritage-secondary leading-relaxed">
+              To launch the platform locally, verify your development runtime supports Node.js 20 or higher.
+            </p>
+            <div class="space-y-4">
+              <div class="p-4 border-l-4 border-heritage-tertiary bg-heritage-surface text-xs space-y-2">
+                <span class="mono-label font-bold text-heritage-primary block">DEVELOPMENT COMMANDS</span>
+                <div class="space-y-1 font-mono text-heritage-secondary">
+                  <p>1. Copy settings: <code class="bg-heritage-bg px-1">cp .env.example .env.local</code></p>
+                  <p>2. Install dependencies: <code class="bg-heritage-bg px-1">npm install</code></p>
+                  <p>3. Run locally: <code class="bg-heritage-bg px-1">npm run dev</code></p>
+                  <p>4. Build: <code class="bg-heritage-bg px-1">npm run build</code></p>
+                </div>
+              </div>
+
+              <div id="deploy" class="p-4 border-l-4 border-heritage-secondary bg-heritage-surface text-xs space-y-2 scroll-mt-6">
+                <span class="mono-label font-bold text-heritage-primary block">DEPLOYMENT STEPS (VERCEL)</span>
+                <p class="text-heritage-secondary leading-relaxed">
+                  Heritage is optimized for Vercel deployment:
+                </p>
+                <ol class="list-decimal pl-4 space-y-1 text-heritage-secondary">
+                  <li>Push your fork/clone of the dashboard to GitHub.</li>
+                  <li>Import the project into Vercel dashboard.</li>
+                  <li>Configure the required Environment variables.</li>
+                  <li>Click **Deploy**. Continuous delivery builds updates automatically on pushes to `main`.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-heritage-surface border-t border-heritage-border py-6 px-6 text-center text-xs text-heritage-secondary">
+    <p>© 2026 Heritage Dashboard (Hulu - ሁሉ) • Licensed under MIT. Built with Next.js, Tailwind CSS, Supabase, and Gemini.</p>
+  </footer>
+
+  <script>
+    // Global Theme State Handler
+    const doc = document.documentElement;
+    const globalBtn = document.getElementById('globalThemeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        doc.classList.add('dark');
+        themeIcon.className = 'fa-solid fa-sun text-yellow-500';
+      } else {
+        doc.classList.remove('dark');
+        themeIcon.className = 'fa-solid fa-moon text-heritage-secondary';
+      }
+    }
+
+    // Read stored or system setting
+    let isDark = localStorage.getItem('theme') === 'dark' || 
+                 (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    applyTheme(isDark);
+
+    globalBtn.addEventListener('click', () => {
+      isDark = !doc.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      applyTheme(isDark);
+    });
+
+    // ----------------------------------------------------
+    // INBOX SIMULATOR CODE
+    // ----------------------------------------------------
+    const inboxForm = document.getElementById('sandboxInboxForm');
+    const inboxTitleInput = document.getElementById('sandboxInboxTitle');
+    const inboxTypeSelect = document.getElementById('sandboxInboxType');
+    const inboxStatusSelect = document.getElementById('sandboxInboxStatus');
+    const inboxList = document.getElementById('sandboxInboxList');
+
+    inboxForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = inboxTitleInput.value.trim();
+      const type = inboxTypeSelect.value;
+      const status = inboxStatusSelect.value;
+
+      if (!title) return;
+
+      // Create list item markup
+      const div = document.createElement('div');
+      div.className = "flex items-center justify-between p-2 bg-heritage-bg rounded text-xs opacity-0 transition-opacity duration-300";
+      
+      let typeLabel = "Thought";
+      if (type === 'url') typeLabel = "URL";
+      if (type === 'snippet') typeLabel = "Code";
+
+      div.innerHTML = `
+        <div>
+          <span class="font-bold">[${typeLabel}]</span> ${title}
+        </div>
+        <span class="text-[10px] mono-label text-heritage-tertiary uppercase">${status}</span>
+      `;
+
+      inboxList.prepend(div);
+      
+      // Trigger animation frame
+      setTimeout(() => div.classList.remove('opacity-0'), 10);
+
+      // Reset
+      inboxTitleInput.value = '';
+    });
+
+    // ----------------------------------------------------
+    // HABIT TRACKER STREAK SIMULATOR
+    // ----------------------------------------------------
+    const habitChks1 = document.querySelectorAll('.habit-chk');
+    const habitStreak = document.getElementById('habitStreakDisplay');
+    
+    const habitChks2 = document.querySelectorAll('.habit-chk-2');
+    const habitStreak2 = document.getElementById('habitStreakDisplay2');
+
+    function calculateStreak(inputs) {
+      let streak = 0;
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].checked) {
+          streak++;
+        } else {
+          // Reset streak calculation upon any unchecked habit
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function updateHabitStreaks() {
+      const streak1 = calculateStreak(Array.from(habitChks1));
+      habitStreak.innerText = `Streak: ${streak1} days`;
+      
+      const streak2 = calculateStreak(Array.from(habitChks2));
+      habitStreak2.innerText = `Streak: ${streak2} days`;
+    }
+
+    habitChks1.forEach(chk => chk.addEventListener('change', updateHabitStreaks));
+    habitChks2.forEach(chk => chk.addEventListener('change', updateHabitStreaks));
+    
+    // Initial run
+    updateHabitStreaks();
+
+    // ----------------------------------------------------
+    // SRS FLASHCARD FLIP SIMULATOR
+    // ----------------------------------------------------
+    const flashcardBox = document.getElementById('flashcardBox');
+    const innerCard = flashcardBox.querySelector('.flashcard-inner');
+    const correctBtn = document.getElementById('srsCorrect');
+    const incorrectBtn = document.getElementById('srsIncorrect');
+    const cardStatusLabel = document.getElementById('cardStatusLabel');
+    const srsFeedback = document.getElementById('srsFeedback');
+
+    flashcardBox.addEventListener('click', (e) => {
+      // Don't trigger flip if clicking button inside the back card
+      if (e.target.closest('#srsCorrect') || e.target.closest('#srsIncorrect')) return;
+      innerCard.classList.toggle('flashcard-flipped');
+    });
+
+    correctBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cardStatusLabel.innerText = "Learned";
+      cardStatusLabel.className = "text-green-600 font-bold";
+      srsFeedback.innerText = "Scheduled for review in 4 days.";
+      // Flip back automatically after a short delay
+      setTimeout(() => {
+        innerCard.classList.remove('flashcard-flipped');
+      }, 1000);
+    });
+
+    incorrectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cardStatusLabel.innerText = "Fail (Retry)";
+      cardStatusLabel.className = "text-red-500 font-bold";
+      srsFeedback.innerText = "Scheduled for review in 10 minutes.";
+      setTimeout(() => {
+        innerCard.classList.remove('flashcard-flipped');
+      }, 1000);
+    });
+
+    // ----------------------------------------------------
+    // POMODORO TIMER SIMULATOR
+    // ----------------------------------------------------
+    let timerInterval = null;
+    let secondsLeft = 1500; // 25:00
+    let completedSessions = 0;
+    const pomodoroTimerDisplay = document.getElementById('pomodoroTimer');
+    const startBtn = document.getElementById('pomoStart');
+    const pauseBtn = document.getElementById('pomoPause');
+    const resetBtn = document.getElementById('pomoReset');
+    const countDisplay = document.getElementById('pomoCount');
+
+    function updateTimerUI() {
+      const minutes = Math.floor(secondsLeft / 60);
+      const seconds = secondsLeft % 60;
+      pomodoroTimerDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        if (secondsLeft > 0) {
+          secondsLeft--;
+          updateTimerUI();
+        } else {
+          // Timer finished
+          clearInterval(timerInterval);
+          timerInterval = null;
+          completedSessions++;
+          countDisplay.innerText = `Completed: ${completedSessions} sessions`;
+          secondsLeft = 1500; // Reset to 25 mins
+          updateTimerUI();
+          alert("Focus interval complete! Great work.");
+        }
+      }, 1000);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      secondsLeft = 1500;
+      updateTimerUI();
+    });
+  </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useDashboard, Project, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
@@ -23,6 +23,14 @@ import {
   Pin
 } from 'lucide-react';
 
+import PageShell from '@/components/ui/PageShell';
+import SectionHeader from '@/components/ui/SectionHeader';
+import EditorialCard from '@/components/ui/EditorialCard';
+import { PrimaryButton, SecondaryButton, IconButton } from '@/components/ui/Buttons';
+import { Input, Textarea, Select } from '@/components/ui/Inputs';
+import StatusBadge from '@/components/ui/StatusBadge';
+import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
+
 const PROJECT_COLORS = [
   { name: 'Terracotta', value: '#B8422E' },
   { name: 'Slate', value: '#6C7278' },
@@ -39,13 +47,17 @@ function ProjectDetailContent() {
   const {
     projects,
     tasks,
+    inboxItems,
+    objectLinks,
+    knowledgeItems,
     updateProject,
     archiveProject,
     deleteProject,
     addTask,
     updateTask,
     updateTaskStatus,
-    togglePinTask
+    togglePinTask,
+    computedQueueItems
   } = useDashboard();
 
   const project = projects.find((p) => p.id === id);
@@ -96,6 +108,88 @@ function ProjectDetailContent() {
     }
   }, [project]);
 
+  const projectId = project?.id;
+
+  // Related captures & knowledge notes
+  const relatedCaptures = useMemo(() => {
+    if (!projectId) return [];
+    return inboxItems.filter((i) => i.project_id === projectId);
+  }, [inboxItems, projectId]);
+
+  const relatedNoteIds = useMemo(() => {
+    if (!projectId) return [];
+    return objectLinks
+      .filter((link) => link.target_id === projectId && link.target_type === 'project' && link.source_type === 'knowledge_item')
+      .map((link) => link.source_id);
+  }, [objectLinks, projectId]);
+
+  const relatedNotes = useMemo(() => {
+    if (relatedNoteIds.length === 0) return [];
+    return knowledgeItems.filter((note) => relatedNoteIds.includes(note.id));
+  }, [knowledgeItems, relatedNoteIds]);
+
+  // Actionable next task (incomplete task with highest priority & due date)
+  const nextTask = useMemo(() => {
+    if (!projectId) return null;
+    const pending = tasks.filter((t) => t.project_id === projectId && t.status !== 'done');
+    if (pending.length === 0) return null;
+    
+    // Sort priority (high -> medium -> low)
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return [...pending].sort((a, b) => {
+      const pA = priorityOrder[a.priority] ?? 1;
+      const pB = priorityOrder[b.priority] ?? 1;
+      if (pA !== pB) return pA - pB;
+      
+      // Sort due date (earlier date first)
+      if (a.due_date && b.due_date) {
+        return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+      }
+      if (a.due_date) return -1;
+      if (b.due_date) return 1;
+      return 0;
+    })[0];
+  }, [tasks, projectId]);
+
+  const projTasks = useMemo(() => tasks.filter((t) => t.project_id === projectId), [tasks, projectId]);
+  const doneTasks = useMemo(() => projTasks.filter((t) => t.status === 'done'), [projTasks]);
+  const pendingTasks = useMemo(() => projTasks.filter((t) => t.status !== 'done'), [projTasks]);
+
+  const weeklyStats = useMemo(() => {
+    if (!projectId) return { completedTasks: 0, addedCaptures: 0, addedNotes: 0 };
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const completedTasks = tasks.filter(t => t.project_id === projectId && t.status === 'done' && t.due_date && new Date(t.due_date) >= sevenDaysAgo).length;
+    const addedCaptures = relatedCaptures.filter(c => new Date(c.created_at) >= sevenDaysAgo).length;
+    const addedNotes = relatedNotes.filter(n => new Date(n.created_at) >= sevenDaysAgo).length;
+    
+    return { completedTasks, addedCaptures, addedNotes };
+  }, [tasks, relatedCaptures, relatedNotes, projectId]);
+
+  const projectSignals = useMemo(() => {
+    const signals = [];
+    const noAction = pendingTasks.length === 0;
+    const hasUnprocessedCaptures = relatedCaptures.some(c => c.status === 'unprocessed' || c.status === 'unsorted');
+    
+    // Check if project is in computed queue items for staleness
+    const isStale = (computedQueueItems || []).some(
+      item => item.item_id === projectId && item.item_type === 'project' && item.reason.includes('progress')
+    );
+
+    if (noAction) {
+      signals.push({ severity: 'high' as const, message: 'No next action/tasks planned' });
+    }
+    if (isStale) {
+      signals.push({ severity: 'medium' as const, message: 'Stale: No progress in 14 days' });
+    }
+    if (hasUnprocessedCaptures) {
+      signals.push({ severity: 'low' as const, message: 'Has unprocessed captured slips' });
+    }
+
+    return signals;
+  }, [pendingTasks, relatedCaptures, computedQueueItems, projectId]);
+
   if (!project) {
     return (
       <div className="space-y-6">
@@ -109,10 +203,6 @@ function ProjectDetailContent() {
       </div>
     );
   }
-
-  const projTasks = tasks.filter((t) => t.project_id === project.id);
-  const doneTasks = projTasks.filter((t) => t.status === 'done');
-  const pendingTasks = projTasks.filter((t) => t.status !== 'done');
   
   // Progress calculations
   const getProgress = () => {
@@ -266,50 +356,34 @@ function ProjectDetailContent() {
   ];
 
   return (
-    <div className="space-y-8">
+    <PageShell>
       {/* Back link */}
-      <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider">
-        <ArrowLeft className="h-4 w-4" />
-        <span>Back to Projects</span>
-      </Link>
+      <div>
+        <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider btn-press">
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Projects</span>
+        </Link>
+      </div>
 
-      {/* Hero Header */}
-      <div 
-        className="bg-surface border border-secondary/30 border-l-8 p-6 md:p-8 rounded-sm shadow-sm space-y-4"
-        style={{ borderLeftColor: project.color || '#B8422E' }}
-      >
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <div className="flex items-center space-x-3 flex-wrap gap-y-2">
-              <span className="font-label text-xs text-white px-2 py-0.5 uppercase tracking-wider font-bold rounded-sm" style={{ backgroundColor: project.color || '#B8422E' }}>
-                {project.area}
-              </span>
-              <span className={`font-label text-xs border px-2.5 py-0.5 uppercase tracking-wider font-bold rounded-sm ${getStatusBadgeStyle(project.status)}`}>
-                {project.status || 'active'}
-              </span>
-              {project.is_archived && (
-                <span className="font-label text-xs border border-[#D1A153] bg-[#FFFDE7] text-[#D1A153] px-2.5 py-0.5 uppercase tracking-wider font-bold rounded-sm">
-                  Archived
-                </span>
-              )}
-            </div>
-            <h2 className="font-display text-3xl font-bold text-primary mt-3 leading-tight">
-              {project.name}
-            </h2>
-          </div>
-
-          <div className="flex items-center space-x-2.5 font-label text-xs shrink-0">
+      {/* Hero Header Card */}
+      <EditorialCard
+        title={project.name}
+        subtitle={`${project.area} Sector Matrix`}
+        className="border-l-8"
+        style={{ borderLeftColor: project.color || 'var(--accent)' }}
+        action={
+          <div className="flex items-center space-x-2 font-label text-xs shrink-0">
             <button
               onClick={() => setIsEditing(!isEditing)}
-              className="px-3.5 py-2 border border-secondary hover:bg-neutral-bg transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm"
+              className="px-3.5 py-2 border border-border hover:border-primary bg-surface transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-none btn-press text-primary"
             >
               <Edit3 className="h-3.5 w-3.5 text-secondary" />
               <span>{isEditing ? 'Cancel Edit' : 'Edit Matrix'}</span>
             </button>
             <button
               onClick={handleToggleArchive}
-              className={`px-3.5 py-2 border border-secondary hover:bg-neutral-bg transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm ${
-                project.is_archived ? 'bg-[#FFFDE7] text-[#D1A153]' : ''
+              className={`px-3.5 py-2 border border-border hover:border-primary bg-surface transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-none btn-press text-primary ${
+                project.is_archived ? 'bg-accent/5 text-accent border-accent/30' : ''
               }`}
             >
               <Archive className="h-3.5 w-3.5" />
@@ -317,75 +391,156 @@ function ProjectDetailContent() {
             </button>
             <button
               onClick={() => setDeleteModalOpen(true)}
-              className="px-3.5 py-2 border border-tertiary text-tertiary hover:bg-[#FFEBEE] transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-sm"
+              className="px-3.5 py-2 border border-danger/40 text-danger hover:bg-danger/5 bg-surface transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-none btn-press"
             >
               <Trash2 className="h-3.5 w-3.5" />
               <span>Delete</span>
             </button>
           </div>
-        </div>
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3 flex-wrap gap-y-2">
+            <StatusBadge status={project.status || 'active'} type="status" />
+            {project.is_archived && (
+              <span className="font-label text-xs border border-accent/40 bg-accent/5 text-accent px-2.5 py-0.5 uppercase tracking-wider font-bold rounded-none">
+                Archived
+              </span>
+            )}
+          </div>
 
-        {project.description && (
-          <p className="font-sans text-sm text-primary leading-relaxed max-w-3xl">
-            {project.description}
-          </p>
-        )}
+          {project.description && (
+            <p className="font-sans text-sm text-primary leading-relaxed max-w-3xl">
+              {project.description}
+            </p>
+          )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-secondary/15 font-label text-xs text-primary">
-          {project.client && (
-            <div className="flex items-center space-x-2">
-              <Briefcase className="h-4 w-4 shrink-0 text-secondary" />
-              <span>Client/Audience: <strong className="font-bold">{project.client}</strong></span>
-            </div>
-          )}
-          {project.gain && (
-            <div className="flex items-center space-x-2">
-              <TrendingUp className="h-4 w-4 shrink-0 text-secondary" />
-              <span>Expected Payoff: <strong className="font-bold">{project.gain}</strong></span>
-            </div>
-          )}
-          {(project.start_date || project.deadline) && (
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-4 w-4 shrink-0 text-secondary" />
-              <span>
-                Timeline: {project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'None'}
-                {' '}&rarr;{' '}
-                {project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No Deadline'}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-border font-label text-xs text-primary">
+            {project.client && (
+              <div className="flex items-center space-x-2">
+                <Briefcase className="h-4 w-4 shrink-0 text-secondary" />
+                <span>Client/Audience: <strong className="font-bold">{project.client}</strong></span>
+              </div>
+            )}
+            {project.gain && (
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="h-4 w-4 shrink-0 text-secondary" />
+                <span>Expected Payoff: <strong className="font-bold">{project.gain}</strong></span>
+              </div>
+            )}
+            {(project.start_date || project.deadline) && (
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 shrink-0 text-secondary" />
+                <span>
+                  Timeline: {project.start_date ? new Date(project.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'None'}
+                  {' '}&rarr;{' '}
+                  {project.deadline ? new Date(project.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'No Deadline'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Linear progress */}
+          <div className="space-y-2 pt-3 border-t border-border">
+            <div className="flex justify-between items-center text-xs font-label">
+              <span className="text-secondary uppercase font-semibold">Project Completion Rate</span>
+              <span className="text-primary font-bold">
+                {doneTasks.length}/{projTasks.length} Completed ({progress}%)
               </span>
             </div>
+            <div className="w-full bg-secondary/10 h-1.5 rounded-none overflow-hidden">
+              <div 
+                className="h-full transition-all duration-300 animate-pulse-slow" 
+                style={{ width: `${progress}%`, backgroundColor: project.color || 'var(--accent)' }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </EditorialCard>
+
+      {/* Project Intelligence & Next Action Dashboard */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+        {/* RECOMMENDED NEXT ACTION */}
+        <div className="bg-accent/5 border border-accent/20 p-5 rounded-none flex flex-col justify-between space-y-4">
+          <div className="space-y-2">
+            <span className="font-label text-[9px] uppercase tracking-widest text-accent font-bold block">Recommended Next Action</span>
+            {nextTask ? (
+              <div className="space-y-1">
+                <h4 className="font-sans text-sm font-bold text-primary">{nextTask.name}</h4>
+                {nextTask.description && <p className="font-sans text-xs text-secondary leading-relaxed">{nextTask.description}</p>}
+                <div className="pt-2">
+                  <StatusBadge status={nextTask.priority} type="priority" />
+                </div>
+              </div>
+            ) : (
+              <p className="font-sans text-xs text-secondary italic">No upcoming tasks. Create a task below to establish next momentum.</p>
+            )}
+          </div>
+          {nextTask && (
+            <button
+              onClick={() => handleStartFocusSession(nextTask.id)}
+              className="w-full text-center bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-wider py-2.5 font-bold cursor-pointer flex items-center justify-center gap-1.5 rounded-none"
+            >
+              <Play className="h-3.5 w-3.5 fill-current animate-pulse" />
+              <span>Start Focus Session</span>
+            </button>
           )}
         </div>
 
-        {/* Linear progress */}
-        <div className="space-y-2 pt-3">
-          <div className="flex justify-between items-center text-xs font-label">
-            <span className="text-secondary uppercase">Project Completion Rate</span>
-            <span className="text-primary font-bold">
-              {doneTasks.length}/{projTasks.length} Completed ({progress}%)
-            </span>
+        {/* HEALTH SIGNALS & WEEKLY SUMMARY */}
+        <div className="bg-surface border border-border p-5 rounded-none flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <span className="font-label text-[9px] uppercase tracking-widest text-secondary font-bold block border-b border-border/40 pb-1">Sector Health & Weekly Activity</span>
+            
+            {/* Health Signals */}
+            <div className="space-y-2">
+              {projectSignals.length > 0 ? (
+                projectSignals.map((signal, idx) => (
+                  <div key={idx} className="flex items-center space-x-2">
+                    <StalenessSignalBadge severity={signal.severity} />
+                    <span className="font-sans text-xs text-primary font-medium">{signal.message}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <span className="font-label text-[9px] border border-success/40 text-success bg-success/5 px-1.5 py-0.5 uppercase font-bold">Stable</span>
+                  <span className="font-sans text-xs text-primary font-medium">Project integrity is sound</span>
+                </div>
+              )}
+            </div>
           </div>
-          <div className="w-full bg-secondary/15 h-2 rounded-none overflow-hidden">
-            <div 
-              className="h-full transition-all duration-300" 
-              style={{ width: `${progress}%`, backgroundColor: project.color || '#B8422E' }}
-            ></div>
+
+          {/* Weekly Summary */}
+          <div className="grid grid-cols-3 gap-2 text-center font-label text-[8px] uppercase font-bold border-t border-border/40 pt-3">
+            <div className="bg-background border border-border/60 p-2">
+              <span className="text-secondary block">Completed</span>
+              <span className="text-xs font-bold text-success block mt-0.5">{weeklyStats.completedTasks}</span>
+            </div>
+            <div className="bg-background border border-border/60 p-2">
+              <span className="text-secondary block">New Slips</span>
+              <span className="text-xs font-bold text-primary block mt-0.5">{weeklyStats.addedCaptures}</span>
+            </div>
+            <div className="bg-background border border-border/60 p-2">
+              <span className="text-secondary block">Linked Notes</span>
+              <span className="text-xs font-bold text-primary block mt-0.5">{weeklyStats.addedNotes}</span>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Configurator Form */}
       {isEditing && (
-        <form onSubmit={handleEditSubmit} className="bg-surface border border-secondary p-6 rounded-sm space-y-4 font-label text-xs">
-          <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
+        <form onSubmit={handleEditSubmit} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
+          <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
             Configure Project Metadata
           </span>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Sector / Area</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Sector / Area</label>
               <select
                 value={editArea}
                 onChange={(e) => setEditArea(e.target.value as Project['area'])}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2.5 focus:outline-none rounded-none font-sans"
               >
                 <option value="Business">Business</option>
                 <option value="Health">Health</option>
@@ -395,11 +550,11 @@ function ProjectDetailContent() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Status</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Status</label>
               <select
                 value={editStatus}
                 onChange={(e) => setEditStatus(e.target.value as Project['status'])}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2.5 focus:outline-none rounded-none font-sans"
               >
                 <option value="planning">Planning</option>
                 <option value="active">Active</option>
@@ -409,14 +564,14 @@ function ProjectDetailContent() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Brand Accent Color</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Brand Accent Color</label>
               <div className="flex flex-wrap gap-2 py-1">
                 {PROJECT_COLORS.map((c) => (
                   <button
                     key={c.value}
                     type="button"
                     onClick={() => setEditColor(c.value)}
-                    className={`h-5 w-5 rounded-full transition-all border cursor-pointer ${
+                    className={`h-5 w-5 rounded-none transition-all border cursor-pointer ${
                       editColor === c.value ? 'border-primary scale-110 ring-1 ring-primary' : 'border-transparent hover:scale-105'
                     }`}
                     style={{ backgroundColor: c.value }}
@@ -429,117 +584,117 @@ function ProjectDetailContent() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Project Name *</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Project Name *</label>
               <input
                 type="text"
                 value={editName}
                 onChange={(e) => setEditName(e.target.value)}
                 required
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Client / Audience</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Client / Audience</label>
               <input
                 type="text"
                 value={editClient}
                 onChange={(e) => setEditClient(e.target.value)}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Project Payload / Gain</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Project Payload / Gain</label>
               <input
                 type="text"
                 value={editGain}
                 onChange={(e) => setEditGain(e.target.value)}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Start Date</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Start Date</label>
               <input
                 type="date"
                 value={editStartDate}
                 onChange={(e) => setEditStartDate(e.target.value)}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Target Deadline</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Target Deadline</label>
               <input
                 type="date"
                 value={editDeadline}
                 onChange={(e) => setEditDeadline(e.target.value)}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
               />
             </div>
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs uppercase text-secondary">Detailed Description</label>
+            <label className="block text-[10px] uppercase text-secondary font-bold">Detailed Description</label>
             <textarea
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
               rows={3}
-              className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+              className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none resize-none"
             />
           </div>
 
-          <button type="submit" className="w-full bg-primary text-on-primary py-2.5 text-xs uppercase font-bold tracking-wider hover:bg-primary/95 cursor-pointer transition-colors">
+          <PrimaryButton type="submit" className="w-full">
             Save Matrix Changes
-          </button>
+          </PrimaryButton>
         </form>
       )}
 
       {/* Task Add Trigger */}
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center border-b-2 border-primary pb-3 mt-8">
         <h3 className="font-display text-lg font-bold text-primary uppercase tracking-wider">
           Task Workspace
         </h3>
         
         {!isAddingTask && (
-          <button
+          <PrimaryButton
             onClick={() => setIsAddingTask(true)}
-            className="px-4 py-2 bg-primary text-on-primary hover:bg-tertiary font-label text-xs uppercase font-bold tracking-wider rounded-sm cursor-pointer transition-colors flex items-center space-x-1.5"
+            className="flex items-center space-x-1.5"
           >
             <Plus className="h-4 w-4" />
             <span>Add Inline Task</span>
-          </button>
+          </PrimaryButton>
         )}
       </div>
 
       {/* Task Creation Form */}
       {isAddingTask && (
-        <form onSubmit={handleQuickTaskSubmit} className="bg-surface border border-secondary p-5 rounded-sm space-y-4 font-label text-xs">
-          <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
+        <form onSubmit={handleQuickTaskSubmit} className="bg-surface border border-border p-5 rounded-none space-y-4 font-label text-xs shadow-none">
+          <div className="flex justify-between items-center border-b border-border pb-2">
             <span className="font-bold uppercase text-primary">Configure Project Task</span>
-            <button type="button" onClick={() => setIsAddingTask(false)} className="text-secondary hover:text-tertiary cursor-pointer">
+            <button type="button" onClick={() => setIsAddingTask(false)} className="text-secondary hover:text-accent cursor-pointer btn-press">
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Task Name *</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Task Name *</label>
               <input
                 type="text"
                 value={quickTaskName}
                 onChange={(e) => setQuickTaskName(e.target.value)}
                 placeholder="e.g. Draft technical specs"
                 required
-                className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Category</label>
+              <label className="block text-[10px] uppercase text-secondary font-bold">Category</label>
               <select
                 value={quickTaskCategory}
                 onChange={(e) => setQuickTaskCategory(e.target.value as Task['category'])}
-                className="w-full bg-neutral-bg border border-secondary p-1.5 focus:outline-none"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-2.5 focus:outline-none rounded-none font-sans"
               >
                 <option value="Work">Work</option>
                 <option value="Personal">Personal</option>
@@ -554,8 +709,8 @@ function ProjectDetailContent() {
             <button
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`p-1.5 border rounded-sm cursor-pointer transition-colors flex items-center space-x-1 font-label text-[10px] uppercase font-bold ${
-                showAdvanced ? 'bg-primary text-on-primary border-primary' : 'border-secondary/35 text-secondary'
+              className={`p-1.5 border rounded-none cursor-pointer transition-colors flex items-center space-x-1 font-label text-[10px] uppercase font-bold btn-press ${
+                showAdvanced ? 'bg-primary text-on-primary border-primary font-semibold' : 'border-border text-secondary'
               }`}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -564,14 +719,14 @@ function ProjectDetailContent() {
           </div>
 
           {showAdvanced && (
-            <div className="bg-neutral-bg/50 p-3 border border-secondary/25 space-y-3 rounded-sm">
+            <div className="bg-neutral-bg/50 p-3 border border-border space-y-3 rounded-none">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-secondary">Priority Level</label>
+                  <label className="block text-[10px] uppercase text-secondary font-bold">Priority Level</label>
                   <select
                     value={quickTaskPriority}
                     onChange={(e) => setQuickTaskPriority(e.target.value as Task['priority'])}
-                    className="w-full bg-surface border border-secondary/25 p-1 focus:outline-none"
+                    className="w-full bg-surface border border-border px-2.5 py-1.5 focus:outline-none rounded-none font-sans"
                   >
                     <option value="high">High</option>
                     <option value="medium">Medium</option>
@@ -579,70 +734,68 @@ function ProjectDetailContent() {
                   </select>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-secondary">Due Date</label>
+                  <label className="block text-[10px] uppercase text-secondary font-bold">Due Date</label>
                   <input
                     type="date"
                     value={quickTaskDueDate}
                     onChange={(e) => setQuickTaskDueDate(e.target.value)}
-                    className="w-full bg-surface border border-secondary/25 p-1 focus:outline-none font-sans"
+                    className="w-full bg-surface border border-border px-2.5 py-1 focus:outline-none font-sans rounded-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-[10px] uppercase text-secondary">Notes / Details</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Notes / Details</label>
                 <input
                   type="text"
                   value={quickTaskDesc}
                   onChange={(e) => setQuickTaskDesc(e.target.value)}
                   placeholder="e.g. requirements checklist..."
-                  className="w-full bg-surface border border-secondary/25 p-1 focus:outline-none font-sans"
+                  className="w-full bg-surface border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
                 />
               </div>
             </div>
           )}
 
-          <button type="submit" className="w-full bg-primary text-on-primary py-2 text-xs uppercase font-bold tracking-wider cursor-pointer">
+          <PrimaryButton type="submit" className="w-full">
             Save task
-          </button>
+          </PrimaryButton>
         </form>
       )}
 
       {/* Task Kanban board */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {kanbanColumns.map((col) => {
           const colTasks = projTasks.filter((t) => t.status === col.status && !t.parent_task_id);
           return (
             <div 
               key={col.status}
-              className="bg-surface border border-secondary/30 p-4 rounded-sm flex flex-col min-h-[300px]"
+              className="bg-surface border border-border p-4 rounded-none flex flex-col min-h-[350px] shadow-none"
             >
-              <span className="font-label text-xs text-primary uppercase tracking-wide block border-b border-secondary/20 pb-2 mb-3 font-bold">
+              <span className="font-label text-xs text-primary uppercase tracking-wide block border-b border-border pb-2 mb-3 font-semibold">
                 {col.name} ({colTasks.length})
               </span>
 
-              <div className="space-y-2.5 flex-1">
+              <div className="space-y-3 flex-1">
                 {colTasks.length > 0 ? (
                   colTasks.map((task) => (
                     <div
                       key={task.id}
                       onClick={() => setSelectedTaskId(task.id)}
-                      className="bg-neutral-bg border border-secondary/25 p-3 rounded-sm flex flex-col justify-between hover:border-primary transition-all group cursor-pointer"
+                      className="bg-background border border-border p-3.5 rounded-none flex flex-col justify-between hover:border-primary transition-all group cursor-pointer"
                     >
-                      <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                          {task.category && (
-                            <span className="font-label text-[8px] bg-tertiary/10 border border-tertiary/25 text-tertiary px-1 py-0.2 font-bold uppercase rounded-[2px]">
-                              {task.category}
-                            </span>
-                          )}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          {task.category ? (
+                            <StatusBadge status={task.category} type="category" />
+                          ) : <div />}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               togglePinTask(task.id);
                             }}
-                            className={`text-xs shrink-0 ml-1.5 cursor-pointer ${task.is_pinned ? 'text-tertiary' : 'text-stone-300 group-hover:text-secondary opacity-0 group-hover:opacity-100'}`}
+                            className={`text-xs shrink-0 ml-1.5 cursor-pointer btn-press ${task.is_pinned ? 'text-accent' : 'text-stone-300 group-hover:text-secondary opacity-0 group-hover:opacity-100'}`}
                           >
                             <Pin className="h-3 w-3 fill-current" />
                           </button>
@@ -654,7 +807,7 @@ function ProjectDetailContent() {
                             checked={task.status === 'done'}
                             onClick={(e) => e.stopPropagation()}
                             onChange={() => handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done')}
-                            className="h-4 w-4 accent-tertiary shrink-0 cursor-pointer mt-0.5"
+                            className="h-4 w-4 accent-accent shrink-0 cursor-pointer mt-0.5"
                           />
                           <span className={`font-sans text-xs font-semibold text-primary leading-snug ${task.status === 'done' ? 'line-through text-secondary' : ''}`}>
                             {task.name}
@@ -662,21 +815,21 @@ function ProjectDetailContent() {
                         </div>
 
                         {task.description && (
-                          <p className="font-sans text-[10px] text-secondary mt-1.5 line-clamp-2 leading-relaxed">
+                          <p className="font-sans text-[11px] text-secondary mt-1.5 line-clamp-2 leading-relaxed">
                             {task.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-secondary/15 pt-2 mt-2 font-label text-[9px] uppercase font-bold text-secondary">
-                        <span>{task.priority}</span>
+                      <div className="flex items-center justify-between border-t border-border pt-2 mt-3 font-label text-[10px] uppercase font-bold text-secondary">
+                        <StatusBadge status={task.priority} type="priority" />
                         {task.status !== 'done' && (
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleStartFocusSession(task.id);
                             }}
-                            className="text-secondary hover:text-tertiary cursor-pointer flex items-center space-x-0.5"
+                            className="text-secondary hover:text-accent cursor-pointer flex items-center space-x-0.5 btn-press"
                             title="Start Focus Session"
                           >
                             <Play className="h-3 w-3 fill-current" />
@@ -687,8 +840,8 @@ function ProjectDetailContent() {
                     </div>
                   ))
                 ) : (
-                  <div className="h-20 border border-dashed border-secondary/20 flex items-center justify-center rounded-sm">
-                    <span className="font-sans text-[10px] text-stone-400 italic">Empty</span>
+                  <div className="h-24 border border-dashed border-border flex items-center justify-center rounded-none bg-background/30">
+                    <span className="font-sans text-[10px] text-secondary italic">No items</span>
                   </div>
                 )}
               </div>
@@ -697,33 +850,94 @@ function ProjectDetailContent() {
         })}
       </div>
 
+      {/* Lower Cockpit: Related Captures & Notes */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-primary pt-8 mt-8">
+        
+        {/* RELATED CAPTURES */}
+        <div className="space-y-4">
+          <div className="border-b border-border pb-2 flex justify-between items-baseline font-label uppercase text-xs font-bold text-primary">
+            <span>Related Captures</span>
+            <span className="text-[10px] text-secondary">{relatedCaptures.length} slips</span>
+          </div>
+
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+            {relatedCaptures.length > 0 ? (
+              relatedCaptures.map((item) => (
+                <div key={item.id} className="border border-border p-3.5 bg-neutral-bg/30 rounded-none space-y-1">
+                  <div className="flex justify-between items-baseline font-label text-[9px] text-secondary">
+                    <span className="uppercase font-bold">{item.type}</span>
+                    <span>{new Date(item.created_at).toLocaleDateString('en-US')}</span>
+                  </div>
+                  <h4 className="font-sans text-xs font-semibold text-primary">{item.title}</h4>
+                  {item.content && <p className="font-sans text-[11px] text-secondary line-clamp-1">{item.content}</p>}
+                  <div className="flex justify-between items-baseline pt-2">
+                    <span className="font-label text-[9px] uppercase font-bold text-accent">{item.status}</span>
+                    <Link href={`/inbox?id=${item.id}`} className="font-label text-[8px] uppercase font-bold text-secondary hover:text-primary underline">
+                      Process Slip →
+                    </Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="font-sans text-xs text-secondary italic">No captures linked to this project.</p>
+            )}
+          </div>
+        </div>
+
+        {/* RELATED KNOWLEDGE NOTES */}
+        <div className="space-y-4">
+          <div className="border-b border-border pb-2 flex justify-between items-baseline font-label uppercase text-xs font-bold text-primary">
+            <span>Related Knowledge Notes</span>
+            <span className="text-[10px] text-secondary">{relatedNotes.length} notes</span>
+          </div>
+
+          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+            {relatedNotes.length > 0 ? (
+              relatedNotes.map((note) => (
+                <div key={note.id} className="border border-border p-3.5 bg-neutral-bg/30 rounded-none space-y-1.5">
+                  <div className="flex justify-between items-baseline font-label text-[9px] text-secondary">
+                    <span className="uppercase font-bold">{note.topic || 'General'}</span>
+                    <span>{new Date(note.created_at).toLocaleDateString('en-US')}</span>
+                  </div>
+                  <h4 className="font-sans text-xs font-semibold text-primary">{note.title}</h4>
+                  {note.summary && <p className="font-sans text-[11px] text-secondary line-clamp-1">{note.summary}</p>}
+                </div>
+              ))
+            ) : (
+              <p className="font-sans text-xs text-secondary italic">No knowledge notes linked to this project.</p>
+            )}
+          </div>
+        </div>
+
+      </div>
+
       {/* Guard Warning Modal */}
       {showGuardModal && (
         <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4">
-          <div className="bg-surface border-2 border-tertiary p-6 max-w-sm w-full space-y-4 shadow-2xl rounded-sm font-label">
-            <div className="flex items-center space-x-2 text-tertiary border-b border-tertiary/25 pb-2">
+          <div className="bg-surface border border-accent p-6 max-w-sm w-full space-y-4 shadow-none rounded-none font-label">
+            <div className="flex items-center space-x-2 text-accent border-b border-border pb-2">
               <AlertCircle className="h-5 w-5" />
               <span className="font-bold text-sm uppercase tracking-wider">Unfinished Tasks Warning</span>
             </div>
             <p className="font-sans text-xs text-primary leading-relaxed">
               This project still contains <strong className="font-semibold">{pendingTasks.length}</strong> unfinished tasks. Are you sure you want to mark the project as completed?
             </p>
-            <div className="flex justify-end space-x-2 text-[10px] font-bold uppercase">
+            <div className="flex justify-end space-x-2 text-[10px] font-bold uppercase pt-2">
               <button
                 onClick={() => {
                   setShowGuardModal(false);
                   setPendingStatusChange(null);
                 }}
-                className="px-3 py-1.5 border border-secondary hover:bg-neutral-bg cursor-pointer rounded-sm"
+                className="px-3 py-1.5 border border-border hover:bg-background cursor-pointer rounded-none btn-press text-secondary"
               >
                 Cancel
               </button>
-              <button
+              <PrimaryButton
                 onClick={handleConfirmGuardChange}
-                className="px-3 py-1.5 bg-tertiary text-on-primary hover:opacity-90 cursor-pointer rounded-sm"
+                className="btn-press"
               >
                 Proceed as Completed
-              </button>
+              </PrimaryButton>
             </div>
           </div>
         </div>
@@ -747,7 +961,7 @@ function ProjectDetailContent() {
         taskId={selectedTaskId}
         onClose={() => setSelectedTaskId(null)}
       />
-    </div>
+    </PageShell>
   );
 }
 

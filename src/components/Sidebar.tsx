@@ -21,10 +21,13 @@ import {
   RefreshCw,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Plus,
+  Sparkles,
+  History as ReviewIcon
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => void }) {
   const pathname = usePathname();
   const { signOut } = useAuth();
   const {
@@ -135,21 +138,46 @@ export default function Sidebar() {
   const learningPct = getLearningProgress();
   const lifeScore = Math.round(taskPct * 0.4 + habitPct * 0.3 + learningPct * 0.3);
 
-  const menuItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Inbox Triage', href: '/inbox', icon: Inbox },
-    { name: 'Projects', href: '/projects', icon: FolderKanban },
-    { name: 'Tasks', href: '/tasks', icon: CheckSquare },
-    { name: 'The Academy', href: '/academy', icon: GraduationCap },
-    { name: 'Habits & Health', href: '/habits', icon: Activity },
-    { name: 'Daily Journal', href: '/journal', icon: BookOpen }
+  const navigationGroups = [
+    {
+      groupName: 'Command',
+      items: [
+        { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+        { name: 'Intelligence Feed', href: '/intelligence', icon: Sparkles },
+        { name: 'Review Room', href: '/review', icon: ReviewIcon }
+      ]
+    },
+    {
+      groupName: 'Capture',
+      items: [{ name: 'Inbox Triage', href: '/inbox', icon: Inbox }]
+    },
+    {
+      groupName: 'Execute',
+      items: [
+        { name: 'Projects', href: '/projects', icon: FolderKanban },
+        { name: 'Tasks', href: '/tasks', icon: CheckSquare }
+      ]
+    },
+    {
+      groupName: 'Learn',
+      items: [{ name: 'The Academy', href: '/academy', icon: GraduationCap }]
+    },
+    {
+      groupName: 'Reflect',
+      items: [
+        { name: 'Habits & Health', href: '/habits', icon: Activity },
+        { name: 'Daily Journal', href: '/journal', icon: BookOpen }
+      ]
+    }
   ];
 
+  let itemCounter = 0;
+
   return (
-    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-secondary h-screen sticky top-0 flex flex-col justify-between py-6 sidebar-transition hidden md:flex shrink-0 self-start z-40`}>
+    <aside className={`${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-border h-screen sticky top-0 flex flex-col justify-between py-6 sidebar-transition hidden md:flex shrink-0 self-start z-40`}>
       {/* Upper Logo & Nav Section */}
-      <div className="space-y-8">
-        <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-secondary pb-3`}>
+      <div className="space-y-6 overflow-y-auto max-h-[80vh] no-scrollbar">
+        <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-border pb-3`}>
           {!isCollapsed ? (
             <div>
               <h1 className="font-amharic text-2xl font-bold tracking-tight text-primary">
@@ -170,7 +198,7 @@ export default function Sidebar() {
             <ThemeToggle />
             <button
               onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-secondary hover:text-primary p-1 rounded-sm hover:bg-neutral-bg cursor-pointer btn-press"
+              className="text-secondary hover:text-primary p-1 rounded-none hover:bg-neutral-bg cursor-pointer btn-press"
               title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
             >
               {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
@@ -178,69 +206,101 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="space-y-1">
-          {menuItems.map((item, i) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`nav-link stagger-item flex items-center ${
-                  isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-3'
-                } text-sm font-label tracking-wide rounded-sm relative group ${
-                  isActive
-                    ? 'bg-primary text-on-primary'
-                    : 'text-primary hover:bg-neutral-bg border border-transparent hover:border-secondary/25'
-                }`}
-                style={{ '--stagger-i': i } as React.CSSProperties}
-                title={isCollapsed ? item.name : undefined}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {!isCollapsed && <span>{item.name}</span>}
+        {/* Quick Capture Button */}
+        <div className="px-1">
+          {!isCollapsed ? (
+            <button
+              onClick={onCaptureTrigger}
+              className="w-full bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-widest font-bold py-3 px-4 rounded-none cursor-pointer flex items-center justify-center gap-2 btn-press"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Quick Capture</span>
+              <span className="text-[9px] opacity-60 ml-auto font-sans">⌥C</span>
+            </button>
+          ) : (
+            <button
+              onClick={onCaptureTrigger}
+              className="w-10 h-10 mx-auto bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs font-bold rounded-none cursor-pointer flex items-center justify-center btn-press"
+              title="Quick Capture (⌥C)"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          )}
+        </div>
 
-                {/* Collapsed Tooltip Overlay */}
-                {isCollapsed && (
-                  <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
-                    {item.name}
-                  </div>
-                )}
-              </Link>
-            );
-          })}
+        {/* Navigation Menu */}
+        <nav className="space-y-4">
+          {navigationGroups.map((group) => (
+            <div key={group.groupName} className="space-y-1">
+              {!isCollapsed && (
+                <span className="font-label text-[10px] text-secondary uppercase tracking-[0.2em] font-semibold px-4 block">
+                  {group.groupName}
+                </span>
+              )}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                const index = itemCounter++;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`nav-link stagger-item flex items-center ${
+                      isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-2.5'
+                    } text-sm font-label tracking-wide rounded-none relative group ${
+                      isActive
+                        ? 'bg-primary text-on-primary font-bold border-l-2 border-accent'
+                        : 'text-primary hover:bg-neutral-bg border-l-2 border-transparent hover:border-border'
+                    }`}
+                    style={{ '--stagger-i': index } as React.CSSProperties}
+                    title={isCollapsed ? item.name : undefined}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {!isCollapsed && <span>{item.name}</span>}
+
+                    {/* Collapsed Tooltip Overlay */}
+                    {isCollapsed && (
+                      <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-none opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap border border-border shadow-none">
+                        {item.name}
+                      </div>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </div>
 
       {/* Footer Section: Life Score & Status */}
-      <div className="space-y-4 pt-4 border-t border-secondary flex flex-col items-center">
+      <div className="space-y-4 pt-4 border-t border-border flex flex-col items-center">
         {/* Dynamic Life Score */}
         {!isCollapsed ? (
-          <div className="bg-neutral-bg border border-secondary/30 p-4 rounded-sm w-full">
+          <div className="bg-neutral-bg border border-border p-4 rounded-none w-full">
             <div className="flex justify-between items-center mb-1">
               <span className="font-label text-xs text-secondary uppercase tracking-[0.1em]">
                 Life Score
               </span>
-              <span className="font-display text-lg font-bold text-tertiary">{lifeScore}%</span>
+              <span className="font-display text-lg font-bold text-accent">{lifeScore}%</span>
             </div>
-            <div className="w-full bg-secondary/20 h-1.5 rounded-none overflow-hidden">
+            <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
               <div
-                className="bg-tertiary h-full transition-all duration-500"
+                className="bg-accent h-full transition-all duration-500"
                 style={{ width: `${lifeScore}%` }}
               ></div>
             </div>
           </div>
         ) : (
           <div className="text-center group relative cursor-pointer">
-            <span className="font-display text-xs font-bold text-tertiary">{lifeScore}%</span>
-            <div className="w-12 bg-secondary/20 h-1 mt-1 rounded-none overflow-hidden">
+            <span className="font-display text-xs font-bold text-accent">{lifeScore}%</span>
+            <div className="w-12 bg-secondary/10 h-1 mt-1 rounded-none overflow-hidden">
               <div
-                className="bg-tertiary h-full transition-all duration-500"
+                className="bg-accent h-full transition-all duration-500"
                 style={{ width: `${lifeScore}%` }}
               ></div>
             </div>
             {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-none opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap border border-border shadow-none">
               Life Score: {lifeScore}%
             </div>
           </div>
@@ -251,13 +311,13 @@ export default function Sidebar() {
           onClick={signOut}
           className={`flex items-center ${
             isCollapsed ? 'justify-center p-2.5 w-10 h-10' : 'space-x-3 px-4 py-2.5 w-full'
-          } text-sm font-label tracking-wide rounded-sm text-secondary hover:text-tertiary hover:bg-neutral-bg border border-transparent hover:border-secondary/25 cursor-pointer relative group btn-press`}
+          } text-sm font-label tracking-wide rounded-none text-secondary hover:text-accent hover:bg-neutral-bg border border-transparent hover:border-border cursor-pointer relative group btn-press`}
           title={isCollapsed ? 'Log Out' : undefined}
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {!isCollapsed && <span>Log Out</span>}
           {isCollapsed && (
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-none opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap border border-border shadow-none">
               Log Out
             </div>
           )}
@@ -269,35 +329,35 @@ export default function Sidebar() {
             <div className="flex items-center space-x-1.5">
               {isOnline ? (
                 <>
-                  <Wifi className="h-3.5 w-3.5 text-emerald-700" />
-                  <span className="uppercase tracking-[0.05em]">Cloud Connected</span>
+                  <Wifi className="h-3.5 w-3.5 text-success" />
+                  <span className="uppercase tracking-[0.05em] text-[10px]">Cloud Connected</span>
                 </>
               ) : (
                 <>
-                  <WifiOff className="h-3.5 w-3.5 text-tertiary" />
-                  <span className="uppercase tracking-[0.05em] text-tertiary">Working Offline</span>
+                  <WifiOff className="h-3.5 w-3.5 text-accent" />
+                  <span className="uppercase tracking-[0.05em] text-[10px] text-accent">Working Offline</span>
                 </>
               )}
             </div>
             {syncPending && (
               <div className="flex items-center space-x-1">
-                <RefreshCw className="h-3 w-3 animate-spin text-tertiary" />
-                <span className="uppercase tracking-[0.05em] text-tertiary">Syncing</span>
+                <RefreshCw className="h-3 w-3 animate-spin text-accent" />
+                <span className="uppercase tracking-[0.05em] text-[10px] text-accent">Syncing</span>
               </div>
             )}
           </div>
         ) : (
           <div className="flex flex-col items-center space-y-2 relative group cursor-pointer">
             {isOnline ? (
-              <Wifi className="h-4 w-4 text-emerald-700" />
+              <Wifi className="h-4 w-4 text-success" />
             ) : (
-              <WifiOff className="h-4 w-4 text-tertiary" />
+              <WifiOff className="h-4 w-4 text-accent" />
             )}
             {syncPending && (
-              <RefreshCw className="h-3.5 w-3.5 animate-spin text-tertiary" />
+              <RefreshCw className="h-3.5 w-3.5 animate-spin text-accent" />
             )}
             {/* Tooltip */}
-            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-sm opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap shadow-md border border-secondary/40">
+            <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-none opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap border border-border shadow-none">
               {isOnline ? 'Cloud Connected' : 'Working Offline'}
               {syncPending && ' (Syncing)'}
             </div>

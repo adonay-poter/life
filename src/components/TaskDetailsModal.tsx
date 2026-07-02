@@ -219,7 +219,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
         }
       }}
     >
-      <div className="animate-modal bg-surface border-2 border-primary rounded-sm shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-sans relative">
+      <div className="animate-modal bg-surface border-2 border-primary rounded-none shadow-none w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col font-sans relative">
         
         {/* Header */}
         <div className="border-b border-secondary/25 p-5 flex justify-between items-start">
@@ -230,7 +230,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 const parentProj = projects.find((p) => p.id === activeTask.project_id);
                 return (
                   <span 
-                    className="font-label text-xs text-white px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]"
+                    className="font-label text-xs text-white px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-none"
                     style={{ backgroundColor: parentProj?.color || '#6C7278' }}
                   >
                     {parentProj ? parentProj.name : 'Standalone Task'}
@@ -240,13 +240,13 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               
               {/* Category Badge */}
               {activeTask.category && (
-                <span className="font-label text-xs text-tertiary bg-tertiary/10 border border-tertiary/25 px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+                <span className="font-label text-xs text-tertiary bg-tertiary/10 border border-tertiary/25 px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-none">
                   {activeTask.category}
                 </span>
               )}
 
               {/* Status Badge */}
-              <span className="font-label text-xs text-on-primary bg-primary px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-[2px]">
+              <span className="font-label text-xs text-on-primary bg-primary px-2 py-0.5 uppercase tracking-wider block w-fit font-bold rounded-none">
                 {activeTask.status.replace('_', ' ')}
               </span>
             </div>
@@ -309,7 +309,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               <div className="space-y-2">
                 {subtasks.length > 0 ? (
                   subtasks.map((sub) => (
-                    <div key={sub.id} className="flex items-center justify-between p-2.5 bg-neutral-bg border border-secondary/20 rounded-sm">
+                    <div key={sub.id} className="flex items-center justify-between p-2.5 bg-neutral-bg border border-secondary/20 rounded-none">
                       <div className="flex items-center space-x-2.5 min-w-0">
                         <input
                           type="checkbox"
@@ -343,12 +343,12 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   placeholder="Create a new subtask..."
                   value={newSubtaskName}
                   onChange={(e) => setNewSubtaskName(e.target.value)}
-                  className="flex-1 bg-neutral-bg border border-secondary/40 px-3 py-1.5 text-xs text-primary focus:border-primary focus:outline-none rounded-sm font-sans"
+                  className="flex-1 bg-neutral-bg border border-secondary/40 px-3 py-1.5 text-xs text-primary focus:border-primary focus:outline-none rounded-none font-sans"
                 />
                 <button
                   type="submit"
                   disabled={!newSubtaskName.trim()}
-                  className="bg-primary text-on-primary hover:bg-tertiary font-label text-xs uppercase font-bold px-3 py-1.5 rounded-sm disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
+                  className="bg-primary text-on-primary hover:bg-tertiary font-label text-xs uppercase font-bold px-3 py-1.5 rounded-none disabled:bg-stone-300 disabled:text-stone-500 disabled:cursor-not-allowed cursor-pointer transition-all flex items-center space-x-1"
                 >
                   <Plus className="h-3 w-3" />
                   <span>Add</span>
@@ -537,29 +537,31 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               <label className="font-label text-xs text-secondary uppercase tracking-wider font-bold block">
                 Focus Sessions
               </label>
-              <div className="flex items-center space-x-3">
+              <div className="flex flex-col space-y-2.5">
                 <div className="flex items-center space-x-1.5 text-primary font-sans">
                   <Timer className="h-4.5 w-4.5 text-tertiary" />
                   <span className="text-sm font-semibold">{activeTask.pomodoro_sessions || 0} sessions</span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    updateTaskPomodoro(activeTask.id, (activeTask.pomodoro_sessions || 0) + 1);
-                    showToast('Pomodoro session logged.', 'info');
-                  }}
-                  className="bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
-                >
-                  <span>+1 Session</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleStartFocusSession(activeTask.id)}
-                  className="bg-primary text-on-primary hover:bg-tertiary font-label text-xs font-bold uppercase tracking-wider px-2 py-1 transition-all rounded-sm cursor-pointer flex items-center space-x-1"
-                >
-                  <Play className="h-3 w-3 fill-current" />
-                  <span>Start Focus</span>
-                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateTaskPomodoro(activeTask.id, (activeTask.pomodoro_sessions || 0) + 1);
+                      showToast('Pomodoro session logged.', 'info');
+                    }}
+                    className="bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary font-label text-[10px] font-bold uppercase tracking-wider py-1.5 transition-all rounded-none cursor-pointer flex items-center justify-center space-x-1"
+                  >
+                    <span>+1 Session</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStartFocusSession(activeTask.id)}
+                    className="bg-primary text-on-primary hover:bg-tertiary font-label text-[10px] font-bold uppercase tracking-wider py-1.5 transition-all rounded-none cursor-pointer flex items-center justify-center space-x-1"
+                  >
+                    <Play className="h-2.5 w-2.5 fill-current" />
+                    <span>Start Focus</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -574,7 +576,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 togglePinTask(activeTask.id);
                 showToast(`Task ${activeTask.is_pinned ? 'unpinned' : 'pinned to focus'}.`, 'info');
               }}
-              className={`px-3 py-1.5 border rounded-sm cursor-pointer flex items-center space-x-1 transition-all ${
+              className={`px-3 py-1.5 border rounded-none cursor-pointer flex items-center space-x-1 transition-all ${
                 activeTask.is_pinned 
                   ? 'bg-tertiary/10 border-tertiary text-tertiary' 
                   : 'bg-surface border-secondary/40 text-secondary hover:border-primary hover:text-primary'
@@ -589,7 +591,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               onClick={() => {
                 triggerDeleteTask(activeTask.id, activeTask.name);
               }}
-              className="px-3 py-1.5 bg-surface border border-red-200 hover:border-red-600 text-red-600 hover:bg-red-50 rounded-sm cursor-pointer transition-all flex items-center space-x-1"
+              className="px-3 py-1.5 bg-surface border border-red-200 hover:border-red-600 text-red-600 hover:bg-red-950/20 rounded-none cursor-pointer transition-all flex items-center space-x-1"
             >
               <Trash2 className="h-3 w-3" />
               <span>Delete</span>
@@ -602,14 +604,14 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 <button
                   type="button"
                   onClick={handleSaveTaskEdit}
-                  className="px-4 py-1.5 bg-primary text-on-primary hover:bg-green-700 rounded-sm cursor-pointer transition-all"
+                  className="px-4 py-1.5 bg-primary text-on-primary hover:bg-accent rounded-none cursor-pointer transition-all"
                 >
                   Save Changes
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsEditingTask(false)}
-                  className="px-4 py-1.5 bg-surface border border-secondary/40 hover:bg-neutral-bg text-primary rounded-sm cursor-pointer transition-all"
+                  className="px-4 py-1.5 bg-surface border border-secondary/40 hover:bg-neutral-bg text-primary rounded-none cursor-pointer transition-all"
                 >
                   Cancel
                 </button>
@@ -618,7 +620,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               <button
                 type="button"
                 onClick={() => setIsEditingTask(true)}
-                className="px-4 py-1.5 bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary text-primary rounded-sm cursor-pointer transition-all"
+                className="px-4 py-1.5 bg-surface border border-secondary/40 hover:bg-neutral-bg hover:border-primary text-primary rounded-none cursor-pointer transition-all"
               >
                 Edit Details
               </button>

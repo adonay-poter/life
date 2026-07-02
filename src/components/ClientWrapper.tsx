@@ -11,9 +11,11 @@ import PomodoroFloating from '@/components/PomodoroFloating';
 import PWARegister from '@/components/pwa-register';
 import SkeletonLoader from '@/components/SkeletonLoader';
 import PageTransition from '@/components/PageTransition';
+import UniversalCaptureModal from '@/components/UniversalCaptureModal';
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
+  const [isCaptureOpen, setIsCaptureOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -24,6 +26,34 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
       active = false;
     };
   }, []);
+
+  // Global keyboard shortcut
+  useEffect(() => {
+    if (!mounted) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.hasAttribute('contenteditable')
+      );
+
+      if (isTyping) return;
+
+      // Option+C or Alt+C or 'c'
+      if ((e.key === 'c' || e.key === 'C') && (e.altKey || e.metaKey || !e.ctrlKey)) {
+        // Prevent default if it's Alt+C or Option+C
+        if (e.altKey) {
+          e.preventDefault();
+        }
+        setIsCaptureOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mounted]);
 
   if (!mounted) {
     return <SkeletonLoader />;
@@ -37,8 +67,8 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
             <PWARegister />
             <div className="min-h-screen bg-neutral-bg flex flex-col md:flex-row text-primary">
               {/* Navigation */}
-              <Sidebar />
-              <MobileNav />
+              <Sidebar onCaptureTrigger={() => setIsCaptureOpen(true)} />
+              <MobileNav onCaptureTrigger={() => setIsCaptureOpen(true)} />
 
               {/* Main Content Area — PageTransition re-mounts on every route change */}
               <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden px-4 py-6 md:p-12 pb-24 md:pb-12 max-w-7xl mx-auto w-full">
@@ -47,6 +77,9 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
 
               {/* Global Floating Widget */}
               <PomodoroFloating />
+
+              {/* Global Quick Capture Modal */}
+              <UniversalCaptureModal isOpen={isCaptureOpen} onClose={() => setIsCaptureOpen(false)} />
             </div>
           </DashboardProvider>
         </AuthGuard>

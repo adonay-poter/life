@@ -9,10 +9,12 @@ import { useTaskProject, TaskProjectProvider, Task, Project } from './TaskProjec
 import { useAcademy, AcademyProvider, Course, CourseModule, Lesson, Flashcard } from './AcademyContext';
 import { useHabit, HabitProvider, Habit, HabitRecord, DailyLog } from './HabitContext';
 import { useJournal, JournalProvider, JournalEntry } from './JournalContext';
+import { useKnowledge, KnowledgeProvider, KnowledgeItem, ObjectLink, DailyDigest } from './KnowledgeContext';
 import { ResearchProvider } from './ResearchContext';
+import { useReview, ReviewProvider, ReviewEntry, ReviewQueueItem } from './ReviewContext';
 
 export { getLocalDateString };
-export type { InboxItem, Project, Task, Course, CourseModule, Lesson, Flashcard, Habit, HabitRecord, DailyLog, JournalEntry };
+export type { InboxItem, Project, Task, Course, CourseModule, Lesson, Flashcard, Habit, HabitRecord, DailyLog, JournalEntry, KnowledgeItem, ObjectLink, DailyDigest, ReviewEntry, ReviewQueueItem };
 
 interface DashboardContextProps {
   // Loading & Sync state
@@ -32,19 +34,50 @@ interface DashboardContextProps {
   habitRecords: HabitRecord[];
   dailyLogs: DailyLog[];
   journalEntries: JournalEntry[];
+  knowledgeItems: KnowledgeItem[];
+  objectLinks: ObjectLink[];
+  dailyDigests: DailyDigest[];
+  reviewEntries: ReviewEntry[];
+  reviewQueueItems: ReviewQueueItem[];
+  computedQueueItems: ReviewQueueItem[];
 
   // Inbox operations
   addInboxItem: (
-    type: 'text' | 'url' | 'snippet',
+    type: InboxItem['type'],
     title: string,
     url?: string,
     content?: string,
     tags?: string[],
-    status?: InboxItem['status']
+    status?: InboxItem['status'],
+    projectId?: string,
+    extraFields?: Partial<Pick<InboxItem, 'source_url' | 'attachment_url' | 'summary' | 'ai_suggested_type' | 'ai_suggested_destination' | 'ai_suggested_action' | 'snoozed_until' | 'processed_at'>>
   ) => Promise<void>;
   updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
   updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
   deleteInboxItem: (id: string) => Promise<void>;
+
+  // Knowledge operations
+  addKnowledgeItem: (
+    title: string,
+    content?: string,
+    type?: string,
+    sourceUrl?: string,
+    topic?: string,
+    summary?: string,
+    createdFromInboxItemId?: string
+  ) => Promise<string>;
+  updateKnowledgeItem: (id: string, updates: Partial<Omit<KnowledgeItem, 'id' | 'user_id' | 'created_at'>>) => Promise<void>;
+  deleteKnowledgeItem: (id: string) => Promise<void>;
+  addObjectLink: (
+    sourceType: string,
+    sourceId: string,
+    targetType: string,
+    targetId: string,
+    relationshipType?: string
+  ) => Promise<void>;
+  deleteObjectLink: (id: string) => Promise<void>;
+  getDailyDigestForDate: (date: string) => Promise<DailyDigest | null>;
+  upsertDailyDigest: (date: string, updates: Partial<Omit<DailyDigest, 'id' | 'user_id' | 'date' | 'created_at'>>) => Promise<void>;
 
   // Project & Task operations
   addProject: (
@@ -111,6 +144,16 @@ interface DashboardContextProps {
     freeText?: string
   ) => Promise<void>;
   deleteJournalEntry?: (date: string) => Promise<void>;
+
+  // Review operations
+  saveReviewEntry: (
+    type: ReviewEntry['review_type'],
+    date: string,
+    updates: Partial<Omit<ReviewEntry, 'id' | 'user_id' | 'review_type' | 'review_date' | 'created_at'>>
+  ) => Promise<void>;
+  snoozeQueueItem: (itemId: string, itemType: string, snoozeUntilDateStr: string) => Promise<void>;
+  resolveQueueItem: (itemId: string, itemType: string) => Promise<void>;
+  deleteReviewQueueItem: (id: string) => Promise<void>;
 }
 
 const DashboardContext = createContext<DashboardContextProps | undefined>(undefined);
@@ -122,8 +165,10 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
   const academy = useAcademy();
   const habit = useHabit();
   const journal = useJournal();
+  const knowledge = useKnowledge();
+  const review = useReview();
 
-  const loading = inbox.loading || taskProject.loading || academy.loading || habit.loading || journal.loading;
+  const loading = inbox.loading || taskProject.loading || academy.loading || habit.loading || journal.loading || knowledge.loading || review.loading;
 
   const { showToast } = useToast();
 
@@ -193,7 +238,26 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
 
     journalEntries: journal.journalEntries,
     updateJournalEntry: withErrorHandling(journal.updateJournalEntry) as any,
-    deleteJournalEntry: withErrorHandling(journal.deleteJournalEntry) as any
+    deleteJournalEntry: withErrorHandling(journal.deleteJournalEntry) as any,
+
+    knowledgeItems: knowledge.knowledgeItems,
+    objectLinks: knowledge.objectLinks,
+    dailyDigests: knowledge.dailyDigests,
+    addKnowledgeItem: withErrorHandling(knowledge.addKnowledgeItem) as any,
+    updateKnowledgeItem: withErrorHandling(knowledge.updateKnowledgeItem) as any,
+    deleteKnowledgeItem: withErrorHandling(knowledge.deleteKnowledgeItem) as any,
+    addObjectLink: withErrorHandling(knowledge.addObjectLink) as any,
+    deleteObjectLink: withErrorHandling(knowledge.deleteObjectLink) as any,
+    getDailyDigestForDate: withErrorHandling(knowledge.getDailyDigestForDate) as any,
+    upsertDailyDigest: withErrorHandling(knowledge.upsertDailyDigest) as any,
+    
+    reviewEntries: review.reviewEntries,
+    reviewQueueItems: review.reviewQueueItems,
+    computedQueueItems: review.computedQueueItems,
+    saveReviewEntry: withErrorHandling(review.saveReviewEntry) as any,
+    snoozeQueueItem: withErrorHandling(review.snoozeQueueItem) as any,
+    resolveQueueItem: withErrorHandling(review.resolveQueueItem) as any,
+    deleteReviewQueueItem: withErrorHandling(review.deleteReviewQueueItem) as any
   };
 
   return <DashboardContext.Provider value={value}>{children}</DashboardContext.Provider>;
@@ -207,9 +271,13 @@ export const DashboardProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           <AcademyProvider>
             <HabitProvider>
               <JournalProvider>
-                <ResearchProvider>
-                  <DashboardContextAggregator>{children}</DashboardContextAggregator>
-                </ResearchProvider>
+                <KnowledgeProvider>
+                  <ReviewProvider>
+                    <ResearchProvider>
+                      <DashboardContextAggregator>{children}</DashboardContextAggregator>
+                    </ResearchProvider>
+                  </ReviewProvider>
+                </KnowledgeProvider>
               </JournalProvider>
             </HabitProvider>
           </AcademyProvider>

@@ -7,27 +7,36 @@ import { useSystem } from './SystemContext';
 
 export interface InboxItem {
   id: string;
-  type: 'text' | 'url' | 'snippet';
+  type: 'text' | 'url' | 'snippet' | 'thought' | 'idea' | 'task' | 'photo' | 'quote' | 'code' | 'question' | 'journal' | 'book_note' | 'course_note' | 'decision' | 'resource';
   title: string;
   url?: string;
+  source_url?: string;
+  attachment_url?: string;
+  summary?: string;
   content?: string;
   tags: string[];
-  status: 'unsorted' | 'task' | 'academy' | 'snoozed' | 'archived' | 'knowledge';
+  status: 'unprocessed' | 'processed' | 'snoozed' | 'archived' | 'unsorted' | 'task' | 'academy' | 'knowledge';
   created_at: string;
   snoozed_until?: string;
+  processed_at?: string;
   project_id?: string;
+  ai_suggested_type?: string;
+  ai_suggested_destination?: string;
+  ai_suggested_action?: string;
 }
 
 interface InboxContextProps {
   inboxItems: InboxItem[];
   loading: boolean;
   addInboxItem: (
-    type: 'text' | 'url' | 'snippet',
+    type: InboxItem['type'],
     title: string,
     url?: string,
     content?: string,
     tags?: string[],
-    status?: InboxItem['status']
+    status?: InboxItem['status'],
+    projectId?: string,
+    extraFields?: Partial<Pick<InboxItem, 'source_url' | 'attachment_url' | 'summary' | 'ai_suggested_type' | 'ai_suggested_destination' | 'ai_suggested_action' | 'snoozed_until' | 'processed_at'>>
   ) => Promise<void>;
   updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
   updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
@@ -85,7 +94,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const checkedItems = loadedItems.map((item) => {
         if (item.status === 'snoozed' && item.snoozed_until && item.snoozed_until <= todayStr) {
           hasChanges = true;
-          return { ...item, status: 'unsorted', snoozed_until: undefined } as InboxItem;
+          return { ...item, status: 'unprocessed', snoozed_until: undefined } as InboxItem;
         }
         return item;
       });
@@ -96,13 +105,13 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (isOnline) {
           const expired = checkedItems.filter(
             (item) =>
-              item.status === 'unsorted' &&
+              item.status === 'unprocessed' &&
               !item.snoozed_until &&
               loadedItems.find((o) => o.id === item.id)?.status === 'snoozed'
           );
           Promise.all(
             expired.map((item) =>
-              supabase.from('inbox_items').update({ status: 'unsorted', snoozed_until: null }).eq('id', item.id)
+              supabase.from('inbox_items').update({ status: 'unprocessed', snoozed_until: null }).eq('id', item.id)
             )
           ).catch((err) => console.warn('Failed to sync unsnoozed items to Supabase:', err));
         }
@@ -116,12 +125,14 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [isOnline, refreshKey]);
 
   const addInboxItem = async (
-    type: 'text' | 'url' | 'snippet',
+    type: InboxItem['type'],
     title: string,
     url?: string,
     content?: string,
     tags: string[] = [],
-    status: InboxItem['status'] = 'unsorted'
+    status: InboxItem['status'] = 'unprocessed',
+    projectId?: string,
+    extraFields?: Partial<Pick<InboxItem, 'source_url' | 'attachment_url' | 'summary' | 'ai_suggested_type' | 'ai_suggested_destination' | 'ai_suggested_action' | 'snoozed_until' | 'processed_at'>>
   ) => {
     const newItem: InboxItem = {
       id: crypto.randomUUID(),
@@ -131,7 +142,9 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       content,
       tags,
       status,
-      created_at: new Date().toISOString()
+      project_id: projectId,
+      created_at: new Date().toISOString(),
+      ...extraFields
     };
 
     const updated = [...inboxItems, newItem];
@@ -147,13 +160,15 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const updateInboxItemStatus = async (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => {
     const tomorrow = getLocalDateString(new Date(Date.now() + 86400000));
     const targetSnoozedUntil = status === 'snoozed' ? (snoozedUntil || tomorrow) : undefined;
+    const processedAt = (status === 'processed' || status === 'task' || status === 'academy' || status === 'knowledge') ? new Date().toISOString() : undefined;
     const updated = inboxItems.map((item) => {
       if (item.id === id) {
         return {
           ...item,
           status,
           project_id: projectId || item.project_id,
-          snoozed_until: targetSnoozedUntil
+          snoozed_until: targetSnoozedUntil,
+          processed_at: processedAt || item.processed_at
         } as InboxItem;
       }
       return item;
@@ -166,6 +181,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const dbUpdates: Record<string, unknown> = { status };
       if (projectId) dbUpdates.project_id = projectId;
       dbUpdates.snoozed_until = targetSnoozedUntil || null;
+      if (processedAt) dbUpdates.processed_at = processedAt;
       const { error } = await supabase.from('inbox_items').update(dbUpdates).eq('id', id);
         if (error) throw error;
     }

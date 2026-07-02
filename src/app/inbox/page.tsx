@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { getLocalDateString } from '@/utils/dateUtils';
-import { useSearchParams } from 'next/navigation';
+import PageShell from '@/components/ui/PageShell';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import { 
   Inbox, 
   Link2, 
@@ -22,10 +24,24 @@ import {
   Sparkles,
   GripVertical,
   BookOpen,
-  Pencil
+  Pencil,
+  X,
+  Plus,
+  HelpCircle,
+  Bookmark,
+  CheckSquare,
+  Zap,
+  Quote,
+  FileCode,
+  Check,
+  Tag,
+  ArrowRight,
+  PlusCircle,
+  FileQuestion,
+  ListTodo
 } from 'lucide-react';
 
-function InboxPageContent() {
+export default function InboxPage() {
   const {
     inboxItems,
     projects,
@@ -37,137 +53,172 @@ function InboxPageContent() {
     deleteInboxItem,
     updateInboxItem,
     addTask,
-    addLesson
+    addLesson,
+    addFlashcard,
+    addKnowledgeItem,
+    addObjectLink,
+    journalEntries,
+    updateJournalEntry
   } = useDashboard();
 
   const { showToast } = useToast();
 
-  // Delete confirmation modal state
+  // Selected slip state
+  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Status Filter: unprocessed, processed, snoozed, archived
+  const [statusFilter, setStatusFilter] = useState<'unprocessed' | 'processed' | 'snoozed' | 'archived'>('unprocessed');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{ id: string; title: string } | null>(null);
 
-  // Form states
-  const [captureType, setCaptureType] = useState<'text' | 'url' | 'snippet'>('text');
-  const [inputTitle, setInputTitle] = useState('');
-  const [inputUrl, setInputUrl] = useState('');
-  const [inputContent, setInputContent] = useState('');
-  const [inputTags, setInputTags] = useState('');
-  const [captureDestination, setCaptureDestination] = useState<'unsorted' | 'knowledge'>('unsorted');
+  // Quick Capture form inside Inbox
+  const [showQuickCapture, setShowQuickCapture] = useState(false);
+  const [quickTitle, setQuickTitle] = useState('');
+  const [quickContent, setQuickContent] = useState('');
+  const [quickType, setQuickType] = useState<InboxItem['type']>('thought');
+  const [quickUrl, setQuickUrl] = useState('');
+  const [quickTags, setQuickTags] = useState('');
 
-  // UI Interactive states
-  const [activeDropdownId, setActiveDropdownId] = useState<string | null>(null);
-  const [convertingItemId, setConvertingItemId] = useState<string | null>(null);
-  const [conversionType, setConversionType] = useState<'task' | 'academy' | null>(null);
-  const [activeTab, setActiveTab] = useState<'queue' | 'knowledge' | 'snoozed_archived'>('queue');
-  
-  // Triage setup states
-  const [targetProjectId, setTargetProjectId] = useState('');
-  const [targetCourseId, setTargetCourseId] = useState('');
-  const [targetModuleId, setTargetModuleId] = useState('');
-  const [taskPriority, setTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
-
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('');
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const query = params.get('searchQuery');
-      if (query) {
-        setSearchQuery(query);
-      }
-    }
-  }, []);
-
-  // Input ref for keyboard shortcut focus
-  const captureTitleInputRef = useRef<HTMLInputElement | null>(null);
-  // Ref for click outside dropdown detection
-  const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-  // Edit states
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  // In-place edit form for selected item
+  const [isEditingSelected, setIsEditingSelected] = useState(false);
   const [editTitle, setEditTitle] = useState('');
-  const [editType, setEditType] = useState<'text' | 'url' | 'snippet'>('text');
-  const [editUrl, setEditUrl] = useState('');
   const [editContent, setEditContent] = useState('');
+  const [editUrl, setEditUrl] = useState('');
   const [editTags, setEditTags] = useState('');
 
-  const searchParams = useSearchParams();
-  const highlightId = searchParams ? searchParams.get('id') : null;
+  // Selected item active processing tab: 'task' | 'knowledge' | 'project' | 'journal' | 'flashcard' | 'snooze'
+  const [activeActionTab, setActiveActionTab] = useState<'task' | 'knowledge' | 'project' | 'journal' | 'flashcard' | 'snooze'>('task');
 
-  // Auto-select tab, scroll, and highlight when id query param is present
+  // Action fields
+  const [taskProjectId, setTaskProjectId] = useState('');
+  const [taskCategory, setTaskCategory] = useState<'Work' | 'Personal' | 'Urgent' | 'Learning' | 'Other'>('Work');
+  const [taskPriority, setTaskPriority] = useState<'high' | 'medium' | 'low'>('medium');
+  const [taskDueDate, setTaskDueDate] = useState('');
+
+  const [knowledgeTopic, setKnowledgeTopic] = useState('');
+  const [knowledgeSummary, setKnowledgeSummary] = useState('');
+  const [knowledgeLinkProjectId, setKnowledgeLinkProjectId] = useState('');
+
+  const [projectLinkId, setProjectLinkId] = useState('');
+
+  const [journalDate, setJournalDate] = useState(getLocalDateString());
+  const [journalReflectionType, setJournalReflectionType] = useState<'learned' | 'better' | 'free_text'>('learned');
+
+  const [flashcardCourseId, setFlashcardCourseId] = useState('');
+  const [flashcardModuleId, setFlashcardModuleId] = useState('');
+  const [flashcardFront, setFlashcardFront] = useState('');
+  const [flashcardBack, setFlashcardBack] = useState('');
+
+  const [snoozeDate, setSnoozeDate] = useState('');
   useEffect(() => {
-    if (highlightId && inboxItems.length > 0) {
-      const item = inboxItems.find((i) => i.id === highlightId);
-      if (item) {
-        if (item.status === 'unsorted') {
-          setActiveTab('queue');
-        } else if (item.status === 'knowledge') {
-          setActiveTab('knowledge');
-        } else if (item.status === 'snoozed' || item.status === 'archived') {
-          setActiveTab('snoozed_archived');
-        }
+    setSnoozeDate(getLocalDateString(new Date(Date.now() + 86400000)));
+  }, []);
 
-        setTimeout(() => {
-          const el = document.getElementById(`inbox-card-${highlightId}`);
-          if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            el.classList.add('ring-2', 'ring-tertiary', 'ring-offset-2');
-            const timer = setTimeout(() => {
-              el.classList.remove('ring-2', 'ring-tertiary', 'ring-offset-2');
-            }, 3000);
-            return () => clearTimeout(timer);
-          }
-        }, 300);
+  // Setup defaults when item is selected
+  const selectedItem = useMemo(() => {
+    return inboxItems.find((item) => item.id === selectedItemId) || null;
+  }, [inboxItems, selectedItemId]);
+
+  useEffect(() => {
+    if (selectedItem) {
+      setEditTitle(selectedItem.title);
+      setEditContent(selectedItem.content || '');
+      setEditUrl(selectedItem.url || selectedItem.source_url || '');
+      setEditTags((selectedItem.tags || []).map((t) => t.replace('#', '')).join(', '));
+      setIsEditingSelected(false);
+
+      // Default fields values
+      setFlashcardFront(selectedItem.title);
+      setFlashcardBack(selectedItem.content || '');
+      setKnowledgeSummary(selectedItem.summary || selectedItem.content?.slice(0, 150) || '');
+    }
+  }, [selectedItem]);
+
+  // Set default sub-selectors when project/course changes
+  useEffect(() => {
+    if (courses.length > 0 && !flashcardCourseId) {
+      setFlashcardCourseId(courses[0].id);
+    }
+  }, [courses, flashcardCourseId]);
+
+  const activeModules = useMemo(() => {
+    return courseModules.filter((m) => m.course_id === flashcardCourseId);
+  }, [courseModules, flashcardCourseId]);
+
+  useEffect(() => {
+    if (activeModules.length > 0) {
+      setFlashcardModuleId(activeModules[0].id);
+    } else {
+      setFlashcardModuleId('');
+    }
+  }, [activeModules]);
+
+  // Helper icons mapper for types
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'thought': return <Sparkles className="h-4 w-4 text-secondary" />;
+      case 'idea': return <Zap className="h-4 w-4 text-warning" />;
+      case 'task': return <CheckSquare className="h-4 w-4 text-accent" />;
+      case 'url': return <Link2 className="h-4 w-4 text-accent" />;
+      case 'photo': return <Scissors className="h-4 w-4 text-primary" />;
+      case 'quote': return <Quote className="h-4 w-4 text-[#58805F]" />;
+      case 'code': return <FileCode className="h-4 w-4 text-[#8D6E63]" />;
+      case 'question': return <HelpCircle className="h-4 w-4 text-danger" />;
+      case 'journal': return <BookOpen className="h-4 w-4 text-primary" />;
+      case 'book_note': return <Bookmark className="h-4 w-4 text-[#D1A153]" />;
+      case 'course_note': return <GraduationCap className="h-4 w-4 text-accent" />;
+      case 'decision': return <Check className="h-4 w-4 text-success" />;
+      case 'resource': return <FileText className="h-4 w-4 text-secondary" />;
+      default: return <FileText className="h-4 w-4 text-secondary" />;
+    }
+  };
+
+  // Keyboard navigation inside list
+  const filteredSlips = useMemo(() => {
+    const list = inboxItems.filter((item) => {
+      // Map old statuses to support backward compatibility
+      let matchesStatus = false;
+      if (statusFilter === 'unprocessed') {
+        matchesStatus = item.status === 'unprocessed' || item.status === 'unsorted';
+      } else if (statusFilter === 'processed') {
+        matchesStatus = item.status === 'processed' || item.status === 'task' || item.status === 'academy' || item.status === 'knowledge';
+      } else {
+        matchesStatus = item.status === statusFilter;
+      }
+      return matchesStatus;
+    });
+
+    if (!searchQuery.trim()) return list;
+    const query = searchQuery.toLowerCase();
+    return list.filter((item) => {
+      return (
+        item.title.toLowerCase().includes(query) ||
+        (item.content && item.content.toLowerCase().includes(query)) ||
+        (item.tags && item.tags.some((t) => t.toLowerCase().includes(query)))
+      );
+    });
+  }, [inboxItems, statusFilter, searchQuery]);
+
+  // Select first item on desktop if nothing is selected or if selected item leaves the current filter list
+  useEffect(() => {
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
+
+    if (isDesktop && filteredSlips.length > 0) {
+      if (!selectedItemId || !filteredSlips.some((i) => i.id === selectedItemId)) {
+        setSelectedItemId(filteredSlips[0].id);
+      }
+    } else {
+      // On mobile, only reset selection to null if the selected item actually left the list (e.g. processed/deleted)
+      if (selectedItemId && !filteredSlips.some((i) => i.id === selectedItemId)) {
+        setSelectedItemId(null);
       }
     }
-  }, [highlightId, inboxItems]);
+  }, [filteredSlips, selectedItemId]);
 
-  function startEditing(item: InboxItem) {
-    setEditingItemId(item.id);
-    setEditTitle(item.title);
-    setEditType(item.type);
-    setEditUrl(item.url || '');
-    setEditContent(item.content || '');
-    setEditTags((item.tags || []).map(t => t.replace('#', '')).join(', '));
-    setActiveDropdownId(null);
-  }
-
-  const handleSaveEdit = useCallback(async (id: string) => {
-    if (!editTitle.trim()) return;
-
-    let finalUrl = editUrl;
-    if (editType === 'url' && editUrl) {
-      if (!editUrl.startsWith('http://') && !editUrl.startsWith('https://')) {
-        finalUrl = 'https://' + editUrl;
-      }
-    }
-
-    const tagsArray = editTags
-      .split(',')
-      .map((tag) => tag.trim())
-      .filter((tag) => tag.length > 0)
-      .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
-
-    const updates = {
-      title: editTitle,
-      type: editType,
-      url: editType === 'url' ? finalUrl : undefined,
-      content: editType === 'snippet' ? editContent : undefined,
-      tags: tagsArray
-    };
-
-    try {
-      await updateInboxItem(id, updates);
-      showToast('Changes saved successfully.', 'success');
-      setEditingItemId(null);
-    } catch (err) {
-      console.error('Failed to update inbox item:', err);
-      showToast('Failed to save changes. Please try again.', 'error');
-    }
-  }, [editContent, editTags, editTitle, editType, editUrl, showToast, updateInboxItem]);
-
-  // Global keyboard shortcuts
+  // Global Up/Down Arrow keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const activeEl = document.activeElement;
@@ -176,1257 +227,987 @@ function InboxPageContent() {
         activeEl.tagName === 'TEXTAREA' || 
         activeEl.hasAttribute('contenteditable')
       );
-
-      // Ctrl+S / Cmd+S to save card edit
-      if ((e.key === 's' || e.key === 'S') && (e.metaKey || e.ctrlKey)) {
-        if (editingItemId) {
-          e.preventDefault();
-          handleSaveEdit(editingItemId);
-          return;
-        }
-      }
-
-      if (e.key === 'Escape') {
-        if (deleteModalOpen) {
-          e.preventDefault();
-          setDeleteModalOpen(false);
-          return;
-        }
-        if (convertingItemId) {
-          e.preventDefault();
-          setConvertingItemId(null);
-          setConversionType(null);
-          return;
-        }
-        if (editingItemId) {
-          e.preventDefault();
-          setEditingItemId(null);
-          return;
-        }
-        if (activeDropdownId) {
-          e.preventDefault();
-          setActiveDropdownId(null);
-          return;
-        }
-        if (isTyping) {
-          (activeEl as HTMLElement).blur();
-        }
-      }
-
       if (isTyping) return;
 
-      // Shortcut: Cmd+K or Ctrl+K or '/' key
-      if ((e.key === 'k' && (e.metaKey || e.ctrlKey)) || e.key === '/') {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
-        captureTitleInputRef.current?.focus();
+        const index = filteredSlips.findIndex((i) => i.id === selectedItemId);
+        if (index !== -1 && index < filteredSlips.length - 1) {
+          setSelectedItemId(filteredSlips[index + 1].id);
+        }
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        const index = filteredSlips.findIndex((i) => i.id === selectedItemId);
+        if (index > 0) {
+          setSelectedItemId(filteredSlips[index - 1].id);
+        }
       }
     };
-
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [editingItemId, handleSaveEdit, convertingItemId, deleteModalOpen, activeDropdownId]);
+  }, [filteredSlips, selectedItemId]);
 
-  // Handle click outside dropdown and Escape key
-  useEffect(() => {
-    if (!activeDropdownId) return;
+  // Submit edits
+  const handleSaveSlipEdit = async () => {
+    if (!selectedItem || !editTitle.trim()) return;
 
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setActiveDropdownId(null);
-      }
-    };
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setActiveDropdownId(null);
-      }
-    };
-
-    window.addEventListener('click', handleOutsideClick);
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('click', handleOutsideClick);
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [activeDropdownId]);
-
-  // Reset triage setup states when converting item changes
-  useEffect(() => {
-    setTargetProjectId('');
-    setTargetCourseId('');
-    setTargetModuleId('');
-    setTaskPriority('medium');
-  }, [convertingItemId]);
-
-  // Scraper states
-  const [isScraping, setIsScraping] = useState(false);
-  const [scrapeError, setScrapeError] = useState<string | null>(null);
-
-  // Gemma Autotagging states
-  const [isGeneratingTags, setIsGeneratingTags] = useState(false);
-  const [tagsApiStatus, setTagsApiStatus] = useState<string | null>(null);
-
-  // Drag-and-Drop states
-  const [isDragging, setIsDragging] = useState(false);
-  const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
-  const [activeDropzone, setActiveDropzone] = useState<string | null>(null);
-
-  const draggedItem = useMemo(() => inboxItems.find((i) => i.id === draggedItemId), [draggedItemId, inboxItems]);
-
-  // URL Autoscraper effect
-  useEffect(() => {
-    if (captureType !== 'url' || !inputUrl) {
-      setScrapeError(null);
-      setIsScraping(false);
-      return;
-    }
-
-    const isUrlValid = (str: string) => {
-      try {
-        const withProtocol = str.startsWith('http://') || str.startsWith('https://') ? str : 'https://' + str;
-        new URL(withProtocol);
-        return str.includes('.');
-      } catch {
-        return false;
-      }
-    };
-
-    if (!isUrlValid(inputUrl)) {
-      return;
-    }
-
-    setIsScraping(true);
-    setScrapeError(null);
-
-    const applyHostnameFallback = () => {
-      try {
-        const withProtocol = inputUrl.startsWith('http://') || inputUrl.startsWith('https://') ? inputUrl : 'https://' + inputUrl;
-        const parsed = new URL(withProtocol);
-        const fallbackTitle = parsed.hostname.replace('www.', '');
-        setInputTitle((prev) => (!prev || prev === 'External Link' ? fallbackTitle : prev));
-      } catch {
-        setInputTitle((prev) => (!prev || prev === 'External Link' ? 'External Link' : prev));
-      }
-    };
-
-    const timer = setTimeout(async () => {
-      try {
-        const encodedUrl = encodeURIComponent(
-          inputUrl.startsWith('http://') || inputUrl.startsWith('https://') ? inputUrl : 'https://' + inputUrl
-        );
-        const res = await fetch(`/api/scrape?url=${encodedUrl}`);
-        
-        if (res.ok) {
-          const data = await res.json();
-          if (data.title) {
-            setInputTitle((prev) => (!prev || prev === 'External Link' ? data.title : prev));
-          }
-          if (data.description) {
-            setInputContent((prev) => (!prev ? data.description : prev));
-          }
-        } else {
-          setScrapeError('Unable to load metadata (using fallback)');
-          applyHostnameFallback();
-        }
-      } catch (err) {
-        console.warn('Metadata scraper request failed:', err instanceof Error ? err.message : err);
-        setScrapeError('Unable to load metadata (using fallback)');
-        applyHostnameFallback();
-      } finally {
-        setIsScraping(false);
-      }
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, [captureType, inputUrl]);
-
-  // Gemma tags generation
-  const generateGemmaTags = async () => {
-    if (!inputTitle.trim()) {
-      setTagsApiStatus('Title required to generate tags.');
-      return;
-    }
-
-    setIsGeneratingTags(true);
-    setTagsApiStatus('Analyzing content...');
-
-    try {
-      const res = await fetch('/api/tags', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: inputTitle,
-          content: inputContent,
-          url: inputUrl,
-        }),
-      });
-
-      if (!res.ok) throw new Error('Tag API failed');
-      const data = await res.json();
-
-      if (data.tags && Array.isArray(data.tags)) {
-        setInputTags(data.tags.join(', '));
-        setTagsApiStatus(
-          data.geminiEnabled 
-            ? 'Tags generated by Gemma.' 
-            : 'Generated tags locally (Add GEMINI_API_KEY to enable Gemma).'
-        );
-      } else {
-        setTagsApiStatus('Failed to generate tags.');
-      }
-    } catch (err) {
-      console.error(err);
-      setTagsApiStatus('Failed to connect to tagging server.');
-    } finally {
-      setIsGeneratingTags(false);
-      setTimeout(() => setTagsApiStatus(null), 4000);
-    }
-  };
-
-  // Get all unique tags currently in inbox
-  const existingTags = useMemo(() => {
-    const tags = new Set<string>();
-    inboxItems.forEach((item) => {
-      if (item.tags) {
-        item.tags.forEach((t) => {
-          const clean = t.replace('#', '').trim();
-          if (clean) tags.add(clean);
-        });
-      }
-    });
-    return Array.from(tags);
-  }, [inboxItems]);
-
-  // Determine current active typing tag (last term after comma)
-  const currentTypingTag = useMemo(() => {
-    if (!inputTags) return '';
-    const parts = inputTags.split(',');
-    const lastPart = parts[parts.length - 1].trim().toLowerCase();
-    return lastPart.startsWith('#') ? lastPart.slice(1) : lastPart;
-  }, [inputTags]);
-
-  const tagSuggestions = useMemo(() => {
-    if (!currentTypingTag) return [];
-    return existingTags.filter(
-      (t) => t.toLowerCase().startsWith(currentTypingTag) && !inputTags.toLowerCase().includes(t.toLowerCase())
-    );
-  }, [currentTypingTag, existingTags, inputTags]);
-
-  const handleSelectSuggestion = (suggestion: string) => {
-    const parts = inputTags.split(',');
-    parts[parts.length - 1] = ` ${suggestion}`;
-    setInputTags(parts.join(',').trim());
-  };
-
-  // Drag and Drop handlers
-  const handleDragStart = (e: React.DragEvent, id: string) => {
-    setDraggedItemId(id);
-    setIsDragging(true);
-    e.dataTransfer.setData('text/plain', id);
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    setDraggedItemId(null);
-    setActiveDropzone(null);
-  };
-
-  const handleDragOver = (e: React.DragEvent, zone: string) => {
-    e.preventDefault();
-    setActiveDropzone(zone);
-  };
-
-  const handleDragLeave = () => {
-    setActiveDropzone(null);
-  };
-
-  const handleDrop = async (e: React.DragEvent, zone: string) => {
-    e.preventDefault();
-    const itemId = e.dataTransfer.getData('text/plain') || draggedItemId;
-    if (!itemId) return;
-
-    const item = inboxItems.find((i) => i.id === itemId);
-    if (!item) return;
-
-    if (zone === 'task') {
-      setConvertingItemId(itemId);
-      setConversionType('task');
-    } else if (zone === 'academy') {
-      setConvertingItemId(itemId);
-      setConversionType('academy');
-    } else if (zone === 'snooze') {
-      await updateInboxItemStatus(itemId, 'snoozed');
-      showToast('Item snoozed until tomorrow.', 'info');
-    } else if (zone === 'archive') {
-      await updateInboxItemStatus(itemId, 'archived');
-      showToast('Item archived successfully.', 'info');
-    } else if (zone === 'delete') {
-      setItemToDelete({ id: item.id, title: item.title });
-      setDeleteModalOpen(true);
-    } else if (zone === 'knowledge') {
-      await updateInboxItemStatus(itemId, 'knowledge');
-      showToast('Item saved to Knowledge Base.', 'success');
-    } else if (zone === 'unsorted') {
-      await updateInboxItemStatus(itemId, 'unsorted');
-      showToast('Item moved to triage queue.', 'info');
-    }
-
-    handleDragEnd();
-  };
-
-  // ==========================================
-  // QUICK CAPTURE SUBMIT
-  // ==========================================
-  const handleCapture = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (captureType !== 'url' && !inputTitle.trim()) return;
-
-    let finalTitle = inputTitle;
-    let finalUrl = inputUrl;
-    const finalContent = inputContent;
-
-    // URL Mock Parser logic
-    if (captureType === 'url') {
-      if (!inputUrl.startsWith('http://') && !inputUrl.startsWith('https://')) {
-        finalUrl = 'https://' + inputUrl;
-      }
-      try {
-        const parsed = new URL(finalUrl);
-        finalTitle = inputTitle || parsed.hostname.replace('www.', '');
-      } catch {
-        finalTitle = inputTitle || 'External Link';
-      }
-    }
-
-    const tagsArray = inputTags
+    const tagsArray = editTags
       .split(',')
       .map((tag) => tag.trim())
       .filter((tag) => tag.length > 0)
       .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
 
     try {
-      await addInboxItem(captureType, finalTitle, finalUrl || undefined, finalContent || undefined, tagsArray, captureDestination);
-      showToast('Inbox item captured successfully.', 'success');
-      
-      // Reset Form on success
-      setInputTitle('');
-      setInputUrl('');
-      setInputContent('');
-      setInputTags('');
+      await updateInboxItem(selectedItem.id, {
+        title: editTitle.trim(),
+        content: editContent.trim() || undefined,
+        url: editUrl.trim() || undefined,
+        tags: tagsArray,
+      });
+      showToast('Slip details updated.', 'success');
+      setIsEditingSelected(false);
     } catch (err) {
-      console.error('Failed to capture inbox item:', err);
-      showToast('Failed to capture inbox item. Please try again.', 'error');
+      console.error(err);
+      showToast('Failed to update slip.', 'error');
     }
   };
 
-  // ==========================================
-  // TRIAGE CONVERSIONS
-  // ==========================================
-  const handleConvertToTask = async (item: InboxItem) => {
-    if (!targetProjectId) return;
-    
-    // Add to project tasks
-    await addTask(
-      targetProjectId, 
-      item.title, 
-      item.content || item.url || 'Imported from Inbox triage.', 
-      taskPriority,
-      getLocalDateString(),
-      'none',
-      undefined,
-      [],
-      'Work',
-      item.id
-    );
+  // Capture quick slip
+  const handleQuickCaptureSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickTitle.trim()) return;
 
-    // Update status to task
-    await updateInboxItemStatus(item.id, 'task', targetProjectId);
+    try {
+      const tagsArray = quickTags
+        .split(',')
+        .map((tag) => tag.trim())
+        .filter((tag) => tag.length > 0)
+        .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
 
-    showToast('✓ Task created successfully', 'success', {
-      label: 'View Tasks',
-      href: '/tasks'
-    });
-    
-    // Reset triage modal states
-    setConvertingItemId(null);
-    setConversionType(null);
-    setTargetProjectId('');
-  };
-
-  const handleSendToAcademy = async (item: InboxItem) => {
-    if (!targetModuleId) return;
-
-    // Add to course module lessons
-    await addLesson(
-      targetModuleId,
-      item.title,
-      item.url || undefined
-    );
-
-    // Update status to academy
-    await updateInboxItemStatus(item.id, 'academy');
-
-    showToast('✓ Academy lesson created successfully', 'success', {
-      label: 'View Academy',
-      href: `/academy?courseId=${targetCourseId}&moduleId=${targetModuleId}`
-    });
-
-    // Reset triage states
-    setConvertingItemId(null);
-    setConversionType(null);
-    setTargetModuleId('');
-  };
-
-  // Filter items
-  const unsortedItems = inboxItems.filter((item) => item.status === 'unsorted');
-  const snoozedItems = inboxItems.filter((item) => item.status === 'snoozed');
-  const archivedItems = inboxItems.filter((item) => item.status === 'archived');
-  const knowledgeItems = inboxItems.filter((item) => item.status === 'knowledge');
-
-  const filterBySearch = (items: InboxItem[]) => {
-    if (!searchQuery) return items;
-    const query = searchQuery.toLowerCase();
-    return items.filter((item) => {
-      return (
-        item.title.toLowerCase().includes(query) ||
-        (item.content && item.content.toLowerCase().includes(query)) ||
-        (item.url && item.url.toLowerCase().includes(query)) ||
-        (item.tags && item.tags.some((t) => t.toLowerCase().includes(query)))
+      await addInboxItem(
+        quickType,
+        quickTitle.trim(),
+        quickUrl.trim() || undefined,
+        quickContent.trim() || undefined,
+        tagsArray,
+        'unprocessed'
       );
-    });
+
+      showToast('Quick slip captured successfully.', 'success');
+      setQuickTitle('');
+      setQuickContent('');
+      setQuickUrl('');
+      setQuickTags('');
+      setShowQuickCapture(false);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to capture quick slip.', 'error');
+    }
   };
 
-  const filteredUnsorted = filterBySearch(unsortedItems);
-  const filteredSnoozed = filterBySearch(snoozedItems);
-  const filteredArchived = filterBySearch(archivedItems);
-  const filteredKnowledge = filterBySearch(knowledgeItems);
+  // Convert to Task
+  const handleConvertToTaskSubmit = async () => {
+    if (!selectedItem) return;
 
-  const getTagColorClass = (tag: string) => {
-    const clean = tag.toLowerCase();
-    if (clean.includes('idea')) return 'bg-primary text-on-primary';
-    if (clean.includes('purchase')) return 'bg-surface border border-secondary text-primary';
-    if (clean.includes('read')) return 'bg-secondary/20 text-primary';
-    return 'bg-neutral-bg border border-secondary/30 text-secondary';
+    try {
+      // Create task
+      await addTask(
+        taskProjectId || undefined,
+        selectedItem.title,
+        selectedItem.content || selectedItem.url || 'Imported from Capture Slip triage.',
+        taskPriority,
+        taskDueDate || undefined,
+        'none',
+        undefined,
+        [],
+        taskCategory,
+        selectedItem.id
+      );
+
+      // Set status to processed
+      await updateInboxItemStatus(selectedItem.id, 'processed', taskProjectId || undefined);
+      showToast('✓ Task created & Slip marked processed.', 'success');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to convert to task.', 'error');
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-12 animate-pulse">
-        <header className="border-b-2 border-secondary/20 pb-4">
-          <div className="h-8 bg-secondary/15 w-48 rounded-sm mb-2" />
-          <div className="h-4 bg-secondary/10 w-80 rounded-sm" />
-        </header>
+  // Create Knowledge Note
+  const handleCreateKnowledgeSubmit = async () => {
+    if (!selectedItem) return;
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="space-y-8 self-start">
-            <div className="bg-surface border border-secondary/20 p-6 rounded-sm space-y-4">
-              <div className="h-4 bg-secondary/15 w-32 rounded-sm" />
-              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
-              <div className="h-16 bg-secondary/10 w-full rounded-sm" />
-            </div>
-          </div>
-          <div className="lg:col-span-2 space-y-6">
-            <div className="bg-surface border border-secondary/20 p-6 rounded-sm space-y-4">
-              <div className="h-6 bg-secondary/15 w-40 rounded-sm" />
-              <div className="space-y-3">
-                {[1, 2, 3].map((n) => (
-                  <div key={n} className="border border-secondary/15 p-4 rounded-sm space-y-2">
-                    <div className="h-4 bg-secondary/15 w-1/3 rounded-sm" />
-                    <div className="h-3 bg-secondary/10 w-3/4 rounded-sm" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+    try {
+      // Add note
+      const noteId = await addKnowledgeItem(
+        selectedItem.title,
+        selectedItem.content || '',
+        selectedItem.type,
+        selectedItem.url || selectedItem.source_url || undefined,
+        knowledgeTopic || undefined,
+        knowledgeSummary || undefined,
+        selectedItem.id
+      );
+
+      // Link to project if selected
+      if (knowledgeLinkProjectId) {
+        await addObjectLink(
+          'knowledge_item',
+          noteId,
+          'project',
+          knowledgeLinkProjectId,
+          'related_note'
+        );
+      }
+
+      // Update status
+      await updateInboxItemStatus(selectedItem.id, 'processed', knowledgeLinkProjectId || undefined);
+      showToast('✓ Knowledge note created & Slip processed.', 'success');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to save knowledge note.', 'error');
+    }
+  };
+
+  // Attach to Project
+  const handleAttachProjectSubmit = async () => {
+    if (!selectedItem || !projectLinkId) return;
+
+    try {
+      await addObjectLink(
+        'inbox_item',
+        selectedItem.id,
+        'project',
+        projectLinkId,
+        'related_capture'
+      );
+      await updateInboxItemStatus(selectedItem.id, 'processed', projectLinkId);
+      showToast('✓ Slip linked to project & processed.', 'success');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to link project.', 'error');
+    }
+  };
+
+  // Add to Journal
+  const handleAddToJournalSubmit = async () => {
+    if (!selectedItem) return;
+
+    try {
+      const targetJournal = journalEntries.find((j) => j.date === journalDate);
+      
+      let morning = targetJournal?.morning_intentions || [];
+      let learned = targetJournal?.evening_reflections_learned || [];
+      let better = targetJournal?.evening_reflections_better || [];
+      let freeText = targetJournal?.free_text || '';
+
+      const contentText = `${selectedItem.title}${selectedItem.content ? `: ${selectedItem.content}` : ''}`;
+
+      if (journalReflectionType === 'learned') {
+        learned = [...learned, contentText].slice(0, 5); // Allow up to 5 reflections
+      } else if (journalReflectionType === 'better') {
+        better = [...better, contentText].slice(0, 5);
+      } else {
+        freeText = freeText ? `${freeText}\n\n${contentText}` : contentText;
+      }
+
+      await updateJournalEntry(
+        journalDate,
+        morning,
+        learned,
+        better,
+        freeText
+      );
+
+      await updateInboxItemStatus(selectedItem.id, 'processed');
+      showToast('✓ Slip logged to Journal & processed.', 'success');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to log reflection.', 'error');
+    }
+  };
+
+  // Create Flashcard
+  const handleCreateFlashcardSubmit = async () => {
+    if (!selectedItem || !flashcardCourseId || !flashcardModuleId) return;
+
+    try {
+      await addFlashcard(
+        flashcardCourseId,
+        flashcardModuleId,
+        flashcardFront.trim(),
+        flashcardBack.trim()
+      );
+
+      await updateInboxItemStatus(selectedItem.id, 'processed');
+      showToast('✓ Flashcard added & Slip processed.', 'success');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to create flashcard.', 'error');
+    }
+  };
+
+  // Snooze
+  const handleSnoozeSubmit = async () => {
+    if (!selectedItem) return;
+
+    try {
+      await updateInboxItemStatus(selectedItem.id, 'snoozed', undefined, snoozeDate);
+      showToast(`✓ Slip snoozed until ${snoozeDate}.`, 'info');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to snooze slip.', 'error');
+    }
+  };
+
+  // Archive
+  const handleArchiveClick = async () => {
+    if (!selectedItem) return;
+    try {
+      await updateInboxItemStatus(selectedItem.id, 'archived');
+      showToast('✓ Slip archived.', 'info');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to archive.', 'error');
+    }
+  };
+
+  // Delete confirm
+  const handleDeleteClick = () => {
+    if (!selectedItem) return;
+    setItemToDelete({ id: selectedItem.id, title: selectedItem.title });
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!itemToDelete) return;
+    try {
+      await deleteInboxItem(itemToDelete.id);
+      showToast('Capture slip deleted.', 'info');
+      setSelectedItemId(null);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to delete slip.', 'error');
+    }
+  };
+
+  const renderPanelContent = (isMobile: boolean = false) => {
+    if (!selectedItem) {
+      return (
+        <div className="py-20 text-center space-y-3">
+          <Inbox className="h-10 w-10 text-secondary/30 mx-auto" />
+          <h5 className="font-display text-md font-bold uppercase tracking-wider text-secondary">No Slip Selected</h5>
+          <p className="font-sans text-xs text-secondary/80 max-w-xs mx-auto leading-relaxed">
+            Choose a captured thought, link, or note from the Intake Queue to start triaging it into permanent output.
+          </p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  return (
-    <div className="space-y-12">
-      {/* Header */}
-      <header className="border-b-2 border-primary pb-4">
-        <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-          THE TRIAGE CHANNEL
-        </h2>
-        <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
-          Inbox Quick Capture &bull; System Intake Pipeline
-        </p>
-      </header>
-
-      {/* Search Bar (Desktop) */}
-      <div className="hidden lg:flex relative border-2 border-primary bg-surface px-4 py-3 items-center space-x-3 rounded-sm shadow-[2px_2px_0px_0px_var(--primary)]">
-        <Search className="h-5 w-5 text-primary shrink-0" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search all inboxes globally by title, content, URL, or tag..."
-          className="w-full bg-transparent text-sm text-primary focus:outline-none font-sans"
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="font-label text-xs text-tertiary hover:underline uppercase tracking-wider font-semibold cursor-pointer"
-          >
-            Clear
-          </button>
+    return (
+      <div className="space-y-6">
+        {/* Header Close button only on mobile */}
+        {isMobile && (
+          <div className="flex justify-between items-center border-b border-border pb-2">
+            <span className="font-label text-xs uppercase font-bold text-accent">Triage Capture Slip</span>
+            <button 
+              type="button"
+              onClick={() => setSelectedItemId(null)} 
+              className="text-secondary hover:text-primary p-1 btn-press cursor-pointer"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         )}
-      </div>
-
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* ==========================================
-            COLUMN 1: MULTI-MODAL QUICK CAPTURE & MOBILE SEARCH
-           ========================================== */}
-        <div className="space-y-8 self-start">
-          <section className="bg-surface border border-secondary p-6 rounded-sm">
-            <div className="flex justify-between items-center mb-4">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
-                Intel Capture System
-              </span>
-              <span className="hidden md:inline font-label text-[10px] text-secondary/60 uppercase tracking-wider">
-                [Cmd+K] / [/] to focus
-              </span>
-            </div>
-          <form onSubmit={handleCapture} className="space-y-4">
-            {/* Capture Type Selection */}
-            <div className="flex border border-secondary font-label text-sm md:text-xs">
-              <button
-                type="button"
-                onClick={() => { setCaptureType('text'); setInputUrl(''); }}
-                className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all ${
-                  captureType === 'text' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
-                }`}
-              >
-                <FileText className="h-3.5 w-3.5" />
-                <span>TEXT</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setCaptureType('url')}
-                className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all border-l border-r border-secondary ${
-                  captureType === 'url' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
-                }`}
-              >
-                <Link2 className="h-3.5 w-3.5" />
-                <span>URL</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => { setCaptureType('snippet'); setInputUrl(''); }}
-                className={`flex-1 py-3 md:py-2 flex items-center justify-center space-x-1.5 transition-all ${
-                  captureType === 'snippet' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
-                }`}
-              >
-                <Scissors className="h-3.5 w-3.5" />
-                <span>SNIPPET</span>
-              </button>
-            </div>
+        {/* Slip Card Details Header */}
+        <div className="border-b border-border pb-4 space-y-4">
+          <div className="flex justify-between items-center font-label text-[10px] text-secondary">
+            <span className="uppercase font-bold tracking-widest text-accent">Intake Card Details</span>
+            <span className="uppercase">{new Date(selectedItem.created_at).toLocaleDateString('en-US', { dateStyle: 'medium' })}</span>
+          </div>
 
-            {/* Title / Description */}
-            <div className="space-y-1.5">
-              <label className="block font-label text-xs text-secondary uppercase tracking-[0.15em]">
-                {captureType === 'url' ? 'Link Label (Optional)' : 'Capture Title'}
-              </label>
-              <input
-                ref={captureTitleInputRef}
-                type="text"
-                value={inputTitle}
-                onChange={(e) => setInputTitle(e.target.value)}
-                placeholder={captureType === 'url' ? 'Leave empty to auto-extract' : 'e.g. Brainstorm layout concepts'}
-                required={captureType !== 'url'}
-                className="w-full bg-neutral-bg border border-secondary px-3 py-2 text-xs text-primary focus:outline-none focus:border-tertiary font-sans"
-              />
-            </div>
-
-            {/* URL Input (conditional) */}
-            {captureType === 'url' && (
-              <div className="space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <label className="block font-label text-xs text-secondary uppercase tracking-[0.15em]">
-                    Resource URL
-                  </label>
-                  {isScraping && (
-                    <span className="font-label text-xs text-tertiary animate-pulse uppercase tracking-wider font-semibold">
-                      Scraping metadata...
-                    </span>
-                  )}
-                  {scrapeError && !isScraping && (
-                    <span className="font-label text-xs text-secondary uppercase tracking-wider">
-                      {scrapeError}
-                    </span>
-                  )}
+          {!isEditingSelected ? (
+            <div className="space-y-3">
+              <h3 className="font-display text-lg font-bold text-primary leading-tight">
+                {selectedItem.title}
+              </h3>
+              {selectedItem.content && (
+                <div className="bg-neutral-bg/40 border border-border p-3 font-sans text-xs text-primary leading-relaxed whitespace-pre-wrap">
+                  {selectedItem.content}
                 </div>
-                <input
-                  type="text"
-                  value={inputUrl}
-                  onChange={(e) => setInputUrl(e.target.value)}
-                  placeholder="e.g. github.com/nextjs/boilerplate"
-                  required
-                  className="w-full bg-neutral-bg border border-secondary px-3 py-2 text-xs text-primary focus:outline-none focus:border-tertiary font-sans"
-                />
-              </div>
-            )}
-
-            {/* Content Textarea */}
-            <div className="space-y-1.5">
-              <label className="block font-label text-xs text-secondary uppercase tracking-[0.15em]">
-                {captureType === 'snippet' ? 'Code / Text Snippet' : 'Detailed Notes'}
-              </label>
-              <textarea
-                value={inputContent}
-                onChange={(e) => setInputContent(e.target.value)}
-                rows={4}
-                placeholder="Insert details, snippets or references..."
-                className="w-full bg-neutral-bg border border-secondary px-3 py-2 text-xs text-primary focus:outline-none focus:border-tertiary font-sans resize-none"
-              />
-            </div>
-
-            {/* Tags Input */}
-            <div className="space-y-1.5">
-              <div className="flex justify-between items-center">
-                <label className="block font-label text-xs text-secondary uppercase tracking-[0.15em]">
-                  Tags (comma separated)
-                </label>
-                <button
-                  type="button"
-                  onClick={generateGemmaTags}
-                  disabled={isGeneratingTags || !inputTitle.trim()}
-                  className="font-label text-xs text-tertiary hover:underline uppercase tracking-widest flex items-center space-x-1 disabled:opacity-40 disabled:no-underline cursor-pointer"
-                >
-                  <Sparkles className="h-2 w-2" />
-                  <span>{isGeneratingTags ? 'Generating...' : 'Gemma Tags'}</span>
-                </button>
-              </div>
-              <input
-                type="text"
-                value={inputTags}
-                onChange={(e) => setInputTags(e.target.value)}
-                placeholder="e.g. idea, read-later, health"
-                className="w-full bg-neutral-bg border border-secondary px-3 py-2 text-xs text-primary focus:outline-none focus:border-tertiary font-sans"
-              />
-              
-              {/* Autocomplete Dropdown suggestions */}
-              {tagSuggestions.length > 0 && (
-                <div className="flex flex-wrap gap-1 bg-surface border border-secondary p-1.5 rounded-sm">
-                  {tagSuggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => handleSelectSuggestion(suggestion)}
-                      className="font-label text-xs px-1.5 py-0.5 bg-neutral-bg border border-secondary/20 hover:border-tertiary text-primary rounded-sm transition-all cursor-pointer"
-                    >
-                      #{suggestion}
-                    </button>
+              )}
+              {(selectedItem.url || selectedItem.source_url) && (
+                <div className="flex items-center space-x-2 text-xs font-label uppercase">
+                  <Link2 className="h-3.5 w-3.5 text-accent shrink-0" />
+                  <a 
+                    href={selectedItem.url || selectedItem.source_url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="text-accent underline hover:opacity-80 shrink-1 truncate"
+                  >
+                    {selectedItem.url || selectedItem.source_url}
+                  </a>
+                </div>
+              )}
+              {selectedItem.tags && selectedItem.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {selectedItem.tags.map((tag) => (
+                    <span key={tag} className="font-label text-[9px] border border-secondary/20 bg-neutral-bg/40 text-secondary px-2 py-0.5 uppercase">
+                      {tag}
+                    </span>
                   ))}
                 </div>
               )}
-
-              {tagsApiStatus && (
-                <p className="font-label text-xs text-secondary uppercase mt-0.5 tracking-wider font-sans">
-                  {tagsApiStatus}
-                </p>
-              )}
-            </div>
-
-            {/* Destination Selection */}
-            <div className="space-y-1.5">
-              <label className="block font-label text-sm md:text-xs text-secondary uppercase tracking-[0.15em]">
-                Destination
-              </label>
-              <div className="flex border border-secondary font-label text-sm md:text-xs">
+              <div className="flex justify-end pt-1">
                 <button
                   type="button"
-                  onClick={() => setCaptureDestination('unsorted')}
-                  className={`flex-1 py-2.5 md:py-1.5 flex items-center justify-center transition-all ${
-                    captureDestination === 'unsorted' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
-                  }`}
+                  onClick={() => setIsEditingSelected(true)}
+                  className="btn-press border border-border hover:border-primary px-3 py-1.5 font-label text-[10px] uppercase font-bold flex items-center gap-1 cursor-pointer bg-surface text-primary"
                 >
-                  Triage Queue
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setCaptureDestination('knowledge')}
-                  className={`flex-1 py-2.5 md:py-1.5 flex items-center justify-center transition-all border-l border-secondary ${
-                    captureDestination === 'knowledge' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
-                  }`}
-                >
-                  Knowledge Base
+                  <Pencil className="h-3 w-3 text-secondary" />
+                  <span>Edit Slip</span>
                 </button>
               </div>
             </div>
-
-            {/* Submitting button (Terracotta Red - exactly one action driver per page rule!) */}
-            <button type="submit" className="w-full btn-tertiary mt-2">
-              CAPTURE ENTRY
-            </button>
-          </form>
-        </section>
-
-        {/* Search Bar (Mobile - Below Intel Capture System) */}
-        <div className="flex lg:hidden relative border-2 border-primary bg-surface px-4 py-3 items-center space-x-3 rounded-sm shadow-[2px_2px_0px_0px_var(--primary)]">
-          <Search className="h-5 w-5 text-primary shrink-0" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search globally..."
-            className="w-full bg-transparent text-sm text-primary focus:outline-none font-sans"
-          />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="font-label text-xs text-tertiary hover:underline uppercase tracking-wider font-semibold cursor-pointer"
-            >
-              Clear
-            </button>
+          ) : (
+            <div className="space-y-3 font-label text-xs uppercase">
+              <div className="space-y-1">
+                <label className="block text-[10px] text-secondary font-bold">Edit Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[10px] text-secondary font-bold">Edit Content</label>
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  rows={4}
+                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans resize-none"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[10px] text-secondary font-bold">Edit URL</label>
+                <input
+                  type="text"
+                  value={editUrl}
+                  onChange={(e) => setEditUrl(e.target.value)}
+                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="block text-[10px] text-secondary font-bold">Edit Tags</label>
+                <input
+                  type="text"
+                  value={editTags}
+                  onChange={(e) => setEditTags(e.target.value)}
+                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans"
+                />
+              </div>
+              <div className="flex gap-2 justify-end pt-1">
+                <SecondaryButton type="button" onClick={() => setIsEditingSelected(false)}>
+                  Cancel
+                </SecondaryButton>
+                <PrimaryButton type="button" onClick={handleSaveSlipEdit}>
+                  Save Slip
+                </PrimaryButton>
+              </div>
+            </div>
           )}
         </div>
-      </div>
 
-        {/* ==========================================
-            COLUMN 2 & 3: TRIAGE Kanban columns
-           ========================================== */}
-        <section className="lg:col-span-2 space-y-8">
-          
-          {/* Reusable card list rendering helper */}
-          {(() => {
-            // We define renderInboxCards as a local function helper to reuse JSX layout perfectly
-            const renderInboxCards = (items: InboxItem[], emptyMessage: string) => {
+        {/* Triage Action Panel Section */}
+        <div className="space-y-4">
+          <span className="block font-label text-[10px] uppercase tracking-widest text-secondary font-bold border-b border-border pb-2">
+            Triage Tactic
+          </span>
+
+          {/* Sub Action Tabs */}
+          <div className="grid grid-cols-3 md:grid-cols-6 border border-border font-label text-[8px] uppercase tracking-wider font-bold">
+            {[
+              { key: 'task', label: 'Task' },
+              { key: 'knowledge', label: 'Note' },
+              { key: 'project', label: 'Link' },
+              { key: 'journal', label: 'Journal' },
+              { key: 'flashcard', label: 'Card' },
+              { key: 'snooze', label: 'Snooze' },
+            ].map((tab) => {
+              const isActive = activeActionTab === tab.key;
               return (
-                <div className="space-y-4">
-                  {items.length > 0 ? (
-                    items.map((item) => (
-                      <div
-                        id={`inbox-card-${item.id}`}
-                        key={item.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, item.id)}
-                        onDragEnd={handleDragEnd}
-                        className={`border border-secondary/40 bg-neutral-bg/40 p-4 rounded-sm space-y-3 relative group transition-all cursor-grab active:cursor-grabbing hover:border-primary ${
-                          draggedItemId === item.id ? 'opacity-30 border-dashed border-secondary' : ''
-                        }`}
-                      >
-                        {/* Header line on card */}
-                        <div className="flex justify-between items-start pr-8">
-                          <div className="flex items-center space-x-2">
-                            {/* Drag grip indicator */}
-                            <div className="text-secondary/40 group-hover:text-secondary transition-colors cursor-grab">
-                              <GripVertical className="h-3.5 w-3.5" />
-                            </div>
-                            {item.type === 'url' && <Link2 className="h-3.5 w-3.5 text-tertiary" />}
-                            {item.type === 'text' && <FileText className="h-3.5 w-3.5 text-secondary" />}
-                            {item.type === 'snippet' && <Scissors className="h-3.5 w-3.5 text-primary" />}
-                            <h4 className="font-sans text-xs font-semibold text-primary">
-                              {item.title}
-                            </h4>
-                          </div>
-
-                          {/* Dropdown Action Menu */}
-                          <div className="absolute right-4 top-4">
-                            <button
-                              onClick={() => setActiveDropdownId(activeDropdownId === item.id ? null : item.id)}
-                              className="text-secondary hover:text-primary p-1 cursor-pointer"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </button>
-                            
-                            {activeDropdownId === item.id && (
-                              <div className="absolute right-0 mt-1 w-48 bg-surface border border-secondary z-30 shadow-lg font-label text-xs">
-                                <button
-                                  onClick={() => {
-                                    setConvertingItemId(item.id);
-                                    setConversionType('task');
-                                    setActiveDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                >
-                                  <FolderPlus className="h-3.5 w-3.5 text-secondary" />
-                                  <span>Convert to Task</span>
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setConvertingItemId(item.id);
-                                    setConversionType('academy');
-                                    setActiveDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                >
-                                  <GraduationCap className="h-3.5 w-3.5 text-secondary" />
-                                  <span>Send to Academy</span>
-                                </button>
-                                <button
-                                  onClick={() => startEditing(item)}
-                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                >
-                                  <Pencil className="h-3.5 w-3.5 text-secondary" />
-                                  <span>Edit Item</span>
-                                </button>
-
-                                {item.status === 'knowledge' ? (
-                                  <button
-                                    onClick={async () => {
-                                      await updateInboxItemStatus(item.id, 'unsorted');
-                                      setActiveDropdownId(null);
-                                      showToast('Item moved to triage queue.', 'info');
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                  >
-                                    <Inbox className="h-3.5 w-3.5 text-secondary" />
-                                    <span>Move to Triage Queue</span>
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={async () => {
-                                      await updateInboxItemStatus(item.id, 'knowledge');
-                                      setActiveDropdownId(null);
-                                      showToast('Item saved to Knowledge Base.', 'success');
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                  >
-                                    <BookOpen className="h-3.5 w-3.5 text-secondary" />
-                                    <span>Save to Knowledge Base</span>
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={async () => {
-                                    await updateInboxItemStatus(item.id, 'snoozed');
-                                    setActiveDropdownId(null);
-                                    showToast('Item snoozed until tomorrow.', 'info');
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                >
-                                  <Clock className="h-3.5 w-3.5 text-secondary" />
-                                  <span>Snooze until Tomorrow</span>
-                                </button>
-                                <button
-                                  onClick={async () => {
-                                    await updateInboxItemStatus(item.id, 'archived');
-                                    setActiveDropdownId(null);
-                                    showToast('Item archived successfully.', 'info');
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-primary cursor-pointer"
-                                >
-                                  <Archive className="h-3.5 w-3.5 text-secondary" />
-                                  <span>Archive</span>
-                                </button>
-                                <div className="border-t border-secondary/20"></div>
-                                <button
-                                  onClick={() => {
-                                    setItemToDelete({ id: item.id, title: item.title });
-                                    setDeleteModalOpen(true);
-                                    setActiveDropdownId(null);
-                                  }}
-                                  className="w-full text-left px-3 py-2 hover:bg-neutral-bg flex items-center space-x-2 text-tertiary cursor-pointer"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                  <span>Delete Forever</span>
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Content / Snippet / URL Preview Card */}
-                        {item.type === 'url' ? (
-                          <div className="border border-secondary/25 bg-surface p-3 rounded-sm space-y-2 font-sans select-none">
-                            <div className="flex items-center space-x-2">
-                              {/* Favicon */}
-                              <div className="h-4 w-4 rounded-sm bg-neutral-bg flex items-center justify-center overflow-hidden shrink-0 border border-secondary/20">
-                                {item.url && (
-                                  // eslint-disable-next-line @next/next/no-img-element
-                                  <img
-                                    src={`https://www.google.com/s2/favicons?domain=${new URL(item.url.startsWith('http') ? item.url : 'https://' + item.url).hostname}&sz=16`}
-                                    alt="favicon"
-                                    className="h-3.5 w-3.5 object-contain"
-                                    onError={(e) => {
-                                      e.currentTarget.style.display = 'none';
-                                    }}
-                                  />
-                                )}
-                              </div>
-                              <span className="text-xs text-secondary font-label uppercase tracking-wide truncate max-w-[200px]">
-                                {item.url ? new URL(item.url.startsWith('http') ? item.url : 'https://' + item.url).hostname : 'link'}
-                              </span>
-                            </div>
-                            {item.content && (
-                              <p className="text-xs text-secondary leading-relaxed line-clamp-2 font-sans">
-                                {item.content}
-                              </p>
-                            )}
-                            {item.url && (
-                              <a
-                                href={item.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center space-x-1 font-label text-xs text-tertiary uppercase tracking-wider hover:underline"
-                              >
-                                <span>Visit Resource</span>
-                                <ExternalLink className="h-2.5 w-2.5" />
-                              </a>
-                            )}
-                          </div>
-                        ) : (
-                          item.content && (
-                            <p className={`font-sans text-xs text-secondary leading-relaxed whitespace-pre-wrap ${
-                              item.type === 'snippet' ? 'font-mono bg-neutral-bg p-2 border border-secondary/20 overflow-x-auto text-xs' : ''
-                            }`}>
-                              {item.content}
-                            </p>
-                          )
-                        )}
-
-                        {/* Tags */}
-                        {item.tags && item.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-1">
-                            {item.tags.map((tag) => (
-                              <span
-                                key={tag}
-                                className={`font-label text-xs px-1.5 py-0.5 rounded-sm uppercase tracking-wide ${getTagColorClass(tag)}`}
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* INLINE CONVERSION DRAWER */}
-                        {convertingItemId === item.id && (
-                          <div className="mt-4 p-4 border border-secondary bg-surface space-y-3 font-label text-xs">
-                            <div className="flex justify-between items-center border-b border-secondary/20 pb-1.5 mb-1.5">
-                              <span className="font-bold text-primary uppercase">
-                                {conversionType === 'task' ? 'Setup Task Conversion' : 'Select Academy Module'}
-                              </span>
-                              <button
-                                onClick={() => {
-                                  setConvertingItemId(null);
-                                  setConversionType(null);
-                                }}
-                                className="text-secondary hover:text-primary"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-
-                            {conversionType === 'task' ? (
-                              <>
-                                <div className="space-y-1">
-                                  <label className="block text-xs uppercase text-secondary">Target Project</label>
-                                  <select
-                                    value={targetProjectId}
-                                    onChange={(e) => setTargetProjectId(e.target.value)}
-                                    className="w-full bg-neutral-bg border border-secondary p-1.5 font-sans"
-                                  >
-                                    <option value="">-- Choose Project --</option>
-                                    {projects.map((p) => (
-                                      <option key={p.id} value={p.id}>{p.name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="block text-xs uppercase text-secondary">Priority Level</label>
-                                  <select
-                                    value={taskPriority}
-                                    onChange={(e) => setTaskPriority(e.target.value as 'high' | 'medium' | 'low')}
-                                    className="w-full bg-neutral-bg border border-secondary p-1.5 font-sans"
-                                  >
-                                    <option value="high">High</option>
-                                    <option value="medium">Medium</option>
-                                    <option value="low">Low</option>
-                                  </select>
-                                </div>
-                                <button
-                                  onClick={() => handleConvertToTask(item)}
-                                  disabled={!targetProjectId}
-                                  className="w-full bg-primary hover:bg-tertiary text-on-primary py-2 uppercase text-xs tracking-widest disabled:opacity-50"
-                                >
-                                  Confirm Task Convert
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <div className="space-y-1">
-                                  <label className="block text-xs uppercase text-secondary">Choose Course</label>
-                                  <select
-                                    value={targetCourseId}
-                                    onChange={(e) => {
-                                      setTargetCourseId(e.target.value);
-                                      setTargetModuleId('');
-                                    }}
-                                    className="w-full bg-neutral-bg border border-secondary p-1.5 font-sans"
-                                  >
-                                    <option value="">-- Choose Course --</option>
-                                    {courses.map((c) => (
-                                      <option key={c.id} value={c.id}>{c.title}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                                {targetCourseId && (
-                                  <div className="space-y-1">
-                                    <label className="block text-xs uppercase text-secondary">Target Module</label>
-                                    <select
-                                      value={targetModuleId}
-                                      onChange={(e) => setTargetModuleId(e.target.value)}
-                                      className="w-full bg-neutral-bg border border-secondary p-1.5 font-sans"
-                                    >
-                                      <option value="">-- Choose Module --</option>
-                                      {courseModules
-                                        .filter((m) => m.course_id === targetCourseId)
-                                        .map((m) => (
-                                          <option key={m.id} value={m.id}>{m.title}</option>
-                                        ))}
-                                    </select>
-                                  </div>
-                                )}
-                                <button
-                                  onClick={() => handleSendToAcademy(item)}
-                                  disabled={!targetModuleId}
-                                  className="w-full bg-primary hover:bg-tertiary text-on-primary py-2 uppercase text-xs tracking-widest disabled:opacity-50"
-                                >
-                                  Confirm Academy Send
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-16 border border-dashed border-secondary/40 bg-neutral-bg/20 rounded-sm">
-                      <Inbox className="h-8 w-8 text-secondary/40 mx-auto mb-2" />
-                      <p className="font-sans text-xs text-secondary italic">{emptyMessage}</p>
-                    </div>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  key={tab.key}
+                  onClick={() => setActiveActionTab(tab.key as any)}
+                  className={`py-2 text-center border-r last:border-r-0 border-border cursor-pointer transition-colors ${
+                    isActive 
+                      ? 'bg-primary text-on-primary' 
+                      : 'hover:bg-neutral-bg text-secondary'
+                  }`}
+                >
+                  {tab.label}
+                </button>
               );
-            };
+            })}
+          </div>
 
-            const isSearching = searchQuery.trim().length > 0;
-            const globalSearchResults = filterBySearch(inboxItems);
-
-            return (
-              <>
-                {/* Navigation Tabs (Hidden during search) */}
-                {!isSearching && (
-                  <div className="flex border-b border-secondary/40 font-label text-sm md:text-xs space-x-4 mb-4">
-                    <button
-                      onClick={() => setActiveTab('queue')}
-                      className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
-                        activeTab === 'queue'
-                          ? 'border-tertiary text-primary'
-                          : 'border-transparent text-secondary hover:text-primary'
-                      }`}
+          {/* Action Panels */}
+          <div className="bg-neutral-bg/30 border border-border p-4 font-label text-xs uppercase space-y-4">
+            
+            {/* PANEL 1: CONVERT TO TASK */}
+            {activeActionTab === 'task' && (
+              <div className="space-y-3">
+                <span className="block text-[10px] text-secondary font-bold">File Actionable Task</span>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Target Project</label>
+                  <select
+                    value={taskProjectId}
+                    onChange={(e) => setTaskProjectId(e.target.value)}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                  >
+                    <option value="">No Project (Standalone)</option>
+                    {projects.filter(p => !p.is_archived).map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] text-secondary font-bold">Category</label>
+                    <select
+                      value={taskCategory}
+                      onChange={(e) => setTaskCategory(e.target.value as any)}
+                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
                     >
-                      Triage Queue ({unsortedItems.length})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('knowledge')}
-                      className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
-                        activeTab === 'knowledge'
-                          ? 'border-tertiary text-primary'
-                          : 'border-transparent text-secondary hover:text-primary'
-                      }`}
-                    >
-                      Knowledge Base ({knowledgeItems.length})
-                    </button>
-                    <button
-                      onClick={() => setActiveTab('snoozed_archived')}
-                      className={`pb-2 border-b-2 transition-all tracking-wider font-semibold uppercase ${
-                        activeTab === 'snoozed_archived'
-                          ? 'border-tertiary text-primary'
-                          : 'border-transparent text-secondary hover:text-primary'
-                      }`}
-                    >
-                      Snoozed & Archived ({snoozedItems.length + archivedItems.length})
-                    </button>
+                      <option value="Work">Work</option>
+                      <option value="Personal">Personal</option>
+                      <option value="Learning">Learning</option>
+                      <option value="Urgent">Urgent</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
-                )}
-
-                {/* DRAG AND DROP TARGET PANELS (Rendered contextually when dragging) */}
-                {isDragging && (
-                  <div className="mb-6 grid grid-cols-2 md:grid-cols-6 gap-3 border-2 border-dashed border-secondary/60 p-4 bg-neutral-bg rounded-sm transition-all duration-300 animate-in fade-in slide-in-from-top-4">
-                    <div
-                      onDragOver={(e) => handleDragOver(e, 'task')}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, 'task')}
-                      className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'task' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
-                      }`}
+                  <div className="space-y-1">
+                    <label className="block text-[9px] text-secondary font-bold">Priority</label>
+                    <select
+                      value={taskPriority}
+                      onChange={(e) => setTaskPriority(e.target.value as any)}
+                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
                     >
-                      <FolderPlus className="h-4 w-4 text-secondary" />
-                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Convert Task</span>
-                    </div>
-                    <div
-                      onDragOver={(e) => handleDragOver(e, 'academy')}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, 'academy')}
-                      className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'academy' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
-                      }`}
-                    >
-                      <GraduationCap className="h-4 w-4 text-secondary" />
-                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Send Academy</span>
-                    </div>
-                    {draggedItem?.status === 'knowledge' ? (
-                      <div
-                        onDragOver={(e) => handleDragOver(e, 'unsorted')}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, 'unsorted')}
-                        className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                          activeDropzone === 'unsorted' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
-                        }`}
-                      >
-                        <Inbox className="h-4 w-4 text-secondary" />
-                        <span className="font-label text-xs uppercase tracking-wider font-semibold">Move to Queue</span>
-                      </div>
-                    ) : (
-                      <div
-                        onDragOver={(e) => handleDragOver(e, 'knowledge')}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => handleDrop(e, 'knowledge')}
-                        className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                          activeDropzone === 'knowledge' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
-                        }`}
-                      >
-                        <BookOpen className="h-4 w-4 text-secondary" />
-                        <span className="font-label text-xs uppercase tracking-wider font-semibold">Save Knowledge</span>
-                      </div>
-                    )}
-                    <div
-                      onDragOver={(e) => handleDragOver(e, 'snooze')}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, 'snooze')}
-                      className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'snooze' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
-                      }`}
-                    >
-                      <Clock className="h-4 w-4 text-secondary" />
-                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Snooze 24h</span>
-                    </div>
-                    <div
-                      onDragOver={(e) => handleDragOver(e, 'archive')}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, 'archive')}
-                      className={`border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'archive' ? 'bg-primary text-on-primary border-primary' : 'bg-surface border-secondary/40 text-primary'
-                      }`}
-                    >
-                      <Archive className="h-4 w-4 text-secondary" />
-                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Archive</span>
-                    </div>
-                    <div
-                      onDragOver={(e) => handleDragOver(e, 'delete')}
-                      onDragLeave={handleDragLeave}
-                      onDrop={(e) => handleDrop(e, 'delete')}
-                      className={`col-span-2 md:col-span-1 border p-3 text-center rounded-sm transition-all cursor-pointer flex flex-col items-center justify-center space-y-1 ${
-                        activeDropzone === 'delete' ? 'bg-tertiary text-on-primary border-tertiary' : 'bg-surface border-tertiary/20 text-tertiary border-tertiary/40'
-                      }`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      <span className="font-label text-xs uppercase tracking-wider font-semibold">Delete</span>
-                    </div>
+                      <option value="high">High</option>
+                      <option value="medium">Medium</option>
+                      <option value="low">Low</option>
+                    </select>
                   </div>
-                )}
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Due Date (Optional)</label>
+                  <input
+                    type="date"
+                    value={taskDueDate}
+                    onChange={(e) => setTaskDueDate(e.target.value)}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
+                  />
+                </div>
+                <PrimaryButton type="button" onClick={handleConvertToTaskSubmit} className="w-full mt-2">
+                  Execute Conversion & Complete
+                </PrimaryButton>
+              </div>
+            )}
 
-                {/* Search Results rendering or Tab content renders */}
-                {isSearching ? (
-                  <div className="bg-surface border border-secondary p-6 rounded-sm space-y-4">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
-                        Search Results ({globalSearchResults.length})
+            {/* PANEL 2: CREATE KNOWLEDGE NOTE */}
+            {activeActionTab === 'knowledge' && (
+              <div className="space-y-3">
+                <span className="block text-[10px] text-secondary font-bold">File Knowledge Note</span>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Topic / Category</label>
+                  <input
+                    type="text"
+                    value={knowledgeTopic}
+                    onChange={(e) => setKnowledgeTopic(e.target.value)}
+                    placeholder="e.g. Design Systems, React"
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Summary Synthesis</label>
+                  <textarea
+                    value={knowledgeSummary}
+                    onChange={(e) => setKnowledgeSummary(e.target.value)}
+                    placeholder="Synthesize the core insight in one sentence..."
+                    rows={2}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans resize-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Link to Project (Optional)</label>
+                  <select
+                    value={knowledgeLinkProjectId}
+                    onChange={(e) => setKnowledgeLinkProjectId(e.target.value)}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                  >
+                    <option value="">No Project Link</option>
+                    {projects.filter(p => !p.is_archived).map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <PrimaryButton type="button" onClick={handleCreateKnowledgeSubmit} className="w-full mt-2">
+                  File to Note Ledger
+                </PrimaryButton>
+              </div>
+            )}
+
+            {/* PANEL 3: LINK TO PROJECT */}
+            {activeActionTab === 'project' && (
+              <div className="space-y-3">
+                <span className="block text-[10px] text-secondary font-bold">Link Intake directly to Sector Project</span>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Target Project</label>
+                  <select
+                    value={projectLinkId}
+                    onChange={(e) => setProjectLinkId(e.target.value)}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                  >
+                    <option value="">Select Project...</option>
+                    {projects.filter(p => !p.is_archived).map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+                <p className="font-sans text-[10px] text-secondary leading-normal lowercase normal-case">
+                  This links the raw inbox slip directly as a related capture reference inside the project's detail command center.
+                </p>
+                <PrimaryButton 
+                  type="button"
+                  onClick={handleAttachProjectSubmit} 
+                  disabled={!projectLinkId}
+                  className="w-full mt-2"
+                >
+                  Create Reference Connection
+                </PrimaryButton>
+              </div>
+            )}
+
+            {/* PANEL 4: ADD TO JOURNAL */}
+            {activeActionTab === 'journal' && (
+              <div className="space-y-3">
+                <span className="block text-[10px] text-secondary font-bold">Log Reflection slip to Journal</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] text-secondary font-bold">Target Date</label>
+                    <input
+                      type="date"
+                      value={journalDate}
+                      onChange={(e) => setJournalDate(e.target.value)}
+                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[9px] text-secondary font-bold">Reflection Slot</label>
+                    <select
+                      value={journalReflectionType}
+                      onChange={(e) => setJournalReflectionType(e.target.value as any)}
+                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                    >
+                      <option value="learned">What I Learned</option>
+                      <option value="better">What to Improve</option>
+                      <option value="free_text">Free Text Entry</option>
+                    </select>
+                  </div>
+                </div>
+                <PrimaryButton type="button" onClick={handleAddToJournalSubmit} className="w-full mt-2">
+                  Append Reflection & File
+                </PrimaryButton>
+              </div>
+            )}
+
+            {/* PANEL 5: CREATE FLASHCARD */}
+            {activeActionTab === 'flashcard' && (
+              <div className="space-y-3">
+                <span className="block text-[10px] text-secondary font-bold">Create Flashcard</span>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="block text-[9px] text-secondary font-bold">Course</label>
+                    <select
+                      value={flashcardCourseId}
+                      onChange={(e) => setFlashcardCourseId(e.target.value)}
+                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.id} value={c.id}>{c.title}</option>
+                      ))}
+                      {courses.length === 0 && <option value="">No courses available</option>}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[9px] text-secondary font-bold">Module</label>
+                    <select
+                      value={flashcardModuleId}
+                      onChange={(e) => setFlashcardModuleId(e.target.value)}
+                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                      disabled={activeModules.length === 0}
+                    >
+                      {activeModules.map((m) => (
+                        <option key={m.id} value={m.id}>{m.title}</option>
+                      ))}
+                      {activeModules.length === 0 && <option value="">No modules</option>}
+                    </select>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Front Face</label>
+                  <input
+                    type="text"
+                    value={flashcardFront}
+                    onChange={(e) => setFlashcardFront(e.target.value)}
+                    placeholder="Question / term..."
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Back Face</label>
+                  <textarea
+                    value={flashcardBack}
+                    onChange={(e) => setFlashcardBack(e.target.value)}
+                    placeholder="Explanation / formula / answer..."
+                    rows={2}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans resize-none"
+                  />
+                </div>
+                <PrimaryButton 
+                  type="button"
+                  onClick={handleCreateFlashcardSubmit} 
+                  disabled={!flashcardCourseId || !flashcardModuleId || !flashcardFront.trim()}
+                  className="w-full mt-2"
+                >
+                  Add to Review Deck
+                </PrimaryButton>
+              </div>
+            )}
+
+            {/* PANEL 6: SNOOZE SLIP */}
+            {activeActionTab === 'snooze' && (
+              <div className="space-y-3">
+                <span className="block text-[10px] text-secondary font-bold">Snooze Intake Slip</span>
+                <div className="space-y-1">
+                  <label className="block text-[9px] text-secondary font-bold">Wake Up Date</label>
+                  <input
+                    type="date"
+                    value={snoozeDate}
+                    onChange={(e) => setSnoozeDate(e.target.value)}
+                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
+                  />
+                </div>
+                <p className="font-sans text-[10px] text-secondary leading-normal lowercase normal-case">
+                  Snoozing hides this slip from the unprocessed queue until the selected date, where it will reappear at midnight.
+                </p>
+                <PrimaryButton type="button" onClick={handleSnoozeSubmit} className="w-full mt-2">
+                  Apply Snooze Duration
+                </PrimaryButton>
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* Fast general actions (Archive, Delete) */}
+        <div className="flex gap-2 justify-end border-t border-border pt-4 font-label text-xs uppercase tracking-wider font-bold">
+          <button
+            type="button"
+            onClick={handleArchiveClick}
+            className="px-3.5 py-2 border border-border hover:bg-neutral-bg/60 text-primary transition-colors flex items-center space-x-1.5 cursor-pointer btn-press rounded-none"
+            title="Archive Slip"
+          >
+            <Archive className="h-3.5 w-3.5" />
+            <span>Archive</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleDeleteClick}
+            className="px-3.5 py-2 border border-danger/40 text-danger hover:bg-danger/5 transition-colors flex items-center space-x-1.5 cursor-pointer btn-press rounded-none"
+            title="Delete Slip"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+            <span>Delete</span>
+          </button>
+        </div>
+
+      </div>
+    );
+  };
+
+  return (
+    <PageShell>
+      <SectionHeader
+        title="Processing Desk"
+        subtitle="Capture Engine 2.0 • Intake Queue & Triage Channel"
+        action={
+          <button
+            onClick={() => setShowQuickCapture(!showQuickCapture)}
+            className="btn-press border border-primary px-4 py-2 font-label text-xs uppercase tracking-widest font-bold flex items-center gap-1.5 bg-surface text-primary"
+          >
+            <PlusCircle className="h-4 w-4 text-accent" />
+            <span>Quick Slip</span>
+          </button>
+        }
+      />
+
+      {/* Quick Capture Form Drawer */}
+      {showQuickCapture && (
+        <form onSubmit={handleQuickCaptureSubmit} className="bg-surface border border-primary p-6 space-y-4 font-label text-xs animate-modal">
+          <div className="flex justify-between items-center border-b border-border pb-2">
+            <span className="font-bold uppercase text-accent">File Quick Slip</span>
+            <button type="button" onClick={() => setShowQuickCapture(false)} className="text-secondary hover:text-primary">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-1">
+              <label className="block uppercase text-[10px] text-secondary font-bold">Title</label>
+              <input
+                type="text"
+                required
+                value={quickTitle}
+                onChange={(e) => setQuickTitle(e.target.value)}
+                placeholder="Core keyword..."
+                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block uppercase text-[10px] text-secondary font-bold">Category</label>
+              <select
+                value={quickType}
+                onChange={(e) => setQuickType(e.target.value as InboxItem['type'])}
+                className="w-full bg-surface border border-border px-3 py-2.5 text-sm focus:outline-none focus:border-accent font-sans rounded-none cursor-pointer"
+              >
+                <option value="thought">Thought</option>
+                <option value="idea">Idea</option>
+                <option value="task">Task</option>
+                <option value="url">Link / URL</option>
+                <option value="quote">Quote</option>
+                <option value="code">Code Snippet</option>
+                <option value="question">Question</option>
+                <option value="journal">Journal Slip</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="block uppercase text-[10px] text-secondary font-bold">URL / Reference Link</label>
+              <input
+                type="text"
+                value={quickUrl}
+                onChange={(e) => setQuickUrl(e.target.value)}
+                placeholder="https://..."
+                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none"
+              />
+            </div>
+            <div className="space-y-1 md:col-span-3">
+              <label className="block uppercase text-[10px] text-secondary font-bold">Content Notes</label>
+              <textarea
+                value={quickContent}
+                onChange={(e) => setQuickContent(e.target.value)}
+                placeholder="Content details, notes, quotes..."
+                rows={3}
+                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none resize-none"
+              />
+            </div>
+            <div className="space-y-1 md:col-span-3">
+              <label className="block uppercase text-[10px] text-secondary font-bold">Tags (comma separated)</label>
+              <input
+                type="text"
+                value={quickTags}
+                onChange={(e) => setQuickTags(e.target.value)}
+                placeholder="ideas, health, work"
+                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none"
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <SecondaryButton type="button" onClick={() => setShowQuickCapture(false)}>
+              Cancel
+            </SecondaryButton>
+            <PrimaryButton type="submit">
+              File to Intake
+            </PrimaryButton>
+          </div>
+        </form>
+      )}
+
+      {/* Main 3-Column Desk Workspace */}
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+        
+        {/* ====================================================
+            COLUMN 1: FILTERS (Span 3 on md, Span 2 on lg)
+           ==================================================== */}
+        <div className="space-y-6 font-label text-xs uppercase tracking-wider font-bold md:col-span-3 lg:col-span-2">
+          <div className="bg-surface border border-border p-4 space-y-4">
+            <span className="block text-secondary border-b border-border pb-2">Desk Channels</span>
+            <div className="space-y-1.5">
+              {[
+                { key: 'unprocessed', label: 'Intake Queue', icon: Inbox },
+                { key: 'processed', label: 'Processed Archive', icon: Check },
+                { key: 'snoozed', label: 'Snoozed Ledger', icon: Clock },
+                { key: 'archived', label: 'General Archives', icon: Archive },
+              ].map((tab) => {
+                const isActive = statusFilter === tab.key;
+                const Icon = tab.icon;
+                const count = inboxItems.filter((item) => {
+                  if (tab.key === 'unprocessed') return item.status === 'unprocessed' || item.status === 'unsorted';
+                  if (tab.key === 'processed') return item.status === 'processed' || item.status === 'task' || item.status === 'academy' || item.status === 'knowledge';
+                  return item.status === tab.key;
+                }).length;
+
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => {
+                      setStatusFilter(tab.key as any);
+                      setSelectedItemId(null);
+                    }}
+                    className={`w-full text-left px-3 py-2.5 rounded-none flex items-center justify-between transition-colors cursor-pointer btn-press ${
+                      isActive 
+                        ? 'bg-primary text-on-primary border-l-2 border-accent' 
+                        : 'text-primary hover:bg-neutral-bg border-l-2 border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <Icon className="h-4 w-4" />
+                      <span>{tab.label}</span>
+                    </div>
+                    <span className="text-[10px] opacity-75">{count}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Search Slip */}
+          <div className="bg-surface border border-border p-4 space-y-3">
+            <span className="block text-secondary border-b border-border pb-2">Filter Slips</span>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-secondary/60">
+                <Search className="h-3.5 w-3.5" />
+              </span>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="SEARCH LEAKY SLIPS..."
+                className="w-full pl-9 pr-3 py-2 bg-neutral-bg border border-border text-sm focus:outline-none focus:border-accent font-sans placeholder:text-secondary/50 font-normal uppercase"
+              />
+            </div>
+            {searchQuery && (
+              <button 
+                onClick={() => setSearchQuery('')}
+                className="w-full py-1 text-center border border-dashed border-border text-[9px] hover:border-primary transition-colors"
+              >
+                Clear Search Filter
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* ====================================================
+            COLUMN 2: SLIP QUEUE LIST (Span 4)
+           ==================================================== */}
+        <div className="md:col-span-4 lg:col-span-4 space-y-4">
+          <div className="flex justify-between items-center font-label text-[10px] uppercase tracking-wider text-secondary border-b border-border pb-2 px-1">
+            <span>Intake Slips ({filteredSlips.length})</span>
+            <span>Use Arrow Keys to Navigate</span>
+          </div>
+
+          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+            {filteredSlips.length > 0 ? (
+              filteredSlips.map((item) => {
+                const isSelected = selectedItemId === item.id;
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => setSelectedItemId(item.id)}
+                    className={`border p-4 rounded-none space-y-2 relative transition-all cursor-pointer ${
+                      isSelected
+                        ? 'border-primary bg-surface shadow-md ring-1 ring-primary'
+                        : 'border-border bg-neutral-bg/40 hover:border-secondary hover:bg-neutral-bg/75'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex items-center space-x-2">
+                        {getTypeIcon(item.type)}
+                        <span className="font-label text-[9px] uppercase tracking-wider text-secondary font-bold">
+                          {item.type}
+                        </span>
+                      </div>
+                      <span className="font-label text-[8px] text-secondary">
+                        {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
-                    {renderInboxCards(globalSearchResults, "No items match your search query across all inboxes.")}
+
+                    <h4 className="font-sans text-xs font-semibold text-primary line-clamp-1">
+                      {item.title}
+                    </h4>
+
+                    {item.content && (
+                      <p className="font-sans text-[11px] text-secondary line-clamp-2 leading-relaxed">
+                        {item.content}
+                      </p>
+                    )}
+
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1 pt-1.5">
+                        {item.tags.map((tag) => (
+                          <span key={tag} className="font-label text-[8px] border border-secondary/20 bg-neutral-bg/30 text-secondary px-1.5 py-0.5 uppercase">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <>
-                    {activeTab === 'queue' && (
-                      <div className="bg-surface border border-secondary p-6 rounded-sm space-y-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
-                            Pending Triage Queue ({unsortedItems.length})
-                          </span>
-                        </div>
-                        {renderInboxCards(filteredUnsorted, "Triage queue is empty. Active items resolved.")}
-                      </div>
-                    )}
+                );
+              })
+            ) : (
+              <div className="border border-border border-dashed py-16 text-center bg-surface/20">
+                <Inbox className="h-8 w-8 text-secondary/35 mx-auto mb-2" />
+                <p className="font-sans text-xs text-secondary italic">No slips match your selection.</p>
+              </div>
+            )}
+          </div>
+        </div>
 
-                    {activeTab === 'knowledge' && (
-                      <div className="bg-surface border border-secondary p-6 rounded-sm space-y-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
-                            Knowledge Base & Permanent Reference Vault ({knowledgeItems.length})
-                          </span>
-                        </div>
-                        {renderInboxCards(filteredKnowledge, "Knowledge Base is empty. Capture quotes, ideas, snippets, or links.")}
-                      </div>
-                    )}
-
-                    {activeTab === 'snoozed_archived' && (
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Snoozed Queue */}
-                        <div className="bg-surface border border-secondary p-5 rounded-sm space-y-4">
-                          <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-3 border-b border-secondary/25 pb-1">
-                            Snoozed Queue ({snoozedItems.length})
-                          </span>
-                          <div className="max-h-[500px] overflow-y-auto pr-1">
-                            {renderInboxCards(filteredSnoozed, "No snoozed items.")}
-                          </div>
-                        </div>
-
-                        {/* Archived Queue */}
-                        <div className="bg-surface border border-secondary p-5 rounded-sm space-y-4">
-                          <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block mb-3 border-b border-secondary/25 pb-1">
-                            Archived Log ({archivedItems.length})
-                          </span>
-                          <div className="max-h-[500px] overflow-y-auto pr-1">
-                            {renderInboxCards(filteredArchived, "Archive is empty.")}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            );
-          })()}
-        </section>
+        {/* ====================================================
+            COLUMN 3: PROCESSING DESK PANEL (Span 5 on md, Span 6 on lg)
+           ==================================================== */}
+        <div className="hidden md:block md:col-span-5 lg:col-span-6 bg-surface border border-primary p-6 space-y-6 self-start shadow-sm">
+          {renderPanelContent(false)}
+        </div>
 
       </div>
+
+      {/* Mobile Details Pop-up Modal overlay */}
+      {selectedItem && (
+        <div className="md:hidden fixed inset-0 bg-black/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border-2 border-primary w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 space-y-6 shadow-lg animate-modal rounded-none">
+            {renderPanelContent(true)}
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
       <ConfirmDeleteModal
         isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setItemToDelete(null);
-        }}
-        onConfirm={async () => {
-          if (itemToDelete) {
-            await deleteInboxItem(itemToDelete.id);
-            showToast('Inbox item deleted forever.', 'info');
-          }
-        }}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
         itemName={itemToDelete?.title || ''}
-        itemType="inbox item"
+        itemType="Intake Slip"
       />
-    </div>
-  );
-}
-
-export default function InboxPage() {
-  return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="font-label text-xs uppercase tracking-wider text-secondary">Loading Inbox Triage...</p>
-      </div>
-    }>
-      <InboxPageContent />
-    </Suspense>
+    </PageShell>
   );
 }

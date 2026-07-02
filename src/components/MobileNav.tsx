@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useDashboard } from '@/context/DashboardContext';
@@ -20,15 +20,54 @@ import {
   CloudOff,
   Menu,
   X,
-  LogOut
+  LogOut,
+  Plus
 } from 'lucide-react';
 
-export default function MobileNav() {
+function useModalActive() {
+  const [active, setActive] = useState(false);
+
+  useEffect(() => {
+    const checkModal = () => {
+      const modal = document.querySelector('.bg-black\\/40, .bg-black\\/45, .bg-black\\/50');
+      setActive(!!modal);
+    };
+
+    checkModal();
+
+    const observer = new MutationObserver(checkModal);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    window.addEventListener('click', checkModal);
+    window.addEventListener('touchend', checkModal);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('click', checkModal);
+      window.removeEventListener('touchend', checkModal);
+    };
+  }, []);
+
+  return active;
+}
+
+export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () => void }) {
   const pathname = usePathname();
   const { signOut } = useAuth();
   const { isOnline, tasks, habits, habitRecords, lessons } = useDashboard();
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const isTasksPage = pathname === '/tasks';
+  const isModalActive = useModalActive();
+
+  const handleFabClick = () => {
+    if (isTasksPage) {
+      window.dispatchEvent(new Event('trigger_add_task'));
+    } else {
+      onCaptureTrigger();
+    }
+  };
 
   // 1. Tasks Completion (Weighted)
   const getWeightedTaskProgress = () => {
@@ -89,22 +128,22 @@ export default function MobileNav() {
   return (
     <div className="md:hidden flex flex-col shrink-0">
       {/* Top Mobile Header */}
-      <header className="sticky top-0 bg-surface border-b border-secondary px-4 py-3 flex items-center justify-between z-40">
+      <header className="sticky top-0 bg-surface border-b border-border px-4 py-3 flex items-center justify-between z-40">
         <div className="flex items-baseline space-x-2">
           <span className="font-amharic font-bold text-xl text-primary tracking-tight">ሁሉ</span>
-          <span className="font-label text-xs text-secondary uppercase tracking-[0.1em]">OS</span>
+          <span className="font-label text-xs text-secondary uppercase tracking-[0.15em]">OS</span>
         </div>
         
         <div className="flex items-center space-x-3">
           {/* Mobile Cloud Indicator */}
           {isOnline ? (
-            <Cloud className="h-4 w-4 text-emerald-700" />
+            <Cloud className="h-4 w-4 text-success" />
           ) : (
-            <CloudOff className="h-4 w-4 text-tertiary" />
+            <CloudOff className="h-4 w-4 text-accent" />
           )}
 
           {/* Micro Life Score Badge */}
-          <div className="bg-primary text-on-primary px-2 py-0.5 rounded-sm font-label text-xs font-medium tracking-wider">
+          <div className="bg-primary text-on-primary px-2 py-0.5 rounded-none font-label text-xs font-semibold tracking-wider">
             {lifeScore}%
           </div>
 
@@ -114,7 +153,7 @@ export default function MobileNav() {
       </header>
 
       {/* Bottom Sticky Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-secondary flex justify-around items-center py-2 px-1 z-40 pb-safe shadow-md">
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border flex justify-around items-center py-2 px-1 z-40 pb-safe shadow-none">
         {coreMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -122,12 +161,12 @@ export default function MobileNav() {
             <Link
               key={item.name}
               href={item.href}
-              className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-sm ${
-                isActive ? 'text-tertiary' : 'text-secondary'
+              className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-none ${
+                isActive ? 'text-accent font-bold' : 'text-secondary'
               }`}
             >
               <Icon className="h-5 w-5" />
-              <span className="font-label text-xs mt-0.5 uppercase tracking-wider">{item.name}</span>
+              <span className="font-label text-[10px] mt-0.5 uppercase tracking-wider">{item.name}</span>
             </Link>
           );
         })}
@@ -135,12 +174,12 @@ export default function MobileNav() {
         {/* More Button */}
         <button
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-          className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-sm cursor-pointer ${
-            isDrawerOpen ? 'text-tertiary' : 'text-secondary'
+          className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-none cursor-pointer ${
+            isDrawerOpen ? 'text-accent font-bold' : 'text-secondary'
           }`}
         >
           <Menu className="h-5 w-5" />
-          <span className="font-label text-xs mt-0.5 uppercase tracking-wider">More</span>
+          <span className="font-label text-[10px] mt-0.5 uppercase tracking-wider">More</span>
         </button>
       </nav>
 
@@ -154,8 +193,8 @@ export default function MobileNav() {
           />
           
           {/* Drawer Card */}
-          <div className="fixed bottom-14 left-0 right-0 bg-surface border-t-2 border-primary p-5 shadow-2xl z-[9999] md:hidden rounded-t-none animate-drawer">
-            <div className="flex justify-between items-center border-b border-secondary/25 pb-3 mb-4 font-label">
+          <div className="fixed bottom-14 left-0 right-0 bg-surface border-t-2 border-primary p-5 shadow-none z-[9999] md:hidden rounded-none animate-drawer">
+            <div className="flex justify-between items-center border-b border-border pb-3 mb-4 font-label">
               <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-semibold">
                 More Sectors
               </span>
@@ -169,9 +208,9 @@ export default function MobileNav() {
             
             <div className="grid grid-cols-3 gap-3">
               {[
-                { name: 'Projects', href: '/projects', icon: FolderKanban, desc: 'Sectors & boards' },
-                { name: 'Academy', href: '/academy', icon: GraduationCap, desc: 'Courses & cards' },
-                { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily log' },
+                { name: 'Projects', href: '/projects', icon: FolderKanban, desc: 'Sectors' },
+                { name: 'Academy', href: '/academy', icon: GraduationCap, desc: 'Academy' },
+                { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Journal' },
               ].map((item, i) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -180,10 +219,10 @@ export default function MobileNav() {
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsDrawerOpen(false)}
-                    className={`btn-press flex flex-col items-center justify-center p-4 border rounded-sm text-center ${
+                    className={`btn-press flex flex-col items-center justify-center p-3 border rounded-none text-center ${
                       isActive
                         ? 'bg-primary text-on-primary border-primary'
-                        : 'bg-neutral-bg/45 border-secondary/20 hover:border-primary'
+                        : 'bg-neutral-bg/45 border-border hover:border-primary'
                     }`}
                     style={{ '--stagger-i': i } as React.CSSProperties}
                   >
@@ -191,7 +230,7 @@ export default function MobileNav() {
                     <span className="font-label text-xs uppercase font-bold tracking-wide">
                       {item.name}
                     </span>
-                    <span className="font-sans text-xs text-secondary mt-0.5 lowercase">
+                    <span className="font-sans text-[10px] text-secondary mt-0.5 lowercase">
                       {item.desc}
                     </span>
                   </Link>
@@ -205,13 +244,23 @@ export default function MobileNav() {
                 setIsDrawerOpen(false);
                 signOut();
               }}
-              className="w-full mt-4 py-3 border border-tertiary/40 hover:border-tertiary text-tertiary bg-neutral-bg/30 hover:bg-tertiary/5 font-label text-xs uppercase tracking-wider font-semibold rounded-sm cursor-pointer flex items-center justify-center space-x-2 btn-press"
+              className="w-full mt-4 py-3 border border-accent/40 hover:border-accent text-accent bg-neutral-bg/30 hover:bg-accent/5 font-label text-xs uppercase tracking-wider font-semibold rounded-none cursor-pointer flex items-center justify-center space-x-2 btn-press"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Log Out</span>
             </button>
           </div>
         </>
+      )}
+      {/* Mobile Floating Action Button (FAB) for Quick Capture or Create Task */}
+      {!isModalActive && (
+        <button
+          onClick={handleFabClick}
+          className="fixed bottom-20 right-6 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-40 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 active:rotate-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"
+          title={isTasksPage ? "Create New Task" : "Quick Capture"}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
       )}
     </div>
   );

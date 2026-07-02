@@ -5,6 +5,9 @@ import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import PageShell from '@/components/ui/PageShell';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import { Trash2, Check, Smile, Moon, Droplet, Archive, X } from 'lucide-react';
 
 export default function HabitsPage() {
@@ -192,12 +195,12 @@ export default function HabitsPage() {
   const getHeatmapColor = (level: number) => {
     switch (level) {
       case -1: return 'bg-transparent'; // padding
-      case 0: return 'bg-[#EAE8E4]'; // zero completed
-      case 1: return 'bg-[#D8E2D9]'; // level 1: 1-25%
-      case 2: return 'bg-[#B5C7B7]'; // level 2: 26-50%
-      case 3: return 'bg-[#8EAB92]'; // level 3: 51-75%
-      case 4: return 'bg-[#58805F]'; // level 4: 76-100%
-      default: return 'bg-[#EAE8E4]';
+      case 0: return 'bg-border/30'; // zero completed
+      case 1: return 'bg-accent/15'; // level 1: 1-25%
+      case 2: return 'bg-accent/35'; // level 2: 26-50%
+      case 3: return 'bg-accent/65'; // level 3: 51-75%
+      case 4: return 'bg-accent'; // level 4: 76-100%
+      default: return 'bg-border/30';
     }
   };
 
@@ -253,35 +256,28 @@ export default function HabitsPage() {
   });
 
   return (
-    <div className="space-y-12">
+    <PageShell>
       {/* Header */}
-      <header className="border-b-2 border-primary pb-4 flex justify-between items-baseline">
-        <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-            THE HABIT ENGINE
-          </h2>
-          <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
-            Daily Tracker Matrix &bull; 180-Day Discipline Heatmap
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddHabitModal(true)}
-          className="btn-tertiary uppercase text-xs tracking-wider font-bold cursor-pointer"
-        >
-          Add Habit
-        </button>
-      </header>
+      <SectionHeader
+        title="THE HABIT ENGINE"
+        subtitle="Daily Tracker Matrix • 180-Day Discipline Heatmap"
+        action={
+          <PrimaryButton onClick={() => setShowAddHabitModal(true)}>
+            Add Habit
+          </PrimaryButton>
+        }
+      />
 
       {/* 180-DAY HEATMAP SECTION */}
-      <section className="bg-surface border border-secondary p-6 rounded-sm space-y-4">
-        <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-secondary/25 pb-1 mb-2">
+      <section className="bg-surface border border-border p-6 rounded-none space-y-4 shadow-none">
+        <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-1 mb-2 font-bold">
           Discipline Heatmap (Last 180 Days)
         </span>
         
         <div className="flex flex-col items-start space-y-4">
           <div className="flex space-x-2 overflow-x-auto w-full pb-2">
             {/* Weekday indicator labels */}
-            <div className="grid grid-rows-7 gap-1 font-label text-xs text-secondary uppercase justify-center pr-2 pt-1 select-none">
+            <div className="grid grid-rows-7 gap-1 font-label text-[10px] text-secondary uppercase justify-center pr-2 pt-1 select-none font-bold">
               <div>S</div>
               <div>M</div>
               <div>T</div>
@@ -298,9 +294,9 @@ export default function HabitsPage() {
                   {week.map((day, dayIdx) => (
                     <div
                       key={day.date || `empty-${weekIdx}-${dayIdx}`}
-                      className={`h-3 w-3 rounded-none ${getHeatmapColor(day.level)} transition-colors`}
+                      className={`h-3 w-3 rounded-none border border-background/20 ${getHeatmapColor(day.level)} transition-colors`}
                       title={day.date ? `${day.date}: ${day.completed}/${day.total} habits checked` : undefined}
-                    ></div>
+                    />
                   ))}
                 </div>
               ))}
@@ -308,13 +304,13 @@ export default function HabitsPage() {
           </div>
 
           {/* Color Key legend */}
-          <div className="flex items-center space-x-2 font-label text-xs text-secondary">
+          <div className="flex items-center space-x-2 font-label text-[10px] text-secondary font-bold">
             <span>Less Discipline</span>
-            <div className="h-3 w-3 bg-[#EAE8E4]"></div>
-            <div className="h-3 w-3 bg-[#D8E2D9]"></div>
-            <div className="h-3 w-3 bg-[#B5C7B7]"></div>
-            <div className="h-3 w-3 bg-[#8EAB92]"></div>
-            <div className="h-3 w-3 bg-[#58805F]"></div>
+            <div className="h-3 w-3 border border-border bg-border/30"></div>
+            <div className="h-3 w-3 border border-border bg-accent/15"></div>
+            <div className="h-3 w-3 border border-border bg-accent/35"></div>
+            <div className="h-3 w-3 border border-border bg-accent/65"></div>
+            <div className="h-3 w-3 border border-border bg-accent"></div>
             <span>More Discipline</span>
           </div>
         </div>
@@ -324,20 +320,20 @@ export default function HabitsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         
         {/* DAILY MATRIX TABLE */}
-        <section className="xl:col-span-3 bg-surface border border-secondary p-6 rounded-sm space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center border-b border-secondary/25 pb-2 mb-4 gap-3">
-            <h4 className="font-display text-lg font-bold text-primary tracking-tight">
+        <section className="xl:col-span-3 bg-surface border border-border p-6 rounded-none space-y-6 shadow-none">
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center border-b border-border pb-2 mb-4 gap-3">
+            <h4 className="font-serif text-lg font-bold text-primary tracking-tight">
               {formattedMonth} MATRIX
             </h4>
             
             <div className="flex flex-wrap items-center gap-3 font-label text-xs">
               {/* Category Filter */}
               <div className="flex items-center space-x-1.5">
-                <span className="text-secondary uppercase font-bold text-[10px]">Category:</span>
+                <span className="text-secondary uppercase font-bold text-[10px]">Sector:</span>
                 <select
                   value={selectedCategoryFilter}
                   onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                  className="bg-neutral-bg border border-secondary/30 px-2 py-0.5 focus:outline-none uppercase font-bold text-[10px]"
+                  className="bg-neutral-bg border border-border px-2 py-0.5 focus:outline-none uppercase font-bold text-[10px] rounded-none font-sans"
                 >
                   <option value="All">All Sectors</option>
                   <option value="Mind">Mind</option>
@@ -351,25 +347,25 @@ export default function HabitsPage() {
               <button
                 type="button"
                 onClick={() => setShowArchived(!showArchived)}
-                className={`px-2 py-0.5 border transition-colors cursor-pointer font-bold text-[10px] uppercase ${
-                  showArchived ? 'bg-primary text-on-primary border-primary' : 'border-secondary/30 text-secondary hover:text-primary'
+                className={`px-2 py-0.5 border transition-colors cursor-pointer font-bold text-[10px] uppercase rounded-none btn-press ${
+                  showArchived ? 'bg-primary text-on-primary border-primary font-bold' : 'border-border text-secondary hover:text-primary hover:bg-neutral-bg/50'
                 }`}
               >
                 {showArchived ? 'View Active' : 'View Archived'}
               </button>
 
-              <div className="h-4 w-px bg-secondary/25 hidden sm:block"></div>
+              <div className="h-4 w-px bg-border hidden sm:block"></div>
 
               <div className="flex space-x-1 font-bold">
                 <button
                   onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-                  className="px-2 py-0.5 border border-secondary hover:bg-neutral-bg"
+                  className="px-2 py-0.5 border border-border hover:bg-neutral-bg/50 font-bold text-[10px] uppercase rounded-none btn-press cursor-pointer"
                 >
                   &larr; PREV
                 </button>
                 <button
                   onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-                  className="px-2 py-0.5 border border-secondary hover:bg-neutral-bg"
+                  className="px-2 py-0.5 border border-border hover:bg-neutral-bg/50 font-bold text-[10px] uppercase rounded-none btn-press cursor-pointer"
                 >
                   NEXT &rarr;
                 </button>
@@ -378,17 +374,17 @@ export default function HabitsPage() {
           </div>
 
           {/* MATRIX HORIZONTAL CONTAINER (Desktop only) */}
-          <div className="hidden md:block overflow-x-auto border border-secondary/40 rounded-sm">
+          <div className="hidden md:block overflow-x-auto border border-border rounded-none shadow-none">
             <table className="min-w-[800px] w-full border-collapse text-left font-label text-xs">
-              <thead className="bg-neutral-bg border-b border-secondary">
+              <thead className="bg-neutral-bg/60 border-b border-border">
                 <tr>
-                  <th className="p-3 w-44 border-r border-secondary font-bold text-primary uppercase tracking-wider sticky left-0 bg-neutral-bg z-10">
+                  <th className="p-3 w-44 border-r border-border font-bold text-secondary uppercase tracking-wider sticky left-0 bg-neutral-bg z-10 font-label">
                     Day / Metric
                   </th>
                   {currentMonthDays.map((day) => (
-                    <th key={day.day} className="p-2 text-center border-r border-secondary/40 min-w-[32px]">
-                      <span className="block text-xs text-secondary font-medium leading-none">{day.dayName}</span>
-                      <span className="block text-xs text-primary font-bold mt-0.5">{day.day}</span>
+                    <th key={day.day} className="p-2 text-center border-r border-border/60 min-w-[32px] font-bold">
+                      <span className="block text-[10px] text-secondary leading-none">{day.dayName}</span>
+                      <span className="block text-xs text-primary mt-0.5">{day.day}</span>
                     </th>
                   ))}
                 </tr>
@@ -396,8 +392,8 @@ export default function HabitsPage() {
               <tbody>
                 {/* HABIT ROWS */}
                 {filteredHabits.map((habit) => (
-                  <tr key={habit.id} className="border-b border-secondary/30 hover:bg-neutral-bg/20">
-                    <td className="p-3 border-r border-secondary font-sans sticky left-0 bg-surface z-10 flex flex-col justify-center group min-h-[55px]">
+                  <tr key={habit.id} className="border-b border-border/60 hover:bg-neutral-bg/20">
+                    <td className="p-3 border-r border-border font-sans sticky left-0 bg-surface z-10 flex flex-col justify-center group min-h-[55px]">
                       <div className="flex justify-between items-center w-full">
                         <span className="font-semibold text-primary truncate max-w-[100px]">{habit.name}</span>
                         <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1.5 transition-opacity shrink-0">
@@ -408,7 +404,7 @@ export default function HabitsPage() {
                               await archiveHabit(habit.id, nextArchived);
                               showToast(nextArchived ? 'Habit archived.' : 'Habit unarchived.', 'success');
                             }}
-                            className={`hover:text-tertiary p-0.5 cursor-pointer ${habit.is_archived ? 'text-tertiary' : 'text-secondary'}`}
+                            className={`hover:text-accent p-0.5 cursor-pointer btn-press ${habit.is_archived ? 'text-accent font-bold' : 'text-secondary'}`}
                             title={habit.is_archived ? 'Unarchive Habit' : 'Archive Habit'}
                           >
                             <Archive className="h-3.5 w-3.5" />
@@ -419,7 +415,7 @@ export default function HabitsPage() {
                               setHabitToDelete({ id: habit.id, name: habit.name });
                               setDeleteModalOpen(true);
                             }}
-                            className="text-secondary hover:text-tertiary p-0.5 cursor-pointer"
+                            className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
                             title="Delete Habit"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -427,7 +423,7 @@ export default function HabitsPage() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-1.5 mt-1 font-label text-[9px] text-secondary uppercase font-bold select-none">
-                        <span className="bg-secondary/10 px-1 rounded-[2px]">{habit.category || 'Other'}</span>
+                        <span className="bg-neutral-bg/60 border border-border px-1.5 py-0.5 rounded-none">{habit.category || 'Other'}</span>
                         <span>Goal: {habit.frequency || 'daily'} ({habit.goal}{habit.unit || ''})</span>
                       </div>
                     </td>
@@ -437,12 +433,12 @@ export default function HabitsPage() {
                       const val = record ? record.value : 0;
                       
                       return (
-                        <td key={day.day} className="p-2 border-r border-secondary/25 text-center">
+                        <td key={day.day} className="p-2 border-r border-border/40 text-center">
                           {habit.type === 'binary' ? (
                             <button
                               onClick={() => handleCheckboxToggle(habit.id, day.dateStr, val)}
-                              className={`mx-auto h-5 w-5 border border-secondary flex items-center justify-center rounded-none transition-all ${
-                                val > 0 ? 'bg-primary text-on-primary border-primary' : 'bg-transparent text-transparent hover:bg-neutral-bg'
+                              className={`mx-auto h-5 w-5 border flex items-center justify-center rounded-none transition-all cursor-pointer ${
+                                val > 0 ? 'bg-primary text-on-primary border-primary' : 'bg-transparent text-transparent border-border hover:bg-neutral-bg/50'
                               } ${animatingCell === `${habit.id}-${day.dateStr}` ? 'animate-pop' : ''}`}
                             >
                               <Check className="h-3 w-3" />
@@ -454,7 +450,7 @@ export default function HabitsPage() {
                               onChange={(e) => handleNumericChange(habit.id, day.dateStr, e.target.value)}
                               onBlur={() => showToast('Value updated.', 'info')}
                               placeholder="-"
-                              className="w-10 bg-transparent text-center border-b border-transparent focus:border-tertiary focus:outline-none font-sans text-xs text-primary"
+                              className="w-10 bg-transparent text-center border-b border-transparent focus:border-accent focus:outline-none font-mono text-xs text-primary font-bold"
                             />
                           )}
                         </td>
@@ -464,18 +460,18 @@ export default function HabitsPage() {
                 ))}
 
                 {/* divider */}
-                <tr className="bg-secondary/20 h-2 border-b border-secondary">
-                  <td className="sticky left-0 bg-secondary/10 z-10"></td>
+                <tr className="bg-border/20 h-2 border-b border-border">
+                  <td className="sticky left-0 bg-neutral-bg/30 z-10 border-r border-border"></td>
                   {currentMonthDays.map((d) => (
-                    <td key={d.day}></td>
+                    <td key={d.day} className="border-r border-border/40"></td>
                   ))}
                 </tr>
 
                 {/* MOOD RATING ROW */}
-                <tr className="border-b border-secondary/30">
-                  <td className="p-3 border-r border-secondary font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
+                <tr className="border-b border-border/60">
+                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
                     <div className="flex items-center space-x-1.5">
-                      <Smile className="h-4 w-4 text-tertiary" />
+                      <Smile className="h-4 w-4 text-accent" />
                       <span>Daily Mood (1-5)</span>
                     </div>
                   </td>
@@ -483,11 +479,11 @@ export default function HabitsPage() {
                     const log = dailyLogs.find((dl) => dl.date === day.dateStr);
                     const mood = log ? log.mood : 0;
                     return (
-                      <td key={day.day} className="p-2 border-r border-secondary/25 text-center">
+                      <td key={day.day} className="p-2 border-r border-border/40 text-center">
                         <select
                           value={mood || ''}
                           onChange={(e) => handleMoodClick(day.dateStr, parseInt(e.target.value) || 3)}
-                          className="bg-transparent text-center focus:outline-none cursor-pointer text-xs font-sans text-primary"
+                          className="bg-transparent text-center focus:outline-none cursor-pointer text-xs font-mono text-primary font-bold"
                         >
                           <option value="">-</option>
                           <option value="1">1</option>
@@ -502,8 +498,8 @@ export default function HabitsPage() {
                 </tr>
 
                 {/* SLEEP HOURS ROW */}
-                <tr className="border-b border-secondary/30">
-                  <td className="p-3 border-r border-secondary font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
+                <tr className="border-b border-border/60">
+                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
                     <div className="flex items-center space-x-1.5">
                       <Moon className="h-4 w-4 text-secondary" />
                       <span>Sleep (Hours)</span>
@@ -513,14 +509,14 @@ export default function HabitsPage() {
                     const log = dailyLogs.find((dl) => dl.date === day.dateStr);
                     const hours = log ? log.sleep_hours : 0;
                     return (
-                      <td key={day.day} className="p-2 border-r border-secondary/25 text-center">
+                      <td key={day.day} className="p-2 border-r border-border/40 text-center">
                         <input
                           type="text"
                           value={hours || ''}
                           onChange={(e) => handleHealthLogChange(day.dateStr, 'sleep', e.target.value)}
                           onBlur={() => showToast('Wellness log saved.', 'success')}
                           placeholder="-"
-                          className="w-10 bg-transparent text-center border-b border-transparent focus:border-tertiary focus:outline-none font-sans text-xs text-primary"
+                          className="w-10 bg-transparent text-center border-b border-transparent focus:border-accent focus:outline-none font-mono text-xs text-primary font-bold"
                         />
                       </td>
                     );
@@ -528,10 +524,10 @@ export default function HabitsPage() {
                 </tr>
 
                 {/* WATER INTAKE ROW */}
-                <tr className="border-b border-secondary">
-                  <td className="p-3 border-r border-secondary font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
+                <tr className="border-b border-border">
+                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
                     <div className="flex items-center space-x-1.5">
-                      <Droplet className="h-4 w-4 text-tertiary" />
+                      <Droplet className="h-4 w-4 text-accent" />
                       <span>Water (Liters)</span>
                     </div>
                   </td>
@@ -539,14 +535,14 @@ export default function HabitsPage() {
                     const log = dailyLogs.find((dl) => dl.date === day.dateStr);
                     const water = log ? log.water_intake : 0;
                     return (
-                      <td key={day.day} className="p-2 border-r border-secondary/25 text-center">
+                      <td key={day.day} className="p-2 border-r border-border/40 text-center">
                         <input
                           type="text"
                           value={water || ''}
                           onChange={(e) => handleHealthLogChange(day.dateStr, 'water', e.target.value)}
                           onBlur={() => showToast('Wellness log saved.', 'success')}
                           placeholder="-"
-                          className="w-10 bg-transparent text-center border-b border-transparent focus:border-tertiary focus:outline-none font-sans text-xs text-primary"
+                          className="w-10 bg-transparent text-center border-b border-transparent focus:border-accent focus:outline-none font-mono text-xs text-primary font-bold"
                         />
                       </td>
                     );
@@ -559,9 +555,9 @@ export default function HabitsPage() {
 
           {/* MOBILE FRIENDLY DAILY LIST */}
           <div className="block md:hidden space-y-4">
-            <div className="flex justify-between items-center bg-neutral-bg border border-secondary/30 p-4 rounded-sm font-label text-xs">
+            <div className="flex justify-between items-center bg-neutral-bg/60 border border-border p-4 rounded-none font-label text-xs">
               <span className="font-bold text-secondary uppercase">Today Focus Matrix</span>
-              <span className="text-tertiary font-bold">{todayStr}</span>
+              <span className="text-accent font-bold">{todayStr}</span>
             </div>
             
             <div className="space-y-3">
@@ -636,7 +632,7 @@ export default function HabitsPage() {
                   );
                 })
               ) : (
-                <div className="bg-surface border border-secondary/30 py-10 text-center rounded-sm">
+                <div className="bg-surface border border-border py-10 text-center rounded-none shadow-none">
                   <p className="font-sans text-xs text-secondary italic">No active habits in this category.</p>
                 </div>
               )}
@@ -649,13 +645,13 @@ export default function HabitsPage() {
 
       {/* Habit Configurator Modal */}
       {showAddHabitModal && (
-        <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4">
-          <div className="bg-surface border-2 border-primary p-6 max-w-sm w-full space-y-4 shadow-2xl rounded-sm font-label text-xs">
-            <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
+        <div className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-surface border border-border p-6 max-w-sm w-full space-y-4 shadow-none rounded-none font-label text-xs">
+            <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="font-bold uppercase text-primary text-sm tracking-wide">Configure New Habit</span>
               <button 
                 onClick={() => setShowAddHabitModal(false)} 
-                className="text-secondary hover:text-tertiary cursor-pointer p-0.5"
+                className="text-secondary hover:text-accent cursor-pointer p-0.5 btn-press"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -663,24 +659,24 @@ export default function HabitsPage() {
             
             <form onSubmit={handleCreateHabit} className="space-y-4 font-label">
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary">Habit Name *</label>
+                <label className="block text-xs uppercase text-secondary font-bold">Habit Name *</label>
                 <input
                   type="text"
                   value={newHabitName}
                   onChange={(e) => setNewHabitName(e.target.value)}
                   placeholder="e.g. Workout (30 mins)"
                   required
-                  className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-secondary">Category</label>
+                  <label className="block text-xs uppercase text-secondary font-bold">Sector (Category)</label>
                   <select
                     value={newHabitCategory}
                     onChange={(e) => setNewHabitCategory(e.target.value)}
-                    className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none"
+                    className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none rounded-none"
                   >
                     <option value="Mind">Mind</option>
                     <option value="Body">Body</option>
@@ -690,11 +686,11 @@ export default function HabitsPage() {
                 </div>
                 
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-secondary">Frequency Goal</label>
+                  <label className="block text-xs uppercase text-secondary font-bold">Frequency Goal</label>
                   <select
                     value={newHabitFrequency}
                     onChange={(e) => setNewHabitFrequency(e.target.value)}
-                    className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none"
+                    className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none rounded-none"
                   >
                     <option value="daily">Daily</option>
                     <option value="weekly">Weekly</option>
@@ -705,11 +701,11 @@ export default function HabitsPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary">Tracker Type</label>
+                <label className="block text-xs uppercase text-secondary font-bold">Tracker Type</label>
                 <select
                   value={newHabitType}
                   onChange={(e) => setNewHabitType(e.target.value as 'binary' | 'numeric')}
-                  className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none rounded-none"
                 >
                   <option value="binary">Binary Checked (Yes/No)</option>
                   <option value="numeric">Numeric Metric (Volume)</option>
@@ -719,31 +715,31 @@ export default function HabitsPage() {
               {newHabitType === 'numeric' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Unit</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Unit</label>
                     <input
                       type="text"
                       value={newHabitUnit}
                       onChange={(e) => setNewHabitUnit(e.target.value)}
                       placeholder="e.g. glass, km, page"
-                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Goal</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Goal</label>
                     <input
                       type="number"
                       step="any"
                       value={newHabitGoal}
                       onChange={(e) => setNewHabitGoal(parseFloat(e.target.value) || 1)}
-                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
                     />
                   </div>
                 </div>
               )}
 
-              <button type="submit" className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2">
+              <PrimaryButton type="submit" className="w-full mt-2">
                 SAVE NEW HABIT
-              </button>
+              </PrimaryButton>
             </form>
           </div>
         </div>
@@ -764,6 +760,6 @@ export default function HabitsPage() {
         itemName={habitToDelete?.name || ''}
         itemType="habit"
       />
-    </div>
+    </PageShell>
   );
 }

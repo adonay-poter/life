@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useState, useEffect, Suspense, useRef } from 'react';
+import React, { useState, useEffect, Suspense, useRef, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useDashboard, CourseModule, Lesson } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import ResearchModal from '@/components/ResearchModal';
 import QAPanel from '@/components/QAPanel';
+import PageShell from '@/components/ui/PageShell';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
 import { 
   BookOpen, 
   HelpCircle, 
@@ -22,7 +27,12 @@ import {
   ArrowDown,
   Search,
   History,
-  Upload
+  Upload,
+  FileText,
+  Clock,
+  Sparkles,
+  Inbox,
+  Check
 } from 'lucide-react';
 
 function AcademyContent() {
@@ -45,7 +55,13 @@ function AcademyContent() {
     reviewFlashcard,
     updateCourse,
     updateModule,
-    updateLesson
+    updateLesson,
+    knowledgeItems,
+    addKnowledgeItem,
+    deleteKnowledgeItem,
+    updateInboxItemStatus,
+    inboxItems,
+    dailyDigests
   } = useDashboard();
 
   const searchParams = useSearchParams();
@@ -80,7 +96,7 @@ function AcademyContent() {
   // Navigation & UI States
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const [academyTab, setAcademyTab] = useState<'matrix' | 'flashcards'>('matrix');
+  const [academyTab, setAcademyTab] = useState<'matrix' | 'flashcards' | 'knowledge'>('matrix');
   const [isNotePreview, setIsNotePreview] = useState(false);
   const [mobileStudioTab, setMobileStudioTab] = useState<'index' | 'notepad'>('index');
 
@@ -805,10 +821,10 @@ function AcademyContent() {
 
   // Find due flashcards
   const getDueFlashcards = () => {
-    if (!selectedCourseId) return [];
     const now = new Date();
     return flashcards.filter((fc) => {
-      const isDue = fc.course_id === selectedCourseId && new Date(fc.next_review_date) <= now;
+      const isCourseMatch = !selectedCourseId || fc.course_id === selectedCourseId;
+      const isDue = isCourseMatch && new Date(fc.next_review_date) <= now;
       if (!isDue) return false;
       if (!searchQuery) return true;
       return fc.front.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -842,67 +858,91 @@ function AcademyContent() {
 
   if (loading) {
     return (
-      <div className="space-y-12 animate-pulse">
-        <header className="border-b-2 border-secondary/20 pb-4">
-          <div className="h-8 bg-secondary/15 w-48 rounded-sm mb-2" />
-          <div className="h-4 bg-secondary/10 w-80 rounded-sm" />
-        </header>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <PageShell>
+        <SectionHeader
+          title="The Academy"
+          subtitle="Course Matrices • Spaced Repetition Flashcards"
+        />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-surface border border-secondary/20 p-6 rounded-sm space-y-4">
-              <div className="h-4 bg-secondary/15 w-1/4 rounded-sm" />
-              <div className="h-6 bg-secondary/15 w-3/4 rounded-sm" />
-              <div className="h-16 bg-secondary/10 w-full rounded-sm" />
-              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
+            <div key={n} className="bg-surface border border-border p-6 rounded-none space-y-4 shadow-none">
+              <div className="h-4 bg-secondary/15 w-1/4 rounded-none" />
+              <div className="h-6 bg-secondary/15 w-3/4 rounded-none" />
+              <div className="h-16 bg-secondary/10 w-full rounded-none" />
+              <div className="h-8 bg-secondary/10 w-full rounded-none" />
             </div>
           ))}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-12">
+    <PageShell>
       {/* Header / Navigation state */}
       {!selectedCourseId ? (
-        <header className="border-b-2 border-primary pb-4 flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4">
-          <div>
-            <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-              THE ACADEMY
-            </h2>
-            <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
-              Course Matrices &bull; Spaced Repetition Flashcards
-            </p>
-          </div>
-        </header>
+        <SectionHeader
+          title="The Academy"
+          subtitle="Course Matrices • Spaced Repetition Flashcards"
+          action={
+            <div className="flex border border-border font-label text-xs uppercase tracking-wider select-none shrink-0 rounded-none bg-background overflow-hidden">
+              <button
+                onClick={() => setAcademyTab('matrix')}
+                className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                  academyTab === 'matrix' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+                }`}
+              >
+                <BookOpen className="h-3.5 w-3.5" />
+                <span>Matrices</span>
+              </button>
+              <button
+                onClick={() => setAcademyTab('knowledge')}
+                className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-border cursor-pointer btn-press font-bold ${
+                  academyTab === 'knowledge' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Knowledge Base</span>
+              </button>
+              <button
+                onClick={() => setAcademyTab('flashcards')}
+                className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-border cursor-pointer btn-press font-bold ${
+                  academyTab === 'flashcards' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+                }`}
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                <span>All Flashcards ({dueCards.length})</span>
+              </button>
+            </div>
+          }
+        />
       ) : (
-        <header className="border-b-2 border-primary pb-4 flex flex-col md:flex-row justify-between items-start md:items-baseline gap-4 w-full">
+        <header className="border-b border-border pb-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 w-full">
           <div className="flex items-center space-x-3 w-full md:w-auto">
             <button
               onClick={() => {
                 setSelectedCourseId(null);
                 setSelectedModuleId(null);
               }}
-              className="text-secondary hover:text-primary transition-all p-1 cursor-pointer"
+              className="text-secondary hover:text-accent transition-all p-1 cursor-pointer btn-press"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="truncate max-w-full">
-              <h2 className="font-display text-2xl font-bold tracking-tight text-primary truncate max-w-xs md:max-w-md lg:max-w-lg">
+              <h2 className="font-serif text-2xl font-bold tracking-tight text-primary truncate max-w-xs md:max-w-md lg:max-w-lg uppercase">
                 {activeCourse?.title}
               </h2>
-              <p className="font-label text-xs text-secondary uppercase tracking-[0.25em]">
+              <p className="font-label text-[10px] text-secondary uppercase tracking-[0.25em] font-bold">
                 STUDIO WORKSPACE &bull; {activeCourse?.category}
               </p>
             </div>
           </div>
 
-          <div className="flex border border-secondary font-label text-xs uppercase tracking-wider select-none shrink-0 self-end">
+          <div className="flex border border-border font-label text-xs uppercase tracking-wider select-none shrink-0 self-end rounded-none bg-background overflow-hidden">
             <button
               onClick={() => setAcademyTab('matrix')}
-              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer ${
-                academyTab === 'matrix' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
+              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                academyTab === 'matrix' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -910,8 +950,8 @@ function AcademyContent() {
             </button>
             <button
               onClick={() => setAcademyTab('flashcards')}
-              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-secondary cursor-pointer ${
-                academyTab === 'flashcards' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg'
+              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-border cursor-pointer btn-press font-bold ${
+                academyTab === 'flashcards' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
               }`}
             >
               <HelpCircle className="h-3.5 w-3.5" />
@@ -922,7 +962,20 @@ function AcademyContent() {
       )}
 
       {/* Main Content Area */}
-      {!selectedCourseId ? (
+      {academyTab === 'knowledge' ? (
+        <KnowledgeBaseTab
+          knowledgeItems={knowledgeItems}
+          addKnowledgeItem={addKnowledgeItem}
+          deleteKnowledgeItem={deleteKnowledgeItem}
+          inboxItems={inboxItems}
+          updateInboxItemStatus={updateInboxItemStatus}
+          dailyDigests={dailyDigests}
+          courses={courses}
+          courseModules={courseModules}
+          addFlashcard={addFlashcard}
+          showToast={showToast}
+        />
+      ) : !selectedCourseId ? (
         /* ==========================================
             VIEW 1: COURSE & SKILL MATRIX LIST
            ========================================== */
@@ -935,20 +988,20 @@ function AcademyContent() {
                 placeholder="Search matrices..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-surface border border-secondary/40 rounded-sm text-xs focus:outline-none focus:border-primary"
+                className="w-full pl-9 pr-4 py-2 bg-surface border border-border text-xs focus:outline-none focus:border-primary font-sans rounded-none"
               />
             </div>
             <div className="flex gap-2 w-full md:w-auto">
               <button
                 onClick={() => setResearchModalOpen(true)}
-                className="btn-tertiary flex items-center space-x-1.5 cursor-pointer w-full md:w-auto justify-center bg-primary text-on-primary hover:bg-primary/90"
+                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer w-full md:w-auto bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 text-xs font-label font-bold border border-primary rounded-none"
               >
-                <Search className="h-4 w-4 text-tertiary" />
+                <Search className="h-4 w-4" />
                 <span>AI RESEARCH</span>
               </button>
               <button
                 onClick={() => setShowAddCourse(!showAddCourse)}
-                className="btn-tertiary flex items-center space-x-1.5 cursor-pointer w-full md:w-auto justify-center"
+                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer w-full md:w-auto bg-surface border border-border text-primary hover:bg-neutral-bg/40 px-4 py-2 text-xs font-label font-bold rounded-none"
               >
                 <Plus className="h-4 w-4" />
                 <span>ADD SKILL MATRIX</span>
@@ -958,68 +1011,67 @@ function AcademyContent() {
 
           {/* Add Course Form */}
           {showAddCourse && (
-            <form onSubmit={handleAddCourse} className="bg-surface border border-secondary p-6 rounded-sm space-y-4 font-label text-xs">
-              <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
+            <form onSubmit={handleAddCourse} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
+              <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
                 Configure New Skill Matrix
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-secondary">Course / Matrix Title</label>
+                  <label className="block text-[10px] uppercase text-secondary font-bold">Course / Matrix Title</label>
                   <input
                     type="text"
                     value={newCourseTitle}
                     onChange={(e) => setNewCourseTitle(e.target.value)}
                     placeholder="e.g. History of Modern Architecture"
                     required
-                    className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                    className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-secondary">Category (Skill Class)</label>
+                  <label className="block text-[10px] uppercase text-secondary font-bold">Category (Skill Class)</label>
                   <input
                     type="text"
                     value={newCourseCategory}
                     onChange={(e) => setNewCourseCategory(e.target.value)}
                     placeholder="e.g. Design, Philosophy, Technology"
-                    className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                    className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
                   />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary">Skill Roadmap Summary</label>
+                <label className="block text-[10px] uppercase text-secondary font-bold">Skill Roadmap Summary</label>
                 <textarea
                   value={newCourseDesc}
                   onChange={(e) => setNewCourseDesc(e.target.value)}
                   rows={2}
-                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
               <div className="flex space-x-3 pt-2">
-                <button type="submit" className="flex-1 bg-primary text-on-primary py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm">
+                <PrimaryButton type="submit" className="flex-1">
                   Save Skill Matrix
-                </button>
-                <button
+                </PrimaryButton>
+                <SecondaryButton
                   type="button"
                   onClick={() => setShowAddCourse(false)}
-                  className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg uppercase text-xs tracking-wider cursor-pointer rounded-sm"
                 >
                   Cancel
-                </button>
+                </SecondaryButton>
               </div>
             </form>
           )}
 
           {/* Courses grid */}
           {courses.length === 0 ? (
-            <div className="text-center py-20 bg-surface border border-secondary/25 rounded-sm">
-              <BookOpen className="h-12 w-12 text-secondary/40 mx-auto mb-4 animate-pulse" />
-              <h3 className="font-display text-lg font-bold text-primary mb-2">No skill matrices yet</h3>
+            <div className="text-center py-20 bg-surface border border-border rounded-none shadow-none">
+              <BookOpen className="h-12 w-12 text-secondary/40 mx-auto mb-4" />
+              <h3 className="font-serif text-lg font-bold text-primary mb-2 uppercase">No skill matrices yet</h3>
               <p className="font-sans text-xs text-secondary max-w-sm mx-auto mb-6">
                 Create a skill matrix to start organizing your courses, modules, lessons, and flashcards.
               </p>
               <button
                 onClick={() => setShowAddCourse(true)}
-                className="bg-primary text-on-primary px-5 py-2 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-primary/90 transition-all rounded-sm"
+                className="bg-primary text-on-primary px-5 py-2.5 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-primary/90 transition-all rounded-none border border-primary btn-press"
               >
                 Create one to begin
               </button>
@@ -1037,13 +1089,13 @@ function AcademyContent() {
                   return (
                     <div
                       key={course.id}
-                      className="bg-surface border border-secondary/40 p-5 flex flex-col justify-between space-y-6 rounded-sm relative group hover:border-primary transition-all shadow-sm hover:shadow-md"
+                      className="bg-surface border border-border p-5 flex flex-col justify-between space-y-6 rounded-none relative group hover:border-primary transition-all shadow-none"
                     >
                       <div className="space-y-2">
-                        <span className="font-label text-xs bg-secondary/20 px-1.5 py-0.5 text-primary uppercase tracking-wide">
+                        <span className="font-label text-[10px] bg-neutral-bg/60 border border-border px-1.5 py-0.5 text-primary uppercase tracking-wide font-bold">
                           {course.category}
                         </span>
-                        <h4 className="font-display text-lg font-bold text-primary tracking-tight line-clamp-1">
+                        <h4 className="font-serif text-lg font-bold text-primary tracking-tight line-clamp-1">
                           {course.title}
                         </h4>
                         {course.description && (
@@ -1053,13 +1105,13 @@ function AcademyContent() {
                         )}
                       </div>
 
-                      <div className="border-t border-secondary/20 pt-4 flex flex-col space-y-3">
+                      <div className="border-t border-border pt-4 flex flex-col space-y-3">
                         <div className="flex items-center justify-between">
                           <div>
-                            <span className="font-label text-xs text-secondary uppercase tracking-wider block">
+                            <span className="font-label text-[10px] text-secondary uppercase tracking-wider block font-bold">
                               Completion
                             </span>
-                            <span className="font-display text-md font-semibold text-tertiary">
+                            <span className="font-serif text-md font-bold text-accent">
                               {progress}%
                             </span>
                           </div>
@@ -1072,16 +1124,16 @@ function AcademyContent() {
                                 setSelectedModuleId(modules[0].id);
                               }
                             }}
-                            className="border border-primary hover:bg-primary hover:text-on-primary transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
+                            className="border border-primary bg-primary text-on-primary hover:bg-primary/95 transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer btn-press rounded-none"
                           >
                             ENTER STUDIO
                           </button>
                         </div>
                         
                         {/* Animated Progress Bar */}
-                        <div className="w-full bg-secondary/10 h-1.5 rounded-full overflow-hidden">
+                        <div className="w-full bg-border h-1.5 rounded-none overflow-hidden">
                           <div 
-                            className="bg-tertiary h-full transition-all duration-500 ease-out rounded-full"
+                            className="bg-accent h-full transition-all duration-500 ease-out rounded-none"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -1097,7 +1149,7 @@ function AcademyContent() {
                             setEditCourseCategory(course.category || '');
                             setEditCourseModalOpen(true);
                           }}
-                          className="text-secondary hover:text-primary cursor-pointer"
+                          className="text-secondary hover:text-primary cursor-pointer btn-press"
                         >
                           <Edit3 className="h-4 w-4" />
                         </button>
@@ -1123,12 +1175,12 @@ function AcademyContent() {
            ========================================== */
         <div className="space-y-6">
           {/* Mobile tab switcher for split-screen */}
-          <div className="flex lg:hidden border border-secondary font-label text-xs">
+          <div className="flex lg:hidden border border-border font-label text-xs rounded-none bg-background overflow-hidden">
             <button
               type="button"
               onClick={() => setMobileStudioTab('index')}
-              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer ${
-                mobileStudioTab === 'index' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'
+              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer btn-press ${
+                mobileStudioTab === 'index' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'
               }`}
             >
               Index
@@ -1136,8 +1188,8 @@ function AcademyContent() {
             <button
               type="button"
               onClick={() => setMobileStudioTab('notepad')}
-              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer border-l border-secondary ${
-                mobileStudioTab === 'notepad' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'
+              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer border-l border-border btn-press ${
+                mobileStudioTab === 'notepad' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'
               }`}
             >
               Studio Notepad
@@ -1147,17 +1199,17 @@ function AcademyContent() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px]">
             
             {/* LEFT SIDE: HIERARCHICAL INDEX CHECKLIST */}
-            <section className={`bg-surface border border-secondary p-6 rounded-sm space-y-6 max-h-[600px] overflow-y-auto shadow-sm ${
+            <section className={`bg-surface border border-border p-6 rounded-none space-y-6 max-h-[600px] overflow-y-auto shadow-none ${
               mobileStudioTab !== 'index' ? 'hidden lg:block' : ''
             }`}>
-            <div className="border-b border-secondary/20 pb-2 space-y-2">
+            <div className="border-b border-border pb-2 space-y-2">
               <div className="flex justify-between items-center">
-                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-bold">
                   Modules & Lessons Index
                 </span>
                 <button
                   onClick={() => setNewModuleModalOpen(true)}
-                  className="bg-primary text-on-primary text-[10px] font-bold px-2.5 py-1 uppercase tracking-wider rounded-sm cursor-pointer hover:bg-opacity-90 btn-press flex items-center space-x-1"
+                  className="bg-primary text-on-primary text-[10px] font-bold px-2.5 py-1 uppercase tracking-wider rounded-none cursor-pointer hover:bg-opacity-90 btn-press flex items-center space-x-1 border border-primary"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   <span>New Module</span>
@@ -1170,7 +1222,7 @@ function AcademyContent() {
                   placeholder="Search modules or lessons..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-4 py-1.5 bg-neutral-bg/50 border border-secondary/30 rounded-sm text-xs focus:outline-none focus:border-primary"
+                  className="w-full pl-8 pr-4 py-1.5 bg-neutral-bg/50 border border-border rounded-none text-xs focus:outline-none focus:border-primary font-sans"
                 />
               </div>
             </div>
@@ -1200,8 +1252,8 @@ function AcademyContent() {
                   return (
                     <div
                       key={mod.id}
-                      className={`p-4 border transition-all rounded-sm ${
-                        isSelected ? 'border-primary bg-neutral-bg/40 shadow-sm' : 'border-secondary/25 bg-surface'
+                      className={`p-4 border transition-all rounded-none ${
+                        isSelected ? 'border-primary bg-neutral-bg/40 shadow-none' : 'border-border bg-surface'
                       }`}
                     >
                       <div className="flex justify-between items-baseline mb-3 group/mod">
@@ -1211,7 +1263,7 @@ function AcademyContent() {
                               type="text"
                               value={editModuleName}
                               onChange={(e) => setEditModuleName(e.target.value)}
-                              className="flex-grow bg-surface border border-secondary px-2 py-0.5 font-display text-sm text-primary focus:outline-none"
+                              className="flex-grow bg-surface border border-border px-2 py-0.5 font-sans text-sm text-primary focus:outline-none rounded-none"
                             />
                             <div className="flex gap-1">
                               <button
@@ -1221,13 +1273,13 @@ function AcademyContent() {
                                   setEditingModuleId(null);
                                   showToast('Module title updated.', 'success');
                                 }}
-                                className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
+                                className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
                               >
                                 Save
                               </button>
                               <button
                                 onClick={() => setEditingModuleId(null)}
-                                className="border border-secondary px-2 py-0.5 text-[10px] uppercase rounded-sm cursor-pointer"
+                                className="border border-border bg-surface hover:bg-neutral-bg px-2 py-0.5 text-[10px] uppercase rounded-none cursor-pointer btn-press"
                               >
                                 Cancel
                               </button>
@@ -1237,10 +1289,10 @@ function AcademyContent() {
                           <div className="flex items-center space-x-2 flex-grow min-w-0">
                             <h5
                               onClick={() => {
-                                setSelectedModuleId(mod.id);
-                                setMobileStudioTab('notepad');
+                                  setSelectedModuleId(mod.id);
+                                  setMobileStudioTab('notepad');
                               }}
-                              className="font-display text-md font-bold text-primary hover:text-tertiary cursor-pointer truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]"
+                              className="font-serif text-md font-bold text-primary hover:text-accent cursor-pointer truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]"
                             >
                               {mod.title}
                             </h5>
@@ -1251,7 +1303,7 @@ function AcademyContent() {
                                   setEditingModuleId(mod.id);
                                   setEditModuleName(mod.title);
                                 }}
-                                className="text-secondary hover:text-primary p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
                               >
                                 <Edit3 className="h-3 w-3" />
                               </button>
@@ -1260,26 +1312,26 @@ function AcademyContent() {
                                   setItemToDelete({ id: mod.id, title: mod.title, type: 'module' });
                                   setDeleteModalOpen(true);
                                 }}
-                                className="text-secondary hover:text-tertiary p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
                               >
                                 <Trash2 className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={() => handleReorderModule(mod.id, 'up')}
-                                className="text-secondary hover:text-primary p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
                               >
                                 <ArrowUp className="h-3 w-3" />
                               </button>
                               <button
                                 onClick={() => handleReorderModule(mod.id, 'down')}
-                                className="text-secondary hover:text-primary p-0.5 cursor-pointer"
+                                className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
                               >
                                 <ArrowDown className="h-3 w-3" />
                               </button>
                             </div>
                           </div>
                         )}
-                        <span className="font-label text-[10px] text-secondary uppercase shrink-0 bg-secondary/10 px-1.5 py-0.5 rounded-sm">
+                        <span className="font-label text-[10px] text-secondary uppercase shrink-0 bg-neutral-bg/60 border border-border px-1.5 py-0.5 rounded-none font-bold">
                           Module {mod.order_index}
                         </span>
                       </div>
@@ -1287,21 +1339,21 @@ function AcademyContent() {
                       {/* Lessons checklist */}
                       <div className="space-y-2 mb-4">
                         {modLessons.map((l) => (
-                          <div key={l.id} className="flex items-center justify-between p-2 bg-surface border border-secondary/15 rounded-sm group/les">
+                          <div key={l.id} className="flex items-center justify-between p-2 bg-surface border border-border rounded-none group/les">
                             {editingLessonId === l.id ? (
                               <div className="flex-grow flex flex-col gap-1.5 font-label text-xs w-full">
                                 <input
                                   type="text"
                                   value={editLessonName}
                                   onChange={(e) => setEditLessonName(e.target.value)}
-                                  className="w-full bg-surface border border-secondary/50 px-2 py-1 focus:outline-none"
+                                  className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
                                   placeholder="Lesson title"
                                 />
                                 <input
                                   type="text"
                                   value={editLessonLink}
                                   onChange={(e) => setEditLessonLink(e.target.value)}
-                                  className="w-full bg-surface border border-secondary/50 px-2 py-1 focus:outline-none"
+                                  className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
                                   placeholder="Link (optional)"
                                 />
                                 <div className="flex gap-1.5 justify-end mt-1">
@@ -1317,13 +1369,13 @@ function AcademyContent() {
                                       setEditingLessonId(null);
                                       showToast('Lesson updated.', 'success');
                                     }}
-                                    className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-sm cursor-pointer"
+                                    className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
                                   >
                                     Save
                                   </button>
                                   <button
                                     onClick={() => setEditingLessonId(null)}
-                                    className="border border-secondary px-2 py-0.5 text-[10px] uppercase rounded-sm cursor-pointer"
+                                    className="border border-border bg-surface hover:bg-neutral-bg px-2 py-0.5 text-[10px] uppercase rounded-none cursor-pointer btn-press"
                                   >
                                     Cancel
                                   </button>
@@ -1332,17 +1384,13 @@ function AcademyContent() {
                             ) : (
                               <>
                                 <div className="flex items-center space-x-2 flex-grow min-w-0">
-                                  <button
-                                    onClick={() => toggleLessonCompleted(l.id, !l.completed)}
-                                    className="text-secondary hover:text-tertiary shrink-0 cursor-pointer active:scale-95 transition-transform duration-150"
-                                  >
-                                    {l.completed ? (
-                                      <CheckSquare className="h-4 w-4 text-emerald-700 animate-in zoom-in-75 duration-200" />
-                                    ) : (
-                                      <Square className="h-4 w-4" />
-                                    )}
-                                  </button>
-                                  <span className={`font-sans text-xs text-primary truncate ${l.completed ? 'line-through text-secondary opacity-70' : ''}`}>
+                                  <input
+                                    type="checkbox"
+                                    checked={l.completed}
+                                    onChange={() => toggleLessonCompleted(l.id, !l.completed)}
+                                    className="h-4.5 w-4.5 accent-accent shrink-0 cursor-pointer"
+                                  />
+                                  <span className={`font-sans text-xs truncate font-semibold ${l.completed ? 'line-through text-secondary opacity-65' : 'text-primary'}`}>
                                     {l.title}
                                   </span>
                                 </div>
@@ -1353,9 +1401,9 @@ function AcademyContent() {
                                       href={l.link}
                                       target="_blank"
                                       rel="noreferrer"
-                                      className="text-secondary hover:text-tertiary"
+                                      className="text-secondary hover:text-accent btn-press"
                                     >
-                                      <ExternalLink className="h-3 w-3" />
+                                      <ExternalLink className="h-3.5 w-3.5" />
                                     </a>
                                   )}
                                   
@@ -1366,7 +1414,7 @@ function AcademyContent() {
                                         setEditLessonName(l.title);
                                         setEditLessonLink(l.link || '');
                                       }}
-                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
                                     >
                                       <Edit3 className="h-3 w-3" />
                                     </button>
@@ -1375,19 +1423,19 @@ function AcademyContent() {
                                         setItemToDelete({ id: l.id, title: l.title, type: 'lesson' });
                                         setDeleteModalOpen(true);
                                       }}
-                                      className="text-secondary hover:text-tertiary p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
                                     >
                                       <Trash2 className="h-3 w-3" />
                                     </button>
                                     <button
                                       onClick={() => handleReorderLesson(l.id, 'up')}
-                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
                                     >
                                       <ArrowUp className="h-3 w-3" />
                                     </button>
                                     <button
                                       onClick={() => handleReorderLesson(l.id, 'down')}
-                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer"
+                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
                                     >
                                       <ArrowDown className="h-3 w-3" />
                                     </button>
@@ -1401,25 +1449,25 @@ function AcademyContent() {
 
                       {/* Add Lesson Input */}
                       {isSelected && (
-                        <div className="mt-3 pt-3 border-t border-secondary/15 space-y-2 font-label text-xs">
+                        <div className="mt-3 pt-3 border-t border-border space-y-2 font-label text-xs">
                           <div className="flex flex-col sm:flex-row gap-2">
                             <input
                               type="text"
                               value={newLessonName}
                               onChange={(e) => setNewLessonName(e.target.value)}
                               placeholder="Add Lesson Title..."
-                              className="flex-grow bg-neutral-bg border border-secondary/40 px-2 py-1 text-xs focus:outline-none"
+                              className="flex-grow bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
                             />
                             <input
                               type="text"
                               value={newLessonLink}
                               onChange={(e) => setNewLessonLink(e.target.value)}
                               placeholder="Link (optional)..."
-                              className="flex-grow bg-neutral-bg border border-secondary/40 px-2 py-1 text-xs focus:outline-none"
+                              className="flex-grow bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
                             />
                             <button
                               onClick={() => handleAddLesson(mod.id)}
-                              className="bg-primary text-on-primary px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-sm shrink-0"
+                              className="bg-primary text-on-primary px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-none shrink-0 btn-press border border-primary"
                             >
                               Add
                             </button>
@@ -1430,20 +1478,18 @@ function AcademyContent() {
                   );
                 })}
             </div>
-
-            {/* New Module controller removed from bottom (moved to top popup) */}
           </section>
 
           {/* RIGHT SIDE: INTEGRATED MARKDOWN NOTES NOTEPAD */}
-          <section className={`bg-surface border border-secondary p-6 rounded-sm flex flex-col justify-between min-h-[500px] shadow-sm ${
+          <section className={`bg-surface border border-border p-6 rounded-none flex flex-col justify-between min-h-[500px] shadow-none ${
             mobileStudioTab !== 'notepad' ? 'hidden lg:block' : ''
           }`}>
             {activeModule ? (
               <div className="space-y-4 flex-grow flex flex-col justify-between h-full">
-                <div className="flex justify-between items-center border-b border-secondary/25 pb-2">
+                <div className="flex justify-between items-center border-b border-border pb-2">
                   <div className="truncate pr-4 flex-grow">
-                    <span className="font-label text-xs text-secondary uppercase">Studio Notepad</span>
-                    <h5 className="font-display text-md font-bold text-primary truncate max-w-xs sm:max-w-md lg:max-w-lg">
+                    <span className="font-label text-[10px] text-secondary uppercase font-bold">Studio Notepad</span>
+                    <h5 className="font-serif text-md font-bold text-primary truncate max-w-xs sm:max-w-md lg:max-w-lg">
                       {activeModule.title}
                     </h5>
                   </div>
@@ -1453,15 +1499,15 @@ function AcademyContent() {
                     <div className="relative">
                       <button
                         onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-                        className="p-1 border border-secondary hover:bg-neutral-bg transition-all text-primary flex items-center justify-center cursor-pointer rounded-sm"
+                        className="p-1 border border-border bg-surface hover:bg-neutral-bg/40 transition-all text-primary flex items-center justify-center cursor-pointer rounded-none btn-press"
                         title="Version History"
                       >
                         <History className="h-3.5 w-3.5" />
                       </button>
                       
                       {showHistoryDropdown && (
-                        <div className="absolute right-0 mt-1 w-64 bg-surface border border-secondary shadow-lg rounded-sm z-50 text-[11px] max-h-48 overflow-y-auto">
-                          <span className="block p-2 font-bold border-b border-secondary/20 bg-neutral-bg uppercase text-[10px]">
+                        <div className="absolute right-0 mt-1 w-64 bg-surface border border-border shadow-none rounded-none z-50 text-[11px] max-h-48 overflow-y-auto">
+                          <span className="block p-2 font-bold border-b border-border bg-neutral-bg uppercase text-[10px]">
                             Notes Version History
                           </span>
                           {notesHistory.length === 0 ? (
@@ -1475,7 +1521,7 @@ function AcademyContent() {
                                   setShowHistoryDropdown(false);
                                   showToast('Notes restored to historical version.', 'info');
                                 }}
-                                className="w-full text-left p-2 border-b border-secondary/10 hover:bg-neutral-bg flex flex-col justify-start"
+                                className="w-full text-left p-2 border-b border-border hover:bg-neutral-bg flex flex-col justify-start btn-press"
                               >
                                 <span className="font-bold text-primary">
                                   {hIdx === 0 ? 'Current Session' : `Version ${notesHistory.length - hIdx}`}
@@ -1493,17 +1539,17 @@ function AcademyContent() {
                       )}
                     </div>
 
-                    <div className="flex border border-secondary font-label text-xs">
+                    <div className="flex border border-border font-label text-xs rounded-none overflow-hidden bg-background">
                       <button
                         onClick={() => setIsNotePreview(false)}
-                        className={`px-2 py-1 flex items-center space-x-1 cursor-pointer ${!isNotePreview ? 'bg-primary text-on-primary' : 'text-primary'}`}
+                        className={`px-2.5 py-1 flex items-center space-x-1 cursor-pointer btn-press font-bold ${!isNotePreview ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'}`}
                       >
                         <Edit3 className="h-3 w-3" />
                         <span>EDIT</span>
                       </button>
                       <button
                         onClick={() => setIsNotePreview(true)}
-                        className={`px-2 py-1 flex items-center space-x-1 border-l border-secondary cursor-pointer ${isNotePreview ? 'bg-primary text-on-primary' : 'text-primary'}`}
+                        className={`px-2.5 py-1 flex items-center space-x-1 border-l border-border cursor-pointer btn-press font-bold ${isNotePreview ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'}`}
                       >
                         <Eye className="h-3 w-3" />
                         <span>PREVIEW</span>
@@ -1519,18 +1565,18 @@ function AcademyContent() {
                       value={localNotes}
                       onChange={(e) => setLocalNotes(e.target.value)}
                       placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                      className="w-full flex-grow h-[350px] lg:h-[450px] bg-neutral-bg/45 border border-secondary/30 px-4 py-3 text-xs text-primary focus:outline-none focus:border-tertiary font-mono resize-none leading-relaxed"
+                      className="w-full flex-grow h-[350px] lg:h-[450px] bg-neutral-bg/45 border border-border px-4 py-3 text-xs text-primary focus:outline-none font-mono resize-none leading-relaxed rounded-none"
                     />
                   ) : (
-                    <div className="w-full flex-grow h-[350px] lg:h-[450px] bg-surface border border-secondary/15 px-4 py-3 overflow-y-auto space-y-2 border-heritage rounded-sm">
+                    <div className="w-full flex-grow h-[350px] lg:h-[450px] bg-surface border border-border px-4 py-3 overflow-y-auto space-y-2 rounded-none border-heritage prose prose-stone max-w-none">
                       {renderMarkdown(localNotes)}
                     </div>
                   )}
                 </div>
 
-                <div className="border-t border-secondary/20 pt-3 flex justify-between items-center text-xs font-label text-secondary">
+                <div className="border-t border-border pt-3 flex justify-between items-center text-xs font-label text-secondary font-bold">
                   <span>{isSavingNotes ? 'Saving...' : 'Notes auto-saved to backend'}</span>
-                  <span className="font-mono">Markdown syntax supported</span>
+                  <span className="font-mono text-secondary/65 font-normal">Markdown syntax supported</span>
                 </div>
               </div>
             ) : (
@@ -1550,10 +1596,10 @@ function AcademyContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Flashcard Study Desk (Deck queue viewer) */}
-          <section className="lg:col-span-2 bg-surface border border-secondary p-6 rounded-sm flex flex-col justify-between min-h-[400px] shadow-sm">
+          <section className="lg:col-span-2 bg-surface border border-border p-6 rounded-none flex flex-col justify-between min-h-[400px] shadow-none">
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-secondary/20 pb-2">
-                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-border pb-2">
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-bold">
                   Leitner Review Station ({dueCards.length} cards due)
                 </span>
                 <div className="relative w-full sm:w-48">
@@ -1563,7 +1609,7 @@ function AcademyContent() {
                     placeholder="Search deck..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-7 pr-3 py-1 bg-neutral-bg/50 border border-secondary/30 rounded-sm text-[10px] focus:outline-none focus:border-primary"
+                    className="w-full pl-7 pr-3 py-1 bg-neutral-bg/50 border border-border rounded-none text-[10px] focus:outline-none focus:border-primary font-sans"
                   />
                 </div>
               </div>
@@ -1585,39 +1631,39 @@ function AcademyContent() {
                     >
                       {/* Front Side */}
                       <div
-                        className="absolute inset-0 w-full h-full border border-secondary bg-neutral-bg flex flex-col justify-center p-6 rounded-sm shadow-sm"
+                        className="absolute inset-0 w-full h-full border border-border bg-neutral-bg flex flex-col justify-center p-6 rounded-none shadow-none"
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden'
                         }}
                       >
-                        <span className="absolute top-3 left-3 font-label text-[10px] text-secondary uppercase">
+                        <span className="absolute top-3 left-3 font-label text-[9px] text-secondary uppercase font-bold">
                           Box {activeCard.box} &bull; Question
                         </span>
-                        <p className="font-display text-sm text-center text-primary leading-relaxed font-semibold px-4">
+                        <p className="font-serif text-sm text-center text-primary leading-relaxed font-bold px-4">
                           {activeCard.front}
                         </p>
-                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-secondary uppercase tracking-wider">
+                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-secondary uppercase tracking-wider font-bold">
                           Click Card to Flip
                         </span>
                       </div>
 
                       {/* Back Side */}
                       <div
-                        className="absolute inset-0 w-full h-full border border-secondary bg-neutral-bg flex flex-col justify-center p-6 rounded-sm shadow-sm"
+                        className="absolute inset-0 w-full h-full border border-border bg-neutral-bg flex flex-col justify-center p-6 rounded-none shadow-none"
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
                           transform: 'rotateY(180deg)'
                         }}
                       >
-                        <span className="absolute top-3 left-3 font-label text-[10px] text-secondary uppercase">
+                        <span className="absolute top-3 left-3 font-label text-[9px] text-secondary uppercase font-bold">
                           Box {activeCard.box} &bull; Answer
                         </span>
-                        <p className="font-display text-sm text-center text-primary leading-relaxed font-semibold px-4">
+                        <p className="font-serif text-sm text-center text-primary leading-relaxed font-bold px-4">
                           {activeCard.back}
                         </p>
-                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-secondary uppercase tracking-wider">
+                        <span className="absolute bottom-3 right-3 font-label text-[9px] text-secondary uppercase tracking-wider font-bold">
                           Click Card to Flip
                         </span>
                       </div>
@@ -1639,7 +1685,7 @@ function AcademyContent() {
                           }
                           showToast('Marked correct!', 'success');
                         }}
-                        className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-2 uppercase font-bold tracking-wider rounded-sm cursor-pointer"
+                        className="flex-1 bg-emerald-800 hover:bg-emerald-900 border border-emerald-800 text-white py-2 uppercase font-bold tracking-wider rounded-none cursor-pointer btn-press"
                       >
                         Correct (Box +1)
                       </button>
@@ -1655,7 +1701,7 @@ function AcademyContent() {
                           }
                           showToast('Marked incorrect.', 'error');
                         }}
-                        className="flex-1 bg-tertiary hover:bg-tertiary/90 text-on-primary py-2 uppercase font-bold tracking-wider rounded-sm cursor-pointer"
+                        className="flex-1 bg-accent hover:bg-accent/90 text-on-primary py-2 uppercase font-bold tracking-wider rounded-none cursor-pointer btn-press"
                       >
                         Incorrect (Box 1)
                       </button>
@@ -1664,7 +1710,7 @@ function AcademyContent() {
                 </div>
               ) : (
                 <div className="text-center py-24">
-                  <span className="font-display text-md italic text-secondary block">No cards due for review.</span>
+                  <span className="font-serif text-md italic text-secondary block">No cards due for review.</span>
                   <span className="font-sans text-xs text-secondary mt-1 block">Leitner box intervals satisfied. Add flashcards below.</span>
                 </div>
               )}
@@ -1672,11 +1718,11 @@ function AcademyContent() {
 
             {/* Deck queue list footer */}
             {dueCards.length > 1 && (
-              <div className="flex justify-between items-center pt-4 border-t border-secondary/20 font-label text-xs">
+              <div className="flex justify-between items-center pt-4 border-t border-border font-label text-xs font-bold">
                 <button
                   disabled={activeFlashcardIndex === 0}
                   onClick={() => { setActiveFlashcardIndex(prev => prev - 1); setIsFlipped(false); }}
-                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer"
+                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer btn-press hover:text-accent"
                 >
                   &larr; Prev Card
                 </button>
@@ -1684,7 +1730,7 @@ function AcademyContent() {
                 <button
                   disabled={activeFlashcardIndex === dueCards.length - 1}
                   onClick={() => { setActiveFlashcardIndex(prev => prev + 1); setIsFlipped(false); }}
-                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer"
+                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer btn-press hover:text-accent"
                 >
                   Next Card &rarr;
                 </button>
@@ -1696,26 +1742,26 @@ function AcademyContent() {
           <div className="space-y-6">
             
             {/* Statistics */}
-            <section className="bg-surface border border-secondary p-5 rounded-sm space-y-4 font-label text-xs shadow-sm">
-              <span className="block text-xs uppercase text-secondary font-bold border-b border-secondary/20 pb-1">
+            <section className="bg-surface border border-border p-5 rounded-none space-y-4 font-label text-xs shadow-none">
+              <span className="block text-xs uppercase text-secondary font-bold border-b border-border pb-1">
                 Deck Statistics
               </span>
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
-                  <span className="block text-[9px] text-secondary uppercase">Total Cards</span>
-                  <span className="text-md font-bold font-display text-primary">{totalCards}</span>
+                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                  <span className="block text-[9px] text-secondary uppercase font-bold">Total Cards</span>
+                  <span className="text-md font-bold font-serif text-primary">{totalCards}</span>
                 </div>
-                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
-                  <span className="block text-[9px] text-secondary uppercase">Mastery Rate</span>
-                  <span className="text-md font-bold font-display text-tertiary">{masteryRate}%</span>
+                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                  <span className="block text-[9px] text-secondary uppercase font-bold">Mastery Rate</span>
+                  <span className="text-md font-bold font-serif text-accent">{masteryRate}%</span>
                 </div>
-                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
-                  <span className="block text-[9px] text-secondary uppercase">Accuracy Rate</span>
-                  <span className="text-md font-bold font-display text-emerald-800">{totalReviews > 0 ? `${accuracyRate}%` : '0%'}</span>
+                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                  <span className="block text-[9px] text-secondary uppercase font-bold">Accuracy Rate</span>
+                  <span className="text-md font-bold font-serif text-emerald-800">{totalReviews > 0 ? `${accuracyRate}%` : '0%'}</span>
                 </div>
-                <div className="bg-neutral-bg p-2.5 border border-secondary/15 rounded-sm">
-                  <span className="block text-[9px] text-secondary uppercase">Total Reviews</span>
-                  <span className="text-md font-bold font-display text-primary">{totalReviews}</span>
+                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                  <span className="block text-[9px] text-secondary uppercase font-bold">Total Reviews</span>
+                  <span className="text-md font-bold font-serif text-primary">{totalReviews}</span>
                 </div>
               </div>
               
@@ -1726,16 +1772,16 @@ function AcademyContent() {
                     const pct = totalCards > 0 ? (count / totalCards) * 100 : 0;
                     return (
                       <div key={i} className="flex-grow flex flex-col items-center">
-                        <div className="w-full bg-neutral-bg h-12 rounded-sm relative border border-secondary/15 flex items-end">
+                        <div className="w-full bg-neutral-bg h-12 rounded-none relative border border-border flex items-end">
                           <div 
-                            className="w-full bg-tertiary/80 rounded-t-sm transition-all duration-300"
+                            className="w-full bg-accent/80 rounded-none transition-all duration-300"
                             style={{ height: `${pct}%` }}
                           />
                           <span className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[9px] text-primary">
                             {count}
                           </span>
                         </div>
-                        <span className="text-[9px] text-secondary uppercase mt-1">B{i+1}</span>
+                        <span className="text-[9px] text-secondary uppercase mt-1 font-bold">B{i+1}</span>
                       </div>
                     );
                   })}
@@ -1744,14 +1790,14 @@ function AcademyContent() {
             </section>
 
             {/* Flashcard Add Panel */}
-            <section className="bg-surface border border-secondary p-6 rounded-sm shadow-sm">
-              <div className="flex justify-between items-center mb-4 border-b border-secondary/20 pb-2">
+            <section className="bg-surface border border-border p-6 rounded-none shadow-none">
+              <div className="flex justify-between items-center mb-4 border-b border-border pb-2">
                 <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-bold">
                   {isBulkImport ? 'Bulk Import' : 'Add Flashcard'}
                 </span>
                 <button
                   onClick={() => setIsBulkImport(!isBulkImport)}
-                  className="text-secondary hover:text-primary text-[10px] uppercase font-bold flex items-center space-x-1 cursor-pointer"
+                  className="text-secondary hover:text-accent text-[10px] uppercase font-bold flex items-center space-x-1 cursor-pointer btn-press"
                 >
                   <Upload className="h-3 w-3" />
                   <span>{isBulkImport ? 'Single' : 'Bulk'}</span>
@@ -1761,12 +1807,12 @@ function AcademyContent() {
               {!isBulkImport ? (
                 <form onSubmit={handleAddFlashcardSubmit} className="space-y-4 font-label text-xs">
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Module Source</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Module Source</label>
                     <select
                       value={fcModuleId}
                       onChange={(e) => setFcModuleId(e.target.value)}
                       required
-                      className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
                     >
                       <option value="">-- Choose Module --</option>
                       {courseModules
@@ -1778,33 +1824,33 @@ function AcademyContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Front Question</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Front Question</label>
                     <textarea
                       value={fcQuestion}
                       onChange={(e) => setFcQuestion(e.target.value)}
                       rows={2}
                       placeholder="e.g. What is a Service Worker lifecycle?"
                       required
-                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Back Answer</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Back Answer</label>
                     <textarea
                       value={fcAnswer}
                       onChange={(e) => setFcAnswer(e.target.value)}
                       rows={2}
                       placeholder="e.g. Install, Activate, Idle, Fetch"
                       required
-                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={!fcModuleId || !fcQuestion || !fcAnswer}
-                    className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer rounded-sm"
+                    className="w-full border border-primary bg-primary text-on-primary hover:bg-primary/95 py-2 uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer rounded-none disabled:opacity-50 btn-press"
                   >
                     SAVE FLASHCARD
                   </button>
@@ -1812,12 +1858,12 @@ function AcademyContent() {
               ) : (
                 <form onSubmit={handleBulkImportSubmit} className="space-y-4 font-label text-xs">
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Module Source</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Module Source</label>
                     <select
                       value={fcModuleId}
                       onChange={(e) => setFcModuleId(e.target.value)}
                       required
-                      className="w-full bg-neutral-bg border border-secondary px-2 py-1.5 focus:outline-none font-sans"
+                      className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
                     >
                       <option value="">-- Choose Module --</option>
                       {courseModules
@@ -1829,22 +1875,22 @@ function AcademyContent() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary">Paste CSV or TSV (one card per line)</label>
+                    <label className="block text-xs uppercase text-secondary font-bold">Paste CSV or TSV (one card per line)</label>
                     <textarea
                       value={bulkText}
                       onChange={(e) => setBulkText(e.target.value)}
                       rows={6}
                       placeholder="Question 1, Answer 1&#10;Question 2, Answer 2&#10;Or use tab-separation from spreadsheet"
                       required
-                      className="w-full bg-neutral-bg border border-secondary px-3 py-1.5 focus:outline-none font-mono"
+                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-mono rounded-none"
                     />
-                    <p className="text-[9px] text-secondary mt-1">Format: Front / Question, Back / Answer</p>
+                    <p className="text-[9px] text-secondary mt-1 font-sans">Format: Front / Question, Back / Answer</p>
                   </div>
 
                   <button
                     type="submit"
                     disabled={!fcModuleId || !bulkText.trim()}
-                    className="w-full btn-tertiary uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer rounded-sm"
+                    className="w-full border border-primary bg-primary text-on-primary hover:bg-primary/95 py-2 uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer rounded-none disabled:opacity-50 btn-press"
                   >
                     IMPORT FLASHCARDS
                   </button>
@@ -1855,23 +1901,23 @@ function AcademyContent() {
 
           {/* Flashcard list footer directory */}
           {courseCards.length > 0 && (
-            <section className="lg:col-span-3 bg-surface border border-secondary p-6 rounded-sm space-y-4 shadow-sm">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-secondary/20 pb-1">
+            <section className="lg:col-span-3 bg-surface border border-border p-6 rounded-none space-y-4 shadow-none">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-1 font-bold">
                 Deck Cards Directory ({courseCards.length} cards)
               </span>
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs font-label">
                   <thead>
-                    <tr className="border-b border-secondary/30 text-secondary uppercase">
-                      <th className="py-2 font-semibold">Front (Question)</th>
-                      <th className="py-2 font-semibold">Back (Answer)</th>
-                      <th className="py-2 font-semibold text-center">Box</th>
-                      <th className="py-2 font-semibold text-center">Reviews (Acc)</th>
-                      <th className="py-2 font-semibold">Next Review</th>
-                      <th className="py-2 text-right font-semibold">Actions</th>
+                    <tr className="border-b border-border text-secondary uppercase font-bold">
+                      <th className="py-2 font-bold">Front (Question)</th>
+                      <th className="py-2 font-bold">Back (Answer)</th>
+                      <th className="py-2 font-bold text-center">Box</th>
+                      <th className="py-2 font-bold text-center">Reviews (Acc)</th>
+                      <th className="py-2 font-bold">Next Review</th>
+                      <th className="py-2 text-right font-bold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-secondary/10 font-sans">
+                  <tbody className="divide-y divide-border/60 font-sans">
                     {courseCards.map(fc => (
                       <tr key={fc.id} className="hover:bg-neutral-bg/30">
                         <td className="py-2.5 pr-4 truncate max-w-xs">{fc.front}</td>
@@ -1889,7 +1935,7 @@ function AcademyContent() {
                               setItemToDelete({ id: fc.id, title: fc.front, type: 'flashcard' });
                               setDeleteModalOpen(true);
                             }}
-                            className="text-secondary hover:text-tertiary cursor-pointer"
+                            className="text-secondary hover:text-accent cursor-pointer btn-press"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
                           </button>
@@ -1907,42 +1953,42 @@ function AcademyContent() {
 
       {/* Edit Course Modal */}
       {editCourseModalOpen && courseToEdit && (
-        <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-backdrop">
-          <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-lg space-y-4 font-label text-xs shadow-xl animate-modal">
-            <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
+        <div className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-surface border border-border p-6 rounded-none w-full max-w-lg space-y-4 font-label text-xs shadow-none">
+            <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
               Edit Skill Matrix
             </span>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary">Course / Matrix Title</label>
+                <label className="block text-xs uppercase text-secondary font-bold">Course / Matrix Title</label>
                 <input
                   type="text"
                   value={editCourseTitle}
                   onChange={(e) => setEditCourseTitle(e.target.value)}
-                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary">Category (Skill Class)</label>
+                <label className="block text-xs uppercase text-secondary font-bold">Category (Skill Class)</label>
                 <input
                   type="text"
                   value={editCourseCategory}
                   onChange={(e) => setEditCourseCategory(e.target.value)}
-                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
             </div>
             <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary">Skill Roadmap Summary</label>
+              <label className="block text-xs uppercase text-secondary font-bold">Skill Roadmap Summary</label>
               <textarea
                 value={editCourseDesc}
                 onChange={(e) => setEditCourseDesc(e.target.value)}
                 rows={3}
-                className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans"
+                className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
               />
             </div>
             <div className="flex space-x-3 pt-2">
-              <button
+              <PrimaryButton
                 onClick={async () => {
                   if (courseToEdit) {
                     await updateCourse(courseToEdit.id, {
@@ -1955,19 +2001,18 @@ function AcademyContent() {
                     setCourseToEdit(null);
                   }
                 }}
-                className="flex-1 bg-primary text-on-primary py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm"
+                className="flex-grow"
               >
                 Save Changes
-              </button>
-              <button
+              </PrimaryButton>
+              <SecondaryButton
                 onClick={() => {
                   setEditCourseModalOpen(false);
                   setCourseToEdit(null);
                 }}
-                className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg uppercase text-xs tracking-wider cursor-pointer rounded-sm"
               >
                 Cancel
-              </button>
+              </SecondaryButton>
             </div>
           </div>
         </div>
@@ -1982,10 +2027,10 @@ function AcademyContent() {
               setNewModuleName('');
             }
           }}
-          className="fixed inset-0 bg-black/45 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-backdrop"
+          className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
         >
-          <div className="bg-surface border border-secondary p-6 rounded-sm w-full max-w-md space-y-4 font-label text-xs shadow-xl animate-modal">
-            <span className="block font-bold text-sm uppercase text-primary border-b border-secondary/25 pb-2">
+          <div className="bg-surface border border-border p-6 rounded-none w-full max-w-md space-y-4 font-label text-xs shadow-none">
+            <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
               Create New Module
             </span>
             <form
@@ -2000,34 +2045,33 @@ function AcademyContent() {
               className="space-y-4"
             >
               <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary">Module Title</label>
+                <label className="block text-xs uppercase text-secondary font-bold">Module Title</label>
                 <input
                   type="text"
                   value={newModuleName}
                   onChange={(e) => setNewModuleName(e.target.value)}
                   placeholder="e.g. Fundamental Concepts..."
                   required
-                  className="w-full bg-neutral-bg border border-secondary px-2.5 py-1.5 focus:outline-none font-sans text-primary text-xs"
+                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans text-primary text-xs rounded-none"
                 />
               </div>
               <div className="flex space-x-3 pt-2">
-                <button
+                <PrimaryButton
                   type="submit"
                   disabled={!newModuleName.trim()}
-                  className="flex-1 bg-primary text-on-primary py-2 uppercase text-xs tracking-wider font-bold cursor-pointer rounded-sm disabled:opacity-50 btn-press"
+                  className="flex-grow"
                 >
                   Create Module
-                </button>
-                <button
+                </PrimaryButton>
+                <SecondaryButton
                   type="button"
                   onClick={() => {
                     setNewModuleModalOpen(false);
                     setNewModuleName('');
                   }}
-                  className="px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg uppercase text-xs tracking-wider cursor-pointer rounded-sm btn-press"
                 >
                   Cancel
-                </button>
+                </SecondaryButton>
               </div>
             </form>
           </div>
@@ -2085,6 +2129,494 @@ function AcademyContent() {
           moduleNotes={activeModule.notes || ''}
         />
       )}
+    </PageShell>
+  );
+}
+
+function KnowledgeBaseTab({
+  knowledgeItems,
+  addKnowledgeItem,
+  deleteKnowledgeItem,
+  inboxItems,
+  updateInboxItemStatus,
+  dailyDigests,
+  courses,
+  courseModules,
+  addFlashcard,
+  showToast
+}: {
+  knowledgeItems: any[];
+  addKnowledgeItem: any;
+  deleteKnowledgeItem: any;
+  inboxItems: any[];
+  updateInboxItemStatus: any;
+  dailyDigests: any[];
+  courses: any[];
+  courseModules: any[];
+  addFlashcard: any;
+  showToast: any;
+}) {
+  // Add Note Form state
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [noteTitle, setNoteTitle] = useState('');
+  const [noteTopic, setNoteTopic] = useState('');
+  const [noteContent, setNoteContent] = useState('');
+  const [noteSummary, setNoteSummary] = useState('');
+  const [noteSourceUrl, setNoteSourceUrl] = useState('');
+
+  // Add Flashcard state
+  const [addingFcNoteId, setAddingFcNoteId] = useState<string | null>(null);
+  const [fcQuestion, setFcQuestion] = useState('');
+  const [fcAnswer, setFcAnswer] = useState('');
+  const [fcCourseId, setFcCourseId] = useState('');
+  const [fcModuleId, setFcModuleId] = useState('');
+
+  // Search/Filter
+  const [search, setSearch] = useState('');
+
+  const todayStr = new Date().toISOString().split('T')[0];
+
+  // Computations
+  const filteredNotes = useMemo(() => {
+    return knowledgeItems.filter(note => {
+      const matchesSearch = !search || 
+        note.title.toLowerCase().includes(search.toLowerCase()) ||
+        (note.topic && note.topic.toLowerCase().includes(search.toLowerCase())) ||
+        (note.summary && note.summary.toLowerCase().includes(search.toLowerCase()));
+      return matchesSearch;
+    });
+  }, [knowledgeItems, search]);
+
+  const notesCreatedToday = useMemo(() => {
+    return knowledgeItems.filter(note => note.created_at && note.created_at.split('T')[0] === todayStr);
+  }, [knowledgeItems, todayStr]);
+
+  // Unprocessed study resources from inbox
+  const unprocessedResources = useMemo(() => {
+    const studyTypes = ['resource', 'book_note', 'course_note', 'url', 'snippet'];
+    return inboxItems.filter(item => {
+      const isUnprocessed = item.status === 'unprocessed' || item.status === 'unsorted';
+      return isUnprocessed && studyTypes.includes(item.type);
+    });
+  }, [inboxItems]);
+
+  // Extract open questions from daily digests
+  const openQuestions = useMemo(() => {
+    const questionsList: { id: string; date: string; question: string }[] = [];
+    dailyDigests.forEach((digest, dIdx) => {
+      if (digest.questions && Array.isArray(digest.questions)) {
+        digest.questions.forEach((q: string, qIdx: number) => {
+          questionsList.push({
+            id: `q-${dIdx}-${qIdx}`,
+            date: digest.date,
+            question: q
+          });
+        });
+      }
+    });
+    return questionsList;
+  }, [dailyDigests]);
+
+  const handleCreateNote = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!noteTitle.trim() || !noteContent.trim()) {
+      showToast('Title and Content are required.', 'error');
+      return;
+    }
+    try {
+      await addKnowledgeItem(noteTitle, noteContent, noteTopic || 'General', noteSourceUrl || undefined, noteSummary || undefined);
+      showToast('Knowledge note cataloged.', 'success');
+      // Reset
+      setNoteTitle('');
+      setNoteTopic('');
+      setNoteContent('');
+      setNoteSummary('');
+      setNoteSourceUrl('');
+      setIsAddingNote(false);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to create knowledge note.', 'error');
+    }
+  };
+
+  const handleConvertCapture = (item: any) => {
+    setNoteTitle(item.title);
+    setNoteTopic(item.type);
+    setNoteContent(item.content || '');
+    setNoteSourceUrl(item.source_url || '');
+    setNoteSummary(`Captured from intake: ${item.title}`);
+    setIsAddingNote(true);
+    // Mark as processed immediately
+    updateInboxItemStatus(item.id, 'processed');
+    showToast('Capture loaded into note editor.', 'info');
+  };
+
+  const handleCreateFlashcard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fcQuestion.trim() || !fcAnswer.trim() || !fcCourseId || !fcModuleId) {
+      showToast('Please fill out all flashcard details.', 'error');
+      return;
+    }
+    try {
+      await addFlashcard(fcCourseId, fcModuleId, fcQuestion, fcAnswer);
+      showToast('Flashcard created from knowledge note.', 'success');
+      setAddingFcNoteId(null);
+      setFcQuestion('');
+      setFcAnswer('');
+      setFcCourseId('');
+      setFcModuleId('');
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to create flashcard.', 'error');
+    }
+  };
+
+  const modulesForCourse = useMemo(() => {
+    if (!fcCourseId) return [];
+    return courseModules.filter(m => m.course_id === fcCourseId);
+  }, [fcCourseId, courseModules]);
+
+  return (
+    <div className="space-y-8 animate-fade-in font-sans">
+      {/* Ledger Stats Strip */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 font-label text-[10px] uppercase font-bold text-primary">
+        <div className="border border-border bg-surface p-4 flex flex-col justify-between">
+          <span className="text-secondary tracking-wider">Total Notes</span>
+          <span className="text-2xl font-bold mt-1">{knowledgeItems.length} items</span>
+        </div>
+        <div className="border border-border bg-surface p-4 flex flex-col justify-between">
+          <span className="text-secondary tracking-wider">Created Today</span>
+          <span className="text-2xl font-bold mt-1 text-accent">{notesCreatedToday.length} today</span>
+        </div>
+        <div className="border border-border bg-surface p-4 flex flex-col justify-between">
+          <span className="text-secondary tracking-wider">Inbox Resources</span>
+          <span className="text-2xl font-bold mt-1 text-primary">{unprocessedResources.length} wait</span>
+        </div>
+        <div className="border border-border bg-surface p-4 flex flex-col justify-between">
+          <span className="text-secondary tracking-wider">Open Inquiries</span>
+          <span className="text-2xl font-bold mt-1 text-primary">{openQuestions.length} open</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        {/* LEFT COLUMN: LIBRARY & SEARCH */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex justify-between items-center border-b-2 border-primary pb-3">
+            <h3 className="font-display text-lg font-bold text-primary uppercase tracking-wider">
+              Knowledge Ledger
+            </h3>
+            <button
+              onClick={() => setIsAddingNote(!isAddingNote)}
+              className="btn-press flex items-center space-x-1.5 cursor-pointer bg-primary text-on-primary hover:bg-primary/90 px-3.5 py-2 text-xs font-label font-bold border border-primary rounded-none"
+            >
+              <Plus className="h-4 w-4" />
+              <span>{isAddingNote ? 'Close Editor' : 'Catalog Note'}</span>
+            </button>
+          </div>
+
+          {isAddingNote && (
+            <form onSubmit={handleCreateNote} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
+              <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
+                Catalog Knowledge Note
+              </span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="noteTitle" className="block text-[10px] uppercase text-secondary font-bold">Title *</label>
+                  <input
+                    id="noteTitle"
+                    type="text"
+                    value={noteTitle}
+                    onChange={(e) => setNoteTitle(e.target.value)}
+                    required
+                    placeholder="Key insight or concept..."
+                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="noteTopic" className="block text-[10px] uppercase text-secondary font-bold">Topic/Category</label>
+                  <input
+                    id="noteTopic"
+                    type="text"
+                    value={noteTopic}
+                    onChange={(e) => setNoteTopic(e.target.value)}
+                    placeholder="e.g. Systems Architecture, Finance..."
+                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="noteSourceUrl" className="block text-[10px] uppercase text-secondary font-bold">Source URL</label>
+                  <input
+                    id="noteSourceUrl"
+                    type="text"
+                    value={noteSourceUrl}
+                    onChange={(e) => setNoteSourceUrl(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="noteSummary" className="block text-[10px] uppercase text-secondary font-bold">Brief Summary</label>
+                  <input
+                    id="noteSummary"
+                    type="text"
+                    value={noteSummary}
+                    onChange={(e) => setNoteSummary(e.target.value)}
+                    placeholder="Core takeaway in 1 sentence..."
+                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="noteContent" className="block text-[10px] uppercase text-secondary font-bold">Detailed Content *</label>
+                <textarea
+                  id="noteContent"
+                  value={noteContent}
+                  onChange={(e) => setNoteContent(e.target.value)}
+                  required
+                  rows={6}
+                  placeholder="Explain the concept in detail, quotes, formulas..."
+                  className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none resize-none"
+                />
+              </div>
+
+              <PrimaryButton type="submit" className="w-full">
+                Catalog Note
+              </PrimaryButton>
+            </form>
+          )}
+
+          {/* Note List / Search */}
+          <div className="space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
+              <input
+                type="text"
+                placeholder="Search ledger by title, summary, or category..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 bg-surface border border-border text-xs focus:outline-none focus:border-primary font-sans rounded-none"
+              />
+            </div>
+
+            {filteredNotes.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+                {filteredNotes.map((note) => {
+                  const isAddingFc = addingFcNoteId === note.id;
+                  return (
+                    <div key={note.id} className="border border-border bg-surface p-4 flex flex-col justify-between space-y-4 rounded-none shadow-none">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-start">
+                          <span className="font-label text-[9px] uppercase font-bold text-accent">{note.topic || 'General'}</span>
+                          <button
+                            onClick={() => deleteKnowledgeItem(note.id)}
+                            className="text-secondary hover:text-tertiary font-label text-[9px] uppercase font-bold cursor-pointer"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                        <h4 className="font-display text-sm font-bold text-primary leading-tight">{note.title}</h4>
+                        {note.summary && <p className="font-sans text-xs text-secondary leading-relaxed font-semibold italic">{note.summary}</p>}
+                        <p className="font-sans text-xs text-primary leading-relaxed whitespace-pre-wrap">{note.content}</p>
+                        {note.source_url && (
+                          <div className="pt-1">
+                            <a
+                              href={note.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="font-label text-[9px] uppercase font-bold text-secondary hover:text-primary flex items-center gap-1.5"
+                            >
+                              <span>View Source</span>
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-3 border-t border-border/40 flex justify-between items-center">
+                        <span className="font-label text-[8px] text-secondary">Added {new Date(note.created_at).toLocaleDateString()}</span>
+                        {!isAddingFc ? (
+                          <button
+                            onClick={() => {
+                              setAddingFcNoteId(note.id);
+                              setFcQuestion(`What is the core definition of "${note.title}"?`);
+                              setFcAnswer(note.summary || note.content.slice(0, 100));
+                            }}
+                            className="font-label text-[9px] uppercase font-bold text-accent border border-accent/25 hover:border-accent px-2 py-0.5 bg-accent/5 rounded-none cursor-pointer"
+                          >
+                            Create Flashcard
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setAddingFcNoteId(null)}
+                            className="font-label text-[9px] uppercase font-bold text-secondary cursor-pointer"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Inline Create Flashcard form */}
+                      {isAddingFc && (
+                        <form onSubmit={handleCreateFlashcard} className="mt-3 p-3 bg-background border border-border space-y-3 font-label text-[10px]">
+                          <span className="block font-bold text-[10px] uppercase text-primary border-b border-border/40 pb-1">
+                            Add Leitner Flashcard
+                          </span>
+                          <div className="space-y-1.5">
+                            <label className="block text-[9px] uppercase text-secondary font-bold">Front Question *</label>
+                            <input
+                              type="text"
+                              value={fcQuestion}
+                              onChange={(e) => setFcQuestion(e.target.value)}
+                              required
+                              className="w-full bg-surface border border-border px-2 py-1 text-xs font-sans rounded-none"
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <label className="block text-[9px] uppercase text-secondary font-bold">Back Answer *</label>
+                            <textarea
+                              value={fcAnswer}
+                              onChange={(e) => setFcAnswer(e.target.value)}
+                              required
+                              rows={2}
+                              className="w-full bg-surface border border-border px-2 py-1 text-xs font-sans rounded-none resize-none"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <label className="block text-[9px] uppercase text-secondary font-bold">Target Course *</label>
+                              <select
+                                value={fcCourseId}
+                                onChange={(e) => {
+                                  setFcCourseId(e.target.value);
+                                  setFcModuleId('');
+                                }}
+                                required
+                                className="w-full bg-surface border border-border px-1.5 py-1 text-xs font-sans rounded-none"
+                              >
+                                <option value="">Select Course...</option>
+                                {courses.map(c => (
+                                  <option key={c.id} value={c.id}>{c.title}</option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="block text-[9px] uppercase text-secondary font-bold">Target Module *</label>
+                              <select
+                                value={fcModuleId}
+                                onChange={(e) => setFcModuleId(e.target.value)}
+                                required
+                                disabled={!fcCourseId}
+                                className="w-full bg-surface border border-border px-1.5 py-1 text-xs font-sans rounded-none"
+                              >
+                                <option value="">Select Module...</option>
+                                {modulesForCourse.map(m => (
+                                  <option key={m.id} value={m.id}>{m.name}</option>
+                                ))}
+                              </select>
+                            </div>
+                          </div>
+                          <PrimaryButton type="submit" className="w-full py-1.5 text-[9px]">
+                            Save Flashcard
+                          </PrimaryButton>
+                        </form>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-12 border border-dashed border-border bg-surface/30">
+                <p className="font-sans text-xs text-secondary italic">No knowledge notes found. Catalog some insights above.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: RAW CAPTURES & INQUIRIES */}
+        <div className="space-y-6 flex flex-col justify-start">
+          {/* Unprocessed captures */}
+          <div className="bg-surface border border-border p-5 space-y-4 rounded-none shadow-none">
+            <div className="border-b border-border/40 pb-2">
+              <span className="font-label text-xs uppercase tracking-wider font-bold text-primary block">
+                Inbox Study Resources ({unprocessedResources.length})
+              </span>
+              <span className="font-sans text-[10px] text-secondary leading-relaxed block mt-0.5">
+                Process unfiled slips and convert them to structured knowledge.
+              </span>
+            </div>
+
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+              {unprocessedResources.length > 0 ? (
+                unprocessedResources.map((item) => (
+                  <div key={item.id} className="p-3 bg-background border border-border space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="font-label text-[8px] bg-accent/10 text-accent px-1.5 py-0.5 uppercase tracking-wider font-bold">
+                        {item.type}
+                      </span>
+                      <button
+                        onClick={() => updateInboxItemStatus(item.id, 'archived')}
+                        className="font-label text-[8px] uppercase font-bold text-secondary hover:text-tertiary cursor-pointer"
+                      >
+                        Archive
+                      </button>
+                    </div>
+                    <p className="font-sans font-bold text-primary truncate">{item.title}</p>
+                    {item.content && <p className="font-sans text-[10px] text-secondary line-clamp-2 leading-relaxed">{item.content}</p>}
+                    <div className="pt-1 flex justify-end">
+                      <button
+                        onClick={() => handleConvertCapture(item)}
+                        className="font-label text-[9px] uppercase font-bold text-accent hover:opacity-85 flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Convert to Note</span>
+                        <span>&rarr;</span>
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="font-sans text-xs text-secondary italic text-center py-4">No unprocessed study resources.</p>
+              )}
+            </div>
+          </div>
+
+          {/* Open inquiries */}
+          <div className="bg-surface border border-border p-5 space-y-4 rounded-none shadow-none">
+            <div className="border-b border-border/40 pb-2">
+              <span className="font-label text-xs uppercase tracking-wider font-bold text-primary block">
+                Open Learning Questions ({openQuestions.length})
+              </span>
+              <span className="font-sans text-[10px] text-secondary block mt-0.5">
+                Derived dynamically from daily command briefs.
+              </span>
+            </div>
+
+            <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+              {openQuestions.length > 0 ? (
+                openQuestions.map((q) => (
+                  <div key={q.id} className="p-3.5 bg-background border border-border space-y-2 text-xs animate-fade-in">
+                    <span className="font-label text-[8px] text-secondary block">{new Date(q.date).toLocaleDateString()}</span>
+                    <p className="font-sans font-bold text-primary leading-snug">{q.question}</p>
+                    <div className="flex gap-2 justify-end pt-1 font-label text-[8px] font-bold">
+                      <Link
+                        href={`/review/midday`}
+                        className="border border-border hover:border-primary px-2 py-0.5 bg-surface"
+                      >
+                        ANSWER
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="font-sans text-xs text-secondary italic text-center py-4">All inquiries resolved.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -2092,9 +2624,11 @@ function AcademyContent() {
 export default function AcademyPage() {
   return (
     <Suspense fallback={
-      <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
-        <p className="font-sans text-sm text-secondary italic">Loading Academy Studio...</p>
-      </div>
+      <PageShell>
+        <div className="bg-surface border border-border py-16 text-center rounded-none shadow-none">
+          <p className="font-label text-xs uppercase tracking-wider text-secondary font-bold">Loading Academy Studio...</p>
+        </div>
+      </PageShell>
     }>
       <AcademyContent />
     </Suspense>

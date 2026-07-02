@@ -52,10 +52,10 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 p-4 rounded-full bg-tertiary text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all z-40 flex items-center gap-2 group"
+        className="fixed bottom-6 right-6 p-4 border border-border bg-primary text-on-primary hover:bg-neutral-bg hover:text-primary transition-all z-40 flex items-center gap-2 group rounded-none shadow-none btn-press font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
       >
-        <Sparkles className="w-5 h-5" />
-        <span className="hidden group-hover:inline-block font-label text-sm uppercase tracking-wide pr-2">
+        <Sparkles className="w-4 h-4 text-accent" />
+        <span className="hidden group-hover:inline-block pr-1">
           Ask AI
         </span>
       </button>
@@ -63,33 +63,33 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 sm:w-96 bg-surface border border-primary/10 shadow-2xl rounded-xl overflow-hidden z-50 flex flex-col h-[500px] animate-slide-up">
+    <div className="fixed bottom-6 right-6 w-80 sm:w-96 bg-surface border border-border shadow-none rounded-none overflow-hidden z-50 flex flex-col h-[500px] animate-slide-up">
       {/* Header */}
-      <div className="p-4 border-b border-primary/10 bg-primary text-on-primary flex items-center justify-between">
-        <div className="flex items-center gap-2 font-display uppercase tracking-wide">
-          <MessageSquare className="w-4 h-4 text-tertiary" />
+      <div className="p-4 border-b border-border bg-primary text-on-primary flex items-center justify-between">
+        <div className="flex items-center gap-2 font-label uppercase tracking-[0.15em] font-bold text-xs">
+          <MessageSquare className="w-4 h-4 text-accent" />
           <span>Academy AI</span>
         </div>
-        <button onClick={() => setIsOpen(false)} className="text-on-primary/70 hover:text-on-primary">
+        <button onClick={() => setIsOpen(false)} className="text-on-primary/70 hover:text-on-primary cursor-pointer btn-press">
           <X className="w-5 h-5" />
         </button>
       </div>
 
       {/* Chat Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-background/50" ref={scrollRef}>
+      <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-background/50 font-sans" ref={scrollRef}>
         {conversation.length === 0 ? (
-          <div className="text-center text-secondary text-sm mt-10">
-            <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>Ask a question about this module's notes!</p>
+          <div className="text-center text-secondary text-xs mt-10">
+            <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50 text-accent animate-pulse" />
+            <p className="font-serif italic">Ask a question about this module's notes!</p>
           </div>
         ) : (
           conversation.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div 
-                className={`max-w-[85%] rounded-lg p-3 text-sm ${
+                className={`max-w-[85%] rounded-none p-3 text-xs leading-relaxed ${
                   msg.role === 'user' 
-                    ? 'bg-primary text-on-primary rounded-tr-none' 
-                    : 'bg-surface border border-primary/10 text-primary rounded-tl-none shadow-sm'
+                    ? 'bg-neutral-bg border border-border text-primary' 
+                    : 'bg-surface border border-border text-primary shadow-none font-medium'
                 }`}
                 style={{ whiteSpace: 'pre-wrap' }}
               >
@@ -100,15 +100,15 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
         )}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-surface border border-primary/10 text-primary rounded-lg rounded-tl-none p-3 shadow-sm">
-              <Loader2 className="w-4 h-4 text-tertiary animate-spin" />
+            <div className="bg-surface border border-border text-primary rounded-none p-3 shadow-none">
+              <Loader2 className="w-4 h-4 text-accent animate-spin" />
             </div>
           </div>
         )}
       </div>
 
       {/* Input */}
-      <div className="p-3 border-t border-primary/10 bg-surface">
+      <div className="p-3 border-t border-border bg-surface">
         <form 
           onSubmit={(e) => { e.preventDefault(); askQuestion(); }}
           className="flex items-center gap-2"
@@ -116,14 +116,14 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
           <input
             type="text"
             placeholder="Ask anything..."
-            className="flex-1 px-3 py-2 bg-background border border-primary/10 rounded-md focus:border-tertiary focus:ring-1 focus:ring-tertiary outline-none text-sm text-primary"
+            className="flex-grow px-3 py-2 bg-neutral-bg border border-border rounded-none focus:outline-none focus:border-primary text-xs text-primary font-sans"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
           />
           <button
             type="submit"
             disabled={!question.trim() || isLoading}
-            className="p-2 bg-tertiary text-white rounded-md hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-2 bg-primary border border-primary hover:bg-neutral-bg text-on-primary hover:text-primary transition-colors rounded-none disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shrink-0 btn-press"
           >
             <Send className="w-4 h-4" />
           </button>

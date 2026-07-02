@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
+import PageShell from '@/components/ui/PageShell';
+import SectionHeader from '@/components/ui/SectionHeader';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import { Search, Calendar, ChevronRight, Activity, Moon, Droplet, CheckCircle } from 'lucide-react';
 
 export default function JournalPage() {
@@ -326,67 +329,63 @@ export default function JournalPage() {
 
   if (loading) {
     return (
-      <div className="space-y-12 animate-pulse">
-        <header className="border-b-2 border-secondary/20 pb-4">
-          <div className="h-8 bg-secondary/15 w-48 rounded-sm mb-2" />
-          <div className="h-4 bg-secondary/10 w-80 rounded-sm" />
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 bg-surface border border-secondary/20 p-6 rounded-sm space-y-6">
-            <div className="h-4 bg-secondary/15 w-32 rounded-sm" />
-            <div className="space-y-4">
-              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
-              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
-              <div className="h-24 bg-secondary/10 w-full rounded-sm" />
-            </div>
+      <PageShell>
+        <div className="space-y-12 animate-pulse">
+          <div className="border-b border-border pb-4 w-full">
+            <div className="h-8 bg-border/40 w-48 rounded-none mb-2" />
+            <div className="h-4 bg-border/20 w-80 rounded-none" />
           </div>
-          <div className="space-y-8 lg:col-span-1">
-            <div className="bg-surface border border-secondary/20 p-6 rounded-sm space-y-4">
-              <div className="h-4 bg-secondary/15 w-24 rounded-sm" />
-              <div className="h-8 bg-secondary/10 w-full rounded-sm" />
-              <div className="h-16 bg-secondary/10 w-full rounded-sm" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 bg-surface border border-border p-6 rounded-none space-y-6">
+              <div className="h-4 bg-border/30 w-32 rounded-none" />
+              <div className="space-y-4">
+                <div className="h-8 bg-border/20 w-full rounded-none" />
+                <div className="h-8 bg-border/20 w-full rounded-none" />
+                <div className="h-24 bg-border/20 w-full rounded-none" />
+              </div>
+            </div>
+            <div className="space-y-8 lg:col-span-1">
+              <div className="bg-surface border border-border p-6 rounded-none space-y-4">
+                <div className="h-4 bg-border/30 w-24 rounded-none" />
+                <div className="h-8 bg-border/20 w-full rounded-none" />
+                <div className="h-16 bg-border/20 w-full rounded-none" />
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="space-y-12">
+    <PageShell>
       {/* Header */}
-      <header className="border-b-2 border-primary pb-4 flex justify-between items-baseline">
-        <div>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-primary">
-            THE CHRONICLES
-          </h2>
-          <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-0.5">
-            Morning Intentions &bull; Evening Reflections &bull; Journal
-          </p>
-        </div>
-      </header>
+      <SectionHeader
+        title="THE CHRONICLES"
+        subtitle="Morning Intentions • Evening Reflections • Daily Journal"
+      />
 
       {/* Mobile view Tab Selector */}
-      <div className="flex lg:hidden border border-secondary font-label text-xs">
+      <div className="flex lg:hidden border border-border font-label text-xs rounded-none bg-background overflow-hidden">
         <button
           type="button"
           onClick={() => setMobileTab('editor')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'editor' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer btn-press ${mobileTab === 'editor' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
         >
           Editor
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('metrics')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-secondary cursor-pointer ${mobileTab === 'metrics' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-border cursor-pointer btn-press ${mobileTab === 'metrics' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
         >
           Insights
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('timeline')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer ${mobileTab === 'timeline' ? 'bg-primary text-on-primary' : 'text-primary bg-surface'}`}
+          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer btn-press ${mobileTab === 'timeline' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
         >
           Timeline
         </button>
@@ -397,31 +396,31 @@ export default function JournalPage() {
         {/* ==========================================
             COLUMN 1 & 2: ACTIVE JOURNAL WRITER
            ========================================== */}
-        <section className={`lg:col-span-2 bg-surface border border-secondary p-6 rounded-sm space-y-6 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+        <section className={`lg:col-span-2 bg-surface border border-border p-6 rounded-none space-y-6 shadow-none ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
           <form onSubmit={handleSaveJournal} className="space-y-6">
             
             {/* Header select date bar */}
-            <div className="flex justify-between items-center border-b border-secondary/25 pb-3">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-semibold">
+            <div className="flex justify-between items-center border-b border-border pb-3">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-bold">
                 Journal Entry Editor
               </span>
 
               <div className="flex items-center space-x-2 font-label text-xs">
-                <Calendar className="h-4 w-4 text-tertiary" />
+                <Calendar className="h-4 w-4 text-accent" />
                 <input
                   type="date"
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="bg-neutral-bg border border-secondary px-2 py-1 font-sans focus:outline-none"
+                  className="bg-neutral-bg border border-border px-2 py-1 font-sans focus:outline-none rounded-none text-xs text-primary font-bold"
                 />
               </div>
             </div>
 
             {/* Morning Intentions */}
             <div className="space-y-3">
-              <div className="flex items-baseline space-x-2">
-                <span className="font-display text-lg font-bold text-primary">I. Morning Intentions</span>
-                <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; What would make today great?</span>
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                <span className="font-serif text-lg font-bold text-primary">I. Morning Intentions</span>
+                <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">&mdash; What would make today great?</span>
               </div>
 
               <div className="space-y-2 font-label text-xs">
@@ -430,33 +429,33 @@ export default function JournalPage() {
                   value={mIntention1}
                   onChange={(e) => { setMIntention1(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="1. e.g. Execute clean SQL migrations successfully"
-                  className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                  className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                 />
                 <input
                   type="text"
                   value={mIntention2}
                   onChange={(e) => { setMIntention2(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="2. e.g. Interval running outdoors 35 minutes"
-                  className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                  className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                 />
                 <input
                   type="text"
                   value={mIntention3}
                   onChange={(e) => { setMIntention3(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="3. e.g. Read draft of design system standard"
-                  className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                  className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                 />
               </div>
             </div>
 
             {/* Evening Reflections */}
-            <div className="space-y-4 pt-4 border-t border-secondary/25">
+            <div className="space-y-4 pt-4 border-t border-border">
               
               {/* Learned items */}
               <div className="space-y-3">
-                <div className="flex items-baseline space-x-2">
-                  <span className="font-display text-lg font-bold text-primary">II. Evening Lessons</span>
-                  <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; What did I learn today?</span>
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                  <span className="font-serif text-lg font-bold text-primary">II. Evening Lessons</span>
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">&mdash; What did I learn today?</span>
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
@@ -465,30 +464,30 @@ export default function JournalPage() {
                     value={eLearned1}
                     onChange={(e) => { setELearned1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Next.js fonts load as local stylesheet resources"
-                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                   />
                   <input
                     type="text"
                     value={eLearned2}
                     onChange={(e) => { setELearned2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Flat designs require clean negative spaces to feel premium"
-                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                   />
                   <input
                     type="text"
                     value={eLearned3}
                     onChange={(e) => { setELearned3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Leitner card deck reviews work best daily"
-                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                   />
                 </div>
               </div>
 
               {/* Improvements */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-baseline space-x-2">
-                  <span className="font-display text-md font-bold text-primary">III. Refinements</span>
-                  <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; What could have been better?</span>
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                  <span className="font-serif text-md font-bold text-primary">III. Refinements</span>
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">&mdash; What could have been better?</span>
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
@@ -497,21 +496,21 @@ export default function JournalPage() {
                     value={eBetter1}
                     onChange={(e) => { setEBetter1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Avoid starting tasks past 9 PM"
-                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                   />
                   <input
                     type="text"
                     value={eBetter2}
                     onChange={(e) => { setEBetter2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Set reminders for hydration goals"
-                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                   />
                   <input
                     type="text"
                     value={eBetter3}
                     onChange={(e) => { setEBetter3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Keep card answers shorter for Leitner system"
-                    className="w-full bg-neutral-bg/45 border border-secondary/40 px-3 py-1.5 focus:outline-none focus:border-tertiary font-sans"
+                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
                   />
                 </div>
               </div>
@@ -519,34 +518,34 @@ export default function JournalPage() {
             </div>
 
             {/* Free Notes Diary */}
-            <div className="space-y-3 pt-4 border-t border-secondary/25">
-              <div className="flex items-baseline space-x-2">
-                <span className="font-display text-lg font-bold text-primary">IV. Daily Log</span>
-                <span className="font-label text-xs text-secondary uppercase tracking-wider">&mdash; Free thoughts and reflections</span>
+            <div className="space-y-3 pt-4 border-t border-border">
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                <span className="font-serif text-lg font-bold text-primary">IV. Daily Log</span>
+                <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">&mdash; Free thoughts and reflections</span>
               </div>
               <textarea
                 value={freeText}
                 onChange={(e) => { setFreeText(e.target.value); setSaveStatus('dirty'); }}
                 rows={5}
                 placeholder="Write freely here..."
-                className="w-full bg-neutral-bg/45 border border-secondary/40 px-4 py-3 text-xs text-primary focus:outline-none focus:border-tertiary font-sans resize-none leading-relaxed"
+                className="w-full bg-neutral-bg/45 border border-border px-4 py-3 text-xs text-primary focus:outline-none focus:border-primary font-sans resize-none leading-relaxed rounded-none"
               />
             </div>
 
             {/* The single primary Terracotta red Reserved action button */}
             <div className="flex items-center justify-between gap-4">
-              <span className="font-label text-xs uppercase tracking-wider text-secondary">
+              <span className="font-label text-xs uppercase tracking-wider text-secondary font-bold">
                 {saveStatus === 'saved' && '• Saved'}
                 {saveStatus === 'saving' && '• Saving...'}
                 {saveStatus === 'dirty' && '• Unsaved changes'}
               </span>
-              <button 
+              <PrimaryButton 
                 type="submit" 
                 disabled={saveStatus === 'saving'}
-                className="flex-1 btn-tertiary uppercase text-xs tracking-widest font-bold pt-3 pb-3 cursor-pointer disabled:opacity-50"
+                className="flex-grow"
               >
                 {saveStatus === 'saving' ? 'SAVING...' : 'SAVE CHRONICLE ENTRY'}
-              </button>
+              </PrimaryButton>
             </div>
 
           </form>
@@ -558,9 +557,9 @@ export default function JournalPage() {
         <div className={`space-y-8 lg:col-span-1 ${mobileTab === 'editor' ? 'hidden lg:block' : ''}`}>
           
           {/* DAILY INSIGHTS & METRICS PANEL */}
-          <section className={`bg-surface border border-secondary p-6 rounded-sm space-y-6 shadow-sm ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
-            <div className="border-b border-secondary/25 pb-2 flex items-center space-x-2">
-              <Activity className="h-4 w-4 text-tertiary" />
+          <section className={`bg-surface border border-border p-6 rounded-none space-y-6 shadow-none ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
+            <div className="border-b border-border pb-2 flex items-center space-x-2">
+              <Activity className="h-4 w-4 text-accent" />
               <span className="font-label text-xs text-primary uppercase tracking-[0.15em] font-bold">
                 Day Insights & Metrics
               </span>
@@ -570,7 +569,7 @@ export default function JournalPage() {
             <div className="space-y-2">
               <div className="flex justify-between items-baseline">
                 <span className="font-label text-xs text-secondary uppercase font-bold">Daily Mood</span>
-                <span className="font-display text-sm font-semibold text-tertiary">
+                <span className="font-serif text-xs font-bold text-accent">
                   {mood === 1 && '1 - Terrible'}
                   {mood === 2 && '2 - Bad'}
                   {mood === 3 && '3 - Okay'}
@@ -578,14 +577,14 @@ export default function JournalPage() {
                   {mood === 5 && '5 - Excellent'}
                 </span>
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex gap-1.5 bg-background border border-border rounded-none p-1">
                 {[1, 2, 3, 4, 5].map((val) => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => handleMetricChange(val, sleepHours, waterIntake)}
-                    className={`flex-1 py-1 text-center font-label text-xs uppercase border rounded-[2px] transition-all cursor-pointer ${
-                      mood === val ? 'bg-primary text-on-primary border-primary' : 'border-secondary/30 text-secondary hover:border-primary hover:text-primary'
+                    className={`flex-1 py-1 text-center font-label text-xs uppercase border transition-all cursor-pointer rounded-none btn-press font-bold ${
+                      mood === val ? 'bg-primary text-on-primary border-primary font-bold' : 'border-transparent text-secondary hover:border-border hover:bg-neutral-bg/50'
                     }`}
                   >
                     {val}
@@ -598,7 +597,7 @@ export default function JournalPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5 font-label text-xs">
                 <div className="flex items-center space-x-1.5">
-                  <Moon className="h-3.5 w-3.5 text-tertiary" />
+                  <Moon className="h-3.5 w-3.5 text-secondary" />
                   <span className="uppercase text-secondary font-bold">Sleep (Hrs)</span>
                 </div>
                 <input
@@ -608,12 +607,12 @@ export default function JournalPage() {
                   step="0.5"
                   value={sleepHours}
                   onChange={(e) => handleMetricChange(mood, parseFloat(e.target.value) || 0, waterIntake)}
-                  className="w-full bg-neutral-bg border border-secondary/40 px-2 py-1.5 font-sans focus:outline-none focus:border-tertiary"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 font-sans focus:outline-none focus:border-primary rounded-none text-xs text-primary font-semibold"
                 />
               </div>
               <div className="space-y-1.5 font-label text-xs">
                 <div className="flex items-center space-x-1.5">
-                  <Droplet className="h-3.5 w-3.5 text-tertiary" />
+                  <Droplet className="h-3.5 w-3.5 text-accent" />
                   <span className="uppercase text-secondary font-bold">Water (L)</span>
                 </div>
                 <input
@@ -623,22 +622,22 @@ export default function JournalPage() {
                   step="0.25"
                   value={waterIntake}
                   onChange={(e) => handleMetricChange(mood, sleepHours, parseFloat(e.target.value) || 0)}
-                  className="w-full bg-neutral-bg border border-secondary/40 px-2 py-1.5 font-sans focus:outline-none focus:border-tertiary"
+                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 font-sans focus:outline-none focus:border-primary rounded-none text-xs text-primary font-semibold"
                 />
               </div>
             </div>
 
             {/* Habits tracker for this day */}
-            <div className="space-y-2.5 pt-4 border-t border-secondary/20">
+            <div className="space-y-2.5 pt-4 border-t border-border">
               <span className="font-label text-xs text-secondary uppercase tracking-wider block font-bold">
                 Habits Tracker
               </span>
-              <div className="space-y-2.5 bg-neutral-bg/45 p-3 border border-secondary/15 rounded-sm">
+              <div className="space-y-2.5 bg-neutral-bg/45 p-3 border border-border rounded-none">
                 {habits.filter(h => !h.is_archived).map((habit) => {
                   const checked = getHabitStatus(habit.id);
                   return (
                     <label key={habit.id} className="flex items-center justify-between font-sans text-xs text-primary cursor-pointer">
-                      <span className={checked ? 'line-through text-secondary' : ''}>
+                      <span className={checked ? 'line-through text-secondary opacity-65 font-semibold' : 'font-semibold'}>
                         {habit.name}
                         {habit.type === 'numeric' && ` (Goal: ${habit.goal}${habit.unit || ''})`}
                       </span>
@@ -646,7 +645,7 @@ export default function JournalPage() {
                         type="checkbox"
                         checked={checked}
                         onChange={() => handleHabitToggle(habit.id, checked)}
-                        className="h-4 w-4 accent-tertiary cursor-pointer"
+                        className="h-4.5 w-4.5 accent-accent cursor-pointer shrink-0"
                       />
                     </label>
                   );
@@ -658,15 +657,15 @@ export default function JournalPage() {
             </div>
 
             {/* Completed Tasks on this Day */}
-            <div className="space-y-2 pt-4 border-t border-secondary/20">
+            <div className="space-y-2 pt-4 border-t border-border">
               <span className="font-label text-xs text-secondary uppercase tracking-wider block font-bold">
                 Tasks Completed Today
               </span>
-              <div className="space-y-2 bg-neutral-bg/45 p-3 border border-secondary/15 rounded-sm max-h-36 overflow-y-auto">
+              <div className="space-y-2 bg-neutral-bg/45 p-3 border border-border rounded-none max-h-36 overflow-y-auto">
                 {completedTasks.map((task) => (
                   <div key={task.id} className="flex items-center space-x-2 text-xs font-sans text-primary">
-                    <CheckCircle className="h-3.5 w-3.5 text-tertiary shrink-0" />
-                    <span className="truncate">{task.name}</span>
+                    <CheckCircle className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="truncate font-semibold">{task.name}</span>
                   </div>
                 ))}
                 {completedTasks.length === 0 && (
@@ -677,9 +676,9 @@ export default function JournalPage() {
           </section>
 
           {/* HISTORICAL TIMELINE PANEL */}
-          <section className={`bg-surface border border-secondary p-6 rounded-sm flex flex-col justify-between max-h-[500px] shadow-sm ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
+          <section className={`bg-surface border border-border p-6 rounded-none flex flex-col justify-between max-h-[500px] shadow-none ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
             <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-secondary/25 pb-1">
+              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-1 font-bold">
                 Historical Timeline
               </span>
 
@@ -691,7 +690,7 @@ export default function JournalPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search past logs..."
-                  className="w-full bg-neutral-bg border border-secondary pl-9 pr-3 py-2 focus:outline-none focus:border-tertiary font-sans"
+                  className="w-full bg-neutral-bg border border-border pl-9 pr-3 py-2 focus:outline-none focus:border-primary font-sans rounded-none"
                 />
               </div>
 
@@ -713,8 +712,8 @@ export default function JournalPage() {
                         // Auto-toggle back to editor on mobile when selecting a past date
                         setMobileTab('editor');
                       }}
-                      className={`p-3 border border-secondary/35 rounded-sm hover:border-primary cursor-pointer transition-all flex justify-between items-center ${
-                        selectedDateStr === entry.date ? 'bg-neutral-bg border-primary' : 'bg-surface'
+                      className={`p-3 border rounded-none cursor-pointer transition-all flex justify-between items-center btn-press ${
+                        selectedDateStr === entry.date ? 'bg-neutral-bg border-primary' : 'bg-surface border-border/60 hover:bg-neutral-bg/20 hover:border-primary'
                       }`}
                     >
                       <div>
@@ -742,6 +741,6 @@ export default function JournalPage() {
         </div>
 
       </div>
-    </div>
+    </PageShell>
   );
 }
