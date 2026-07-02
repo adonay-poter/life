@@ -8,7 +8,7 @@ import SkeletonLoader from './SkeletonLoader';
 import { useToast } from '@/context/ToastContext';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { session, loading: authLoading } = useAuth();
+  const { session, loading: authLoading, configError } = useAuth();
   const { showToast } = useToast();
   
   const [email, setEmail] = useState('');
@@ -18,6 +18,24 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (authLoading) {
     return <SkeletonLoader />;
+  }
+
+  if (configError) {
+    return (
+      <div className="min-h-screen bg-neutral-bg flex items-center justify-center px-4 py-12 font-sans">
+        <div className="w-full max-w-lg bg-surface border border-secondary/30 p-8 md:p-10 rounded-sm shadow-sm">
+          <h1 className="font-display text-2xl font-medium text-primary mb-4">Deployment configuration required</h1>
+          <p className="text-secondary text-sm leading-6 mb-4">
+            This deployment is missing the public Supabase environment variables required for authentication.
+          </p>
+          <div className="bg-neutral-bg/60 border border-secondary/20 rounded-sm p-4 text-sm text-primary">
+            <p>`NEXT_PUBLIC_SUPABASE_URL`</p>
+            <p>`NEXT_PUBLIC_SUPABASE_ANON_KEY`</p>
+          </div>
+          <p className="text-secondary text-xs mt-4 break-words">{configError}</p>
+        </div>
+      </div>
+    );
   }
 
   if (session) {
