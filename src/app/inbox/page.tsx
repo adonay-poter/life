@@ -61,6 +61,9 @@ export default function InboxPage() {
   // Status Filter: unprocessed, processed, snoozed, archived
   const [statusFilter, setStatusFilter] = useState<'unprocessed' | 'processed' | 'snoozed' | 'archived'>('unprocessed');
   const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'All' | InboxItem['type']>('All');
+  const [signalFilter, setSignalFilter] = useState<'all' | 'tagged' | 'with_url' | 'with_content'>('all');
+  const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'type'>('newest');
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -168,6 +171,10 @@ export default function InboxPage() {
     }
   };
 
+  const inboxTypes = useMemo(() => {
+    return Array.from(new Set(inboxItems.map((item) => item.type))).sort();
+  }, [inboxItems]);
+
   // Keyboard navigation inside list
   const filteredSlips = useMemo(() => {
     const list = inboxItems.filter((item) => {
@@ -180,19 +187,32 @@ export default function InboxPage() {
       } else {
         matchesStatus = item.status === statusFilter;
       }
-      return matchesStatus;
+      if (!matchesStatus) return false;
+      if (typeFilter !== 'All' && item.type !== typeFilter) return false;
+      if (signalFilter === 'tagged' && (!item.tags || item.tags.length === 0)) return false;
+      if (signalFilter === 'with_url' && !(item.url || item.source_url)) return false;
+      if (signalFilter === 'with_content' && !item.content?.trim()) return false;
+      return true;
     });
 
-    if (!searchQuery.trim()) return list;
-    const query = searchQuery.toLowerCase();
-    return list.filter((item) => {
-      return (
-        item.title.toLowerCase().includes(query) ||
-        (item.content && item.content.toLowerCase().includes(query)) ||
-        (item.tags && item.tags.some((t) => t.toLowerCase().includes(query)))
-      );
+    const searchedList = !searchQuery.trim()
+      ? list
+      : list.filter((item) => {
+          const query = searchQuery.toLowerCase();
+          return (
+            item.title.toLowerCase().includes(query) ||
+            (item.content && item.content.toLowerCase().includes(query)) ||
+            (item.tags && item.tags.some((t) => t.toLowerCase().includes(query)))
+          );
+        });
+
+    return [...searchedList].sort((a, b) => {
+      if (sortBy === 'title') return a.title.localeCompare(b.title);
+      if (sortBy === 'type') return a.type.localeCompare(b.type) || b.created_at.localeCompare(a.created_at);
+      if (sortBy === 'oldest') return a.created_at.localeCompare(b.created_at);
+      return b.created_at.localeCompare(a.created_at);
     });
-  }, [inboxItems, statusFilter, searchQuery]);
+  }, [inboxItems, statusFilter, searchQuery, typeFilter, signalFilter, sortBy]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -205,12 +225,22 @@ export default function InboxPage() {
 
   const capturedToday = inboxItems.filter((item) => item.created_at?.split('T')[0] === getLocalDateString()).length;
   const hasSearch = searchQuery.trim().length > 0;
+  const activeRefinementCount = [typeFilter !== 'All', signalFilter !== 'all', hasSearch, sortBy !== 'newest']
+    .filter(Boolean)
+    .length;
   const channelTabs = [
     { key: 'unprocessed' as const, label: 'Intake', icon: Inbox, count: statusCounts.unprocessed },
     { key: 'processed' as const, label: 'Processed', icon: Check, count: statusCounts.processed },
     { key: 'snoozed' as const, label: 'Snoozed', icon: Clock, count: statusCounts.snoozed },
     { key: 'archived' as const, label: 'Archive', icon: Archive, count: statusCounts.archived },
   ];
+
+  const resetTriageControls = () => {
+    setSearchQuery('');
+    setTypeFilter('All');
+    setSignalFilter('all');
+    setSortBy('newest');
+  };
 
   // Select first item on desktop if nothing is selected or if selected item leaves the current filter list
   useEffect(() => {
@@ -1099,8 +1129,8 @@ export default function InboxPage() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-3 font-label text-xs">
-          <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.72fr))_auto] gap-3 font-label text-xs">
+          <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3 md:py-2">
             <Search className="h-4 w-4 text-secondary shrink-0" />
             <input
               type="text"
@@ -1110,26 +1140,73 @@ export default function InboxPage() {
               className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
             />
           </label>
+
+          <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Type</span>
+            <select
+              value={typeFilter}
+              onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])}
+              className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+            >
+              <option value="All">All types</option>
+              {inboxTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Signal</span>
+            <select
+              value={signalFilter}
+              onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)}
+              className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+            >
+              <option value="all">All slips</option>
+              <option value="tagged">Tagged</option>
+              <option value="with_url">With URL</option>
+              <option value="with_content">With notes</option>
+            </select>
+          </label>
+
+          <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
+            <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Sort</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+              <option value="title">Title A-Z</option>
+              <option value="type">Type</option>
+            </select>
+          </label>
+
           <button
             type="button"
-            onClick={() => setSearchQuery('')}
-            disabled={!hasSearch}
+            onClick={resetTriageControls}
+            disabled={activeRefinementCount === 0}
             className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center justify-center gap-2"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Clear
+            Reset {activeRefinementCount > 0 ? `(${activeRefinementCount})` : ''}
           </button>
         </div>
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,0.82fr)_minmax(0,1.18fr)] gap-6 items-start">
         <div className="space-y-4">
-          <div className="flex justify-between items-end font-label text-[10px] uppercase tracking-wider text-secondary border-b border-border pb-2 px-1">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 font-label text-[10px] uppercase tracking-wider text-secondary border-b border-border pb-2 px-1">
             <div>
               <span className="block text-primary font-bold">{filteredSlips.length} slips visible</span>
-              <span>{channelTabs.find((tab) => tab.key === statusFilter)?.label || 'Inbox'} channel</span>
+              <span>
+                {channelTabs.find((tab) => tab.key === statusFilter)?.label || 'Inbox'} channel
+                {typeFilter !== 'All' ? ` · ${typeFilter}` : ''}
+                {signalFilter !== 'all' ? ` · ${signalFilter.replace('_', ' ')}` : ''}
+              </span>
             </div>
-            <span className="hidden sm:block">Arrow keys navigate</span>
+            <span className="hidden sm:block">{sortBy.replace('_', ' ')} order</span>
           </div>
 
           <div className="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
@@ -1176,7 +1253,14 @@ export default function InboxPage() {
                           </span>
                         ))}
                       </div>
-                      <ArrowRight className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-accent' : 'text-secondary/50'}`} />
+                      <div className="flex items-center gap-2 shrink-0">
+                        {(item.url || item.source_url) && (
+                          <span className="font-label text-[8px] uppercase text-accent border border-accent/20 bg-accent/5 px-1.5 py-0.5">
+                            Link
+                          </span>
+                        )}
+                        <ArrowRight className={`h-3.5 w-3.5 ${isSelected ? 'text-accent' : 'text-secondary/50'}`} />
+                      </div>
                     </div>
                   </div>
                 );

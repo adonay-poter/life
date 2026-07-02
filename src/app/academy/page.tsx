@@ -1450,27 +1450,29 @@ function AcademyContent() {
                       {/* Add Lesson Input */}
                       {isSelected && (
                         <div className="mt-3 pt-3 border-t border-border space-y-2 font-label text-xs">
-                          <div className="flex flex-col sm:flex-row gap-2">
+                          <div className="flex flex-col gap-2">
                             <input
                               type="text"
                               value={newLessonName}
                               onChange={(e) => setNewLessonName(e.target.value)}
                               placeholder="Add Lesson Title..."
-                              className="flex-grow bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
+                              className="w-full bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
                             />
-                            <input
-                              type="text"
-                              value={newLessonLink}
-                              onChange={(e) => setNewLessonLink(e.target.value)}
-                              placeholder="Link (optional)..."
-                              className="flex-grow bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
-                            />
-                            <button
-                              onClick={() => handleAddLesson(mod.id)}
-                              className="bg-primary text-on-primary px-3 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-none shrink-0 btn-press border border-primary"
-                            >
-                              Add
-                            </button>
+                            <div className="flex gap-2">
+                              <input
+                                type="text"
+                                value={newLessonLink}
+                                onChange={(e) => setNewLessonLink(e.target.value)}
+                                placeholder="Link (optional)..."
+                                className="flex-grow bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
+                              />
+                              <button
+                                onClick={() => handleAddLesson(mod.id)}
+                                className="bg-primary text-on-primary px-4 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-none shrink-0 btn-press border border-primary"
+                              >
+                                Add
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
