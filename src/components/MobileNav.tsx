@@ -21,7 +21,9 @@ import {
   Menu,
   X,
   LogOut,
-  Plus
+  Plus,
+  Sparkles,
+  History as ReviewIcon
 } from 'lucide-react';
 
 function useModalActive() {
@@ -60,6 +62,10 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
 
   const isTasksPage = pathname === '/tasks';
   const isModalActive = useModalActive();
+  const isActiveRoute = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   const handleFabClick = () => {
     if (isTasksPage) {
@@ -125,16 +131,33 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
     { name: 'Habits', href: '/habits', icon: Activity }
   ];
 
+  const moreMenuItems = [
+    { name: 'Projects', href: '/projects', icon: FolderKanban, desc: 'Active work' },
+    { name: 'Academy', href: '/academy', icon: GraduationCap, desc: 'Learning' },
+    { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily notes' },
+    { name: 'Intelligence', href: '/intelligence', icon: Sparkles, desc: 'Signal feed' },
+    { name: 'Review', href: '/review', icon: ReviewIcon, desc: 'Check-ins' }
+  ];
+
+  const activeMoreItem = moreMenuItems.find((item) => isActiveRoute(item.href));
+  const activePageName =
+    [...coreMenuItems, ...moreMenuItems].find((item) => isActiveRoute(item.href))?.name || 'Dashboard';
+
   return (
     <div className="md:hidden flex flex-col shrink-0">
       {/* Top Mobile Header */}
-      <header className="sticky top-0 bg-surface border-b border-border px-4 py-3 flex items-center justify-between z-40">
-        <div className="flex items-baseline space-x-2">
-          <span className="font-amharic font-bold text-xl text-primary tracking-tight">ሁሉ</span>
-          <span className="font-label text-xs text-secondary uppercase tracking-[0.15em]">OS</span>
+      <header className="sticky top-0 bg-surface/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between z-40">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span className="font-amharic font-bold text-xl text-primary tracking-tight">ሁሉ</span>
+            <span className="font-label text-[10px] text-secondary uppercase tracking-[0.15em]">OS</span>
+          </div>
+          <p className="font-label text-[10px] text-secondary uppercase tracking-[0.16em] truncate">
+            {activePageName}
+          </p>
         </div>
         
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           {/* Mobile Cloud Indicator */}
           {isOnline ? (
             <Cloud className="h-4 w-4 text-success" />
@@ -153,20 +176,23 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
       </header>
 
       {/* Bottom Sticky Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border flex justify-around items-center py-2 px-1 z-40 pb-safe shadow-none">
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur border-t border-border grid grid-cols-5 items-center px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-40 shadow-[0_-8px_24px_rgba(0,0,0,0.05)]">
         {coreMenuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = isActiveRoute(item.href);
           return (
             <Link
               key={item.name}
               href={item.href}
-              className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-none ${
-                isActive ? 'text-accent font-bold' : 'text-secondary'
+              className={`mobile-tab min-h-12 flex flex-col items-center justify-center gap-1 border-t-2 px-1 ${
+                isActive
+                  ? 'border-accent text-primary font-bold'
+                  : 'border-transparent text-secondary'
               }`}
+              aria-current={isActive ? 'page' : undefined}
             >
               <Icon className="h-5 w-5" />
-              <span className="font-label text-[10px] mt-0.5 uppercase tracking-wider">{item.name}</span>
+              <span className="font-label text-[10px] uppercase tracking-wide leading-none">{item.name}</span>
             </Link>
           );
         })}
@@ -174,12 +200,18 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
         {/* More Button */}
         <button
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-          className={`mobile-tab flex flex-col items-center justify-center w-12 py-1 rounded-none cursor-pointer ${
-            isDrawerOpen ? 'text-accent font-bold' : 'text-secondary'
+          className={`mobile-tab min-h-12 flex flex-col items-center justify-center gap-1 border-t-2 px-1 cursor-pointer ${
+            isDrawerOpen || activeMoreItem
+              ? 'border-accent text-primary font-bold'
+              : 'border-transparent text-secondary'
           }`}
+          aria-expanded={isDrawerOpen}
+          aria-label="Open more navigation"
         >
           <Menu className="h-5 w-5" />
-          <span className="font-label text-[10px] mt-0.5 uppercase tracking-wider">More</span>
+          <span className="font-label text-[10px] uppercase tracking-wide leading-none">
+            {activeMoreItem ? activeMoreItem.name : 'More'}
+          </span>
         </button>
       </nav>
 
@@ -193,45 +225,54 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
           />
           
           {/* Drawer Card */}
-          <div className="fixed bottom-14 left-0 right-0 bg-surface border-t-2 border-primary p-5 shadow-none z-[9999] md:hidden rounded-none animate-drawer">
-            <div className="flex justify-between items-center border-b border-border pb-3 mb-4 font-label">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-semibold">
-                More Sectors
-              </span>
+          <div className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-3 right-3 bg-surface border border-primary shadow-[0_18px_50px_rgba(0,0,0,0.22)] z-[9999] md:hidden animate-drawer">
+            <div className="flex justify-between items-start border-b border-border p-4 font-label">
+              <div>
+                <span className="font-label text-[10px] text-secondary uppercase tracking-[0.18em] font-semibold">
+                  More
+                </span>
+                <p className="font-display text-xl text-primary leading-tight mt-1">Navigate</p>
+              </div>
               <button
                 onClick={() => setIsDrawerOpen(false)}
-                className="text-secondary hover:text-primary p-1 cursor-pointer btn-press"
+                className="text-secondary hover:text-primary p-2 cursor-pointer btn-press"
+                aria-label="Close more navigation"
               >
-                <X className="h-4 w-4" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { name: 'Projects', href: '/projects', icon: FolderKanban, desc: 'Sectors' },
-                { name: 'Academy', href: '/academy', icon: GraduationCap, desc: 'Academy' },
-                { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Journal' },
-              ].map((item, i) => {
+            <div className="grid grid-cols-1 gap-2 p-3">
+              {moreMenuItems.map((item, i) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = isActiveRoute(item.href);
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsDrawerOpen(false)}
-                    className={`btn-press flex flex-col items-center justify-center p-3 border rounded-none text-center ${
+                    className={`btn-press flex items-center gap-3 p-3 border text-left ${
                       isActive
                         ? 'bg-primary text-on-primary border-primary'
                         : 'bg-neutral-bg/45 border-border hover:border-primary'
                     }`}
                     style={{ '--stagger-i': i } as React.CSSProperties}
+                    aria-current={isActive ? 'page' : undefined}
                   >
-                    <Icon className="h-6 w-6 mb-1.5 shrink-0" />
-                    <span className="font-label text-xs uppercase font-bold tracking-wide">
-                      {item.name}
+                    <span className={`h-10 w-10 border flex items-center justify-center shrink-0 ${
+                      isActive ? 'border-on-primary/30' : 'border-border bg-surface'
+                    }`}>
+                      <Icon className="h-5 w-5" />
                     </span>
-                    <span className="font-sans text-[10px] text-secondary mt-0.5 lowercase">
-                      {item.desc}
+                    <span className="min-w-0 flex-1">
+                      <span className="font-label text-xs uppercase font-bold tracking-wide block">
+                        {item.name}
+                      </span>
+                      <span className={`font-sans text-xs mt-0.5 block ${
+                        isActive ? 'text-on-primary/75' : 'text-secondary'
+                      }`}>
+                        {item.desc}
+                      </span>
                     </span>
                   </Link>
                 );
@@ -244,7 +285,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
                 setIsDrawerOpen(false);
                 signOut();
               }}
-              className="w-full mt-4 py-3 border border-accent/40 hover:border-accent text-accent bg-neutral-bg/30 hover:bg-accent/5 font-label text-xs uppercase tracking-wider font-semibold rounded-none cursor-pointer flex items-center justify-center space-x-2 btn-press"
+              className="w-[calc(100%-1.5rem)] mx-3 mb-3 py-3 border border-accent/40 hover:border-accent text-accent bg-neutral-bg/30 hover:bg-accent/5 font-label text-xs uppercase tracking-wider font-semibold cursor-pointer flex items-center justify-center gap-2 btn-press"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Log Out</span>

@@ -26,11 +26,8 @@ import {
 
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
-import EditorialCard from '@/components/ui/EditorialCard';
-import { PrimaryButton, SecondaryButton, IconButton } from '@/components/ui/Buttons';
-import { Input, Textarea, Select } from '@/components/ui/Inputs';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import StatusBadge from '@/components/ui/StatusBadge';
-import EmptyState from '@/components/ui/EmptyState';
 
 function TasksContent() {
   const dragCounters = useRef<Record<string, number>>({});
@@ -459,6 +456,36 @@ function TasksContent() {
     return priorityOrder[a.priority] - priorityOrder[b.priority];
   });
 
+  const openTasks = filteredTasks.filter((t) => t.status !== 'done');
+  const overdueTasks = openTasks.filter((t) => (
+    t.due_date &&
+    getLocalDateString(new Date(t.due_date)) < todayStr
+  ));
+  const dueTodayTasks = openTasks.filter((t) => (
+    t.due_date &&
+    getLocalDateString(new Date(t.due_date)) === todayStr
+  ));
+  const pinnedTasks = openTasks.filter((t) => t.is_pinned);
+  const blockedTasks = openTasks.filter((t) => t.status === 'blocked' || isTaskBlocked(t));
+  const completedTasks = filteredTasks.filter((t) => t.status === 'done');
+  const completionPct = filteredTasks.length > 0
+    ? Math.round((completedTasks.length / filteredTasks.length) * 100)
+    : 0;
+  const activeFilterCount = [selectedCategory, selectedPriorityFilter, selectedProjectFilter]
+    .filter((value) => value !== 'All').length;
+  const statusCounts = kanbanColumns.reduce((acc, col) => {
+    acc[col.status] = filteredTasks.filter((t) => (
+      t.status === col.status || (col.status === 'todo' && t.status === 'blocked')
+    )).length;
+    return acc;
+  }, {} as Record<Task['status'], number>);
+
+  const resetFilters = () => {
+    setSelectedCategory('All');
+    setSelectedPriorityFilter('All');
+    setSelectedProjectFilter('All');
+  };
+
   if (loading) {
     return (
       <PageShell>
@@ -487,52 +514,69 @@ function TasksContent() {
     <PageShell>
       {/* Header */}
       <SectionHeader
-        title="Tasks & Schedules"
-        subtitle="Operational Throughput • Categorized Action Engines"
+        title="Task Command"
+        subtitle={`${openTasks.length} open · ${completionPct}% complete in current view`}
         action={
-          <div className="flex border border-border font-label text-xs uppercase tracking-wider select-none shrink-0 rounded-none bg-background overflow-hidden">
-            <button
-              onClick={() => setActiveTab('kanban')}
-              className={`px-4 py-2 flex items-center space-x-1.5 transition-all cursor-pointer font-bold btn-press ${
-                activeTab === 'kanban' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/55'
-              }`}
-            >
-              <Layers className="h-3.5 w-3.5" />
-              <span>Kanban Board</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('calendar')}
-              className={`px-4 py-2 flex items-center space-x-1.5 transition-all border-l border-r border-border cursor-pointer font-bold btn-press ${
-                activeTab === 'calendar' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/55'
-              }`}
-            >
-              <CalendarIcon className="h-3.5 w-3.5" />
-              <span>Calendar View</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('today')}
-              className={`px-4 py-2 flex items-center space-x-1.5 transition-all cursor-pointer font-bold btn-press ${
-                activeTab === 'today' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/55'
-              }`}
-            >
-              <CheckSquare className="h-3.5 w-3.5" />
-              <span>Today Focus</span>
-            </button>
-          </div>
+          <PrimaryButton
+            onClick={() => setShowAddTask(true)}
+            className="hidden md:flex items-center justify-center space-x-1.5 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            <span>New Task</span>
+          </PrimaryButton>
         }
       />
 
-      {/* Global Toolbar: Filters & Quick Actions */}
-      <div className="flex flex-col gap-4 bg-surface border border-border p-4 rounded-none shadow-none">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-label text-xs">
-          <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-4 w-full">
-            {/* Category Filter */}
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
+      <section className="bg-surface border border-primary">
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {[
+            { label: 'Due today', value: dueTodayTasks.length, icon: CalendarIcon, tone: dueTodayTasks.length > 0 ? 'text-accent' : 'text-primary' },
+            { label: 'Overdue', value: overdueTasks.length, icon: AlertCircle, tone: overdueTasks.length > 0 ? 'text-danger' : 'text-primary' },
+            { label: 'Pinned', value: pinnedTasks.length, icon: Pin, tone: pinnedTasks.length > 0 ? 'text-accent' : 'text-primary' },
+            { label: 'Blocked', value: blockedTasks.length, icon: SlidersHorizontal, tone: blockedTasks.length > 0 ? 'text-warning' : 'text-primary' }
+          ].map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className="min-h-28 border-b border-r border-border even:border-r-0 md:even:border-r md:last:border-r-0 md:border-b-0 p-4 flex flex-col justify-between">
+                <Icon className={`h-4 w-4 ${metric.tone}`} />
+                <div>
+                  <div className={`font-display text-3xl font-bold ${metric.tone}`}>{metric.value}</div>
+                  <div className="font-label text-[10px] text-secondary uppercase tracking-[0.16em]">{metric.label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="border-t border-border p-3 md:p-4 space-y-4">
+          <div className="grid grid-cols-3 border border-border bg-neutral-bg font-label text-[10px] md:text-xs uppercase tracking-wider font-bold">
+            {[
+              { key: 'today', label: 'Today', icon: CheckSquare },
+              { key: 'kanban', label: 'Board', icon: Layers },
+              { key: 'calendar', label: 'Calendar', icon: CalendarIcon }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key as typeof activeTab)}
+                  className={`py-3 px-2 flex items-center justify-center gap-1.5 border-r border-border last:border-r-0 transition-all cursor-pointer btn-press ${
+                    activeTab === tab.key ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface'
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.4fr_auto] gap-3 font-label text-xs">
+            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
               <Tag className="h-4 w-4 text-secondary shrink-0" />
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="flex-1 sm:flex-initial w-full sm:w-auto bg-neutral-bg border border-border px-3.5 py-2 md:px-2.5 md:py-1 focus:outline-none text-xs md:text-[11px] font-bold uppercase rounded-none cursor-pointer text-primary"
+                className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
               >
                 <option value="All">All Categories</option>
                 <option value="Work">Work</option>
@@ -541,48 +585,47 @@ function TasksContent() {
                 <option value="Learning">Learning</option>
                 <option value="Other">Other</option>
               </select>
-            </div>
+            </label>
 
-            {/* Priority Filter */}
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
               <SlidersHorizontal className="h-4 w-4 text-secondary shrink-0" />
               <select
                 value={selectedPriorityFilter}
                 onChange={(e) => setSelectedPriorityFilter(e.target.value)}
-                className="flex-1 sm:flex-initial w-full sm:w-auto bg-neutral-bg border border-border px-3.5 py-2 md:px-2.5 md:py-1 focus:outline-none text-xs md:text-[11px] font-bold uppercase rounded-none cursor-pointer text-primary"
+                className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
               >
                 <option value="All">All Priorities</option>
                 <option value="high">High</option>
                 <option value="medium">Medium</option>
                 <option value="low">Low</option>
               </select>
-            </div>
+            </label>
 
-            {/* Project Filter */}
-            <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
               <FolderKanban className="h-4 w-4 text-secondary shrink-0" />
               <select
                 value={selectedProjectFilter}
                 onChange={(e) => setSelectedProjectFilter(e.target.value)}
-                className="flex-1 sm:flex-initial w-full sm:w-auto bg-neutral-bg border border-border px-3.5 py-2 md:px-2.5 md:py-1 focus:outline-none text-xs md:text-[11px] font-bold uppercase rounded-none cursor-pointer text-primary"
+                className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
               >
                 <option value="All">All Projects</option>
                 {projects.map((p) => (
                   <option key={p.id} value={p.id}>{p.name.toUpperCase()}</option>
                 ))}
               </select>
-            </div>
-          </div>
+            </label>
 
-          <PrimaryButton
-            onClick={() => setShowAddTask(!showAddTask)}
-            className="hidden md:flex items-center justify-center space-x-1.5 shrink-0"
-          >
-            <Plus className="h-4 w-4" />
-            <span>CREATE NEW TASK</span>
-          </PrimaryButton>
+            <button
+              type="button"
+              onClick={resetFilters}
+              disabled={activeFilterCount === 0}
+              className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press"
+            >
+              Reset {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
       {/* Configure New Task Form (Modal on mobile, Inline on desktop) */}
       {showAddTask && (
@@ -785,7 +828,7 @@ function TasksContent() {
                     activeKanbanColumn === col.status ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/50'
                   }`}
                 >
-                  {mobileName}
+                  {mobileName} ({statusCounts[col.status] || 0})
                 </button>
               );
             })}
@@ -818,7 +861,7 @@ function TasksContent() {
                   }`}
                 >
                   <span className="font-label text-xs text-primary uppercase tracking-[0.1em] border-b border-border pb-2 mb-3 font-bold flex justify-between items-center">
-                    <span>{col.name} ({columnTasks.length})</span>
+                    <span>{col.name} ({statusCounts[col.status] || columnTasks.length})</span>
                     {col.status === 'done' && (
                       <button 
                         onClick={() => setShowDoneModal(true)}
@@ -1180,25 +1223,77 @@ function TasksContent() {
           TAB VIEW 3: TODAY FOCUS
          ========================================== */}
       {activeTab === 'today' && (
-        <div className="bg-surface border border-border p-6 rounded-none space-y-6 shadow-none">
-          <span className="font-label text-xs text-primary uppercase tracking-[0.15em] block mb-2 border-b border-border pb-1.5 font-bold">
-            Tasks Scheduled for Today or Pinned
-          </span>
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
+          <aside className="bg-surface border border-border p-5 space-y-5">
+            <div>
+              <span className="font-label text-[10px] text-secondary uppercase tracking-[0.18em] font-bold">
+                Focus Plan
+              </span>
+              <h3 className="font-display text-2xl text-primary font-bold mt-1">
+                {sortedTodayTasks.length} item{sortedTodayTasks.length === 1 ? '' : 's'} in play
+              </h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2 font-label text-[10px] uppercase tracking-wider">
+              <div className="border border-border bg-neutral-bg p-3">
+                <span className="text-secondary block">Due</span>
+                <span className="font-display text-2xl text-primary font-bold">{dueTodayTasks.length}</span>
+              </div>
+              <div className="border border-border bg-neutral-bg p-3">
+                <span className="text-secondary block">Late</span>
+                <span className="font-display text-2xl text-danger font-bold">{overdueTasks.length}</span>
+              </div>
+              <div className="border border-border bg-neutral-bg p-3">
+                <span className="text-secondary block">Pinned</span>
+                <span className="font-display text-2xl text-accent font-bold">{pinnedTasks.length}</span>
+              </div>
+              <div className="border border-border bg-neutral-bg p-3">
+                <span className="text-secondary block">Blocked</span>
+                <span className="font-display text-2xl text-warning font-bold">{blockedTasks.length}</span>
+              </div>
+            </div>
+            <PrimaryButton
+              onClick={() => setShowAddTask(true)}
+              className="w-full flex items-center justify-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Add Focus Task
+            </PrimaryButton>
+          </aside>
 
-          <div className="space-y-3.5">
+          <div className="bg-surface border border-border p-4 md:p-6 rounded-none space-y-4 shadow-none">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 border-b border-border pb-3">
+              <div>
+                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-bold">
+                  Today Execution List
+                </span>
+                <p className="font-sans text-xs text-secondary mt-1">
+                  Pinned, overdue, and due-today tasks are sorted by priority.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('kanban')}
+                className="font-label text-xs uppercase tracking-wider text-accent font-bold hover:underline text-left sm:text-right"
+              >
+                Open board
+              </button>
+            </div>
+
+            <div className="space-y-3">
             {sortedTodayTasks.length > 0 ? (
               sortedTodayTasks.map((task) => {
                 const parentProject = projects.find((p) => p.id === task.project_id);
                 const isDone = task.status === 'done';
+                const isLate = task.due_date && getLocalDateString(new Date(task.due_date)) < todayStr;
                 return (
                   <div
                     key={task.id}
                     onClick={() => openTaskModal(task)}
-                    className={`flex items-center justify-between p-4 bg-neutral-bg border border-border hover:border-primary rounded-none group cursor-pointer transition-all ${
+                    className={`flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4 bg-neutral-bg border hover:border-primary rounded-none group cursor-pointer transition-all ${
                       isDone ? 'opacity-65 border-border bg-neutral-bg/30' : ''
-                    }`}
+                    } ${isLate ? 'border-danger/50' : 'border-border'}`}
                   >
-                    <div className="flex items-center space-x-3">
+                    <div className="flex items-start space-x-3 min-w-0">
                       <input
                         type="checkbox"
                         checked={task.status === 'done'}
@@ -1222,14 +1317,14 @@ function TasksContent() {
                           <Play className="h-4.5 w-4.5 fill-current" />
                         </button>
                       )}
-                      <div>
-                        <span className={`font-sans text-sm font-semibold text-primary ${task.status === 'done' ? 'line-through text-secondary' : ''}`}>
+                      <div className="min-w-0">
+                        <span className={`font-sans text-sm font-semibold text-primary block ${task.status === 'done' ? 'line-through text-secondary' : ''}`}>
                           {task.name}
                         </span>
                         {task.description && (
-                          <p className="font-sans text-xs text-secondary mt-1">{task.description}</p>
+                          <p className="font-sans text-xs text-secondary mt-1 line-clamp-2">{task.description}</p>
                         )}
-                        <div className="flex items-center space-x-2 mt-2 font-label text-xs">
+                        <div className="flex flex-wrap items-center gap-2 mt-2 font-label text-xs">
                           <StatusBadge status={task.priority} type="priority" />
                           <span className="text-secondary uppercase font-semibold">
                             {parentProject ? parentProject.name : 'STANDALONE'}
@@ -1242,11 +1337,16 @@ function TasksContent() {
                               RECURRING: {task.recurring.toUpperCase()}
                             </span>
                           )}
+                          {task.due_date && (
+                            <span className={`font-bold ${isLate ? 'text-danger' : 'text-secondary'}`}>
+                              DUE {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase()}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4 shrink-0">
+                    <div className="flex items-center justify-end space-x-3 shrink-0">
                       {/* Pinned status */}
                       <button
                         onClick={(e) => {
@@ -1274,8 +1374,12 @@ function TasksContent() {
                 );
               })
             ) : (
-              <p className="font-sans text-xs text-secondary italic text-center py-12">No focus tasks active for today.</p>
+              <div className="font-sans text-center py-12 border border-dashed border-border bg-neutral-bg/35">
+                <p className="text-sm text-primary font-semibold">No focus tasks active for today.</p>
+                <p className="text-xs text-secondary mt-1">Pin a task, assign a due date, or create a new focus task.</p>
+              </div>
             )}
+            </div>
           </div>
         </div>
       )}

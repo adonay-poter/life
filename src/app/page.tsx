@@ -18,8 +18,6 @@ import {
   Inbox,
   Clock,
   CheckCircle,
-  Coffee,
-  Moon,
   Calendar
 } from 'lucide-react';
 import Link from 'next/link';
@@ -30,9 +28,8 @@ import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
-import { Input, Select } from '@/components/ui/Inputs';
+import { Input } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
-import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
 
 export default function DashboardHome() {
   const {
@@ -45,7 +42,6 @@ export default function DashboardHome() {
     courseModules,
     journalEntries,
     knowledgeItems,
-    objectLinks,
     dailyDigests,
     inboxItems,
     updateTaskStatus,
@@ -291,6 +287,54 @@ export default function DashboardHome() {
 
   const chartData = getLast7DaysData();
 
+  const openTasks = tasks.filter((t) => t.status !== 'done');
+  const overdueTasks = openTasks.filter((t) => {
+    if (!t.due_date) return false;
+    return t.due_date.split('T')[0] < todayStr;
+  });
+  const dueTodayTasks = openTasks.filter((t) => t.due_date?.split('T')[0] === todayStr);
+  const unprocessedInbox = inboxItems.filter((i) => i.status === 'unprocessed' || i.status === 'unsorted');
+  const activeProjects = projects.filter((p) => !p.is_archived && p.status !== 'completed' && p.status !== 'cancelled');
+  const completedToday = tasks.filter((t) => (
+    t.status === 'done' &&
+    t.due_date &&
+    getLocalDateString(new Date(t.due_date)) === todayStr
+  ));
+  const dashboardSignals = [
+    {
+      label: 'Open tasks',
+      value: openTasks.length,
+      detail: `${dueTodayTasks.length} due today`,
+      href: '/tasks',
+      icon: CheckCircle,
+      urgent: overdueTasks.length > 0
+    },
+    {
+      label: 'Inbox',
+      value: unprocessedInbox.length,
+      detail: 'needs sorting',
+      href: '/inbox',
+      icon: Inbox,
+      urgent: unprocessedInbox.length > 0
+    },
+    {
+      label: 'Review',
+      value: computedQueueItems.length,
+      detail: 'open loops',
+      href: '/review',
+      icon: Clock,
+      urgent: computedQueueItems.length > 0
+    },
+    {
+      label: 'Projects',
+      value: activeProjects.length,
+      detail: 'active sectors',
+      href: '/projects',
+      icon: Calendar,
+      urgent: false
+    }
+  ];
+
   // Formatting date header
   const formattedDate = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -301,10 +345,9 @@ export default function DashboardHome() {
 
   return (
     <PageShell>
-      {/* Broadsheet Style Top Header with Refresh & Customize */}
       <SectionHeader
-        title="The Daily Monitor"
-        subtitle="Architecture of Self — Vol. CLXIX • No. 1"
+        title="Command Dashboard"
+        subtitle="Today’s operating picture"
         meta={formattedDate}
         action={
           <div className="flex items-center space-x-2">
@@ -332,7 +375,7 @@ export default function DashboardHome() {
 
       {/* Widget Visibility Config Box */}
       {showConfig && (
-        <div className="bg-surface border border-primary p-5 font-label text-xs space-y-3 shadow-none animate-fade-in rounded-none">
+        <div className="bg-surface border border-primary p-5 font-label text-xs space-y-3 shadow-none animate-fade-in">
           <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
             Customize Dashboard Layout
           </span>
@@ -364,46 +407,86 @@ export default function DashboardHome() {
         </div>
       )}
 
-      {/* Daily Command Briefing Banner */}
-      <div className="bg-surface border border-accent p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 rounded-none">
-        <div className="space-y-2">
-          <div className="flex items-center space-x-2">
-            <span className="font-label text-[9px] bg-accent text-on-accent px-2 py-0.5 uppercase tracking-wider font-bold">
-              Command Brief
-            </span>
-            <span className="font-label text-[9px] text-secondary">
-              Vol. CLXIX • No. 1
-            </span>
+      <section className="bg-surface border border-primary">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.95fr)]">
+          <div className="p-5 md:p-7 border-b xl:border-b-0 xl:border-r border-border">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="font-label text-[10px] bg-accent text-on-accent px-2 py-1 uppercase tracking-wider font-bold">
+                Command Brief
+              </span>
+              <span className="font-label text-[10px] text-secondary uppercase tracking-[0.16em]">
+                {completedToday.length} closed today
+              </span>
+              {overdueTasks.length > 0 && (
+                <span className="font-label text-[10px] text-danger uppercase tracking-[0.16em] font-bold">
+                  {overdueTasks.length} overdue
+                </span>
+              )}
+            </div>
+            <h2 className="font-display text-2xl md:text-4xl font-bold text-primary leading-tight max-w-3xl">
+              {todayFocus ? todayFocus : "Pick the most important outcome, then keep the system moving."}
+            </h2>
+            <p className="font-sans text-sm text-secondary max-w-2xl leading-relaxed mt-4">
+              {computedQueueItems.length > 0
+                ? `${computedQueueItems.length} review item${computedQueueItems.length === 1 ? '' : 's'} need a decision before they become stale.`
+                : unprocessedInbox.length > 0
+                  ? `${unprocessedInbox.length} captured item${unprocessedInbox.length === 1 ? '' : 's'} still need sorting.`
+                  : "No urgent intake or review backlog is blocking the day."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6 font-label text-xs uppercase tracking-wider font-bold">
+              <Link
+                href={!todayFocus ? "/review/midday" : "/review/evening"}
+                className="bg-accent text-on-accent hover:opacity-95 transition-all py-3 px-5 text-center btn-press"
+              >
+                {!todayFocus ? "Start Checkpoint" : "Close the Day"}
+              </Link>
+              <Link
+                href="/tasks?tab=today"
+                className="border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 px-5 text-center btn-press"
+              >
+                Work Today’s Tasks
+              </Link>
+            </div>
           </div>
-          <h2 className="font-display text-xl font-bold text-primary leading-tight">
-            {todayFocus ? `Today's Focus: "${todayFocus}"` : "Calibrate expectations and define focus vectors for today."}
-          </h2>
-          <p className="font-sans text-xs text-secondary max-w-xl leading-relaxed">
-            {computedQueueItems.length > 0
-              ? `Review room has ${computedQueueItems.length} open attention loops needing triage. Maintain system health to prevent backlog decay.`
-              : "All capture loops are closed. Your system is in complete integrity."}
-          </p>
+          <div className="grid grid-cols-2">
+            {dashboardSignals.map((signal) => {
+              const Icon = signal.icon;
+              return (
+                <Link
+                  key={signal.label}
+                  href={signal.href}
+                  className="min-h-32 border-b border-r border-border even:border-r-0 xl:[&:nth-child(n+3)]:border-b-0 p-4 flex flex-col justify-between hover:bg-neutral-bg/55 transition-colors btn-press"
+                >
+                  <div className="flex items-center justify-between">
+                    <Icon className={`h-4 w-4 ${signal.urgent ? 'text-accent' : 'text-secondary'}`} />
+                    <ArrowRight className="h-3.5 w-3.5 text-secondary" />
+                  </div>
+                  <div>
+                    <div className={`font-display text-3xl font-bold ${signal.urgent ? 'text-accent' : 'text-primary'}`}>
+                      {signal.value}
+                    </div>
+                    <div className="font-label text-[10px] text-secondary uppercase tracking-[0.16em] mt-1">
+                      {signal.label} · {signal.detail}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
         </div>
-        <div className="shrink-0 font-label text-xs uppercase font-bold tracking-wider w-full md:w-auto">
-          <Link
-            href={!todayFocus ? "/review/midday" : "/review/evening"}
-            className="w-full md:w-auto text-center bg-accent text-on-accent hover:opacity-95 transition-all py-3 px-5 inline-block cursor-pointer btn-press"
-          >
-            {!todayFocus ? "Start Midday Checkpoint" : "Close the Day"}
-          </Link>
-        </div>
-      </div>
+      </section>
 
       {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* ==========================================
             COLUMN 1: THE MACRO METRIC
            ========================================== */}
         {widgetsVisibility.macroMetrics ? (
           <EditorialCard
-            title="Composite Integrity"
-            subtitle="Calculated Dynamically"
+            title="Operating Score"
+            subtitle="Tasks · Habits · Learning"
+            className="lg:col-span-4"
           >
             <div className="space-y-6">
               <div>
@@ -458,7 +541,7 @@ export default function DashboardHome() {
             </div>
           </EditorialCard>
         ) : (
-          <div className="bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[300px]">
+          <div className="lg:col-span-4 bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[300px]">
             <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Metrics Widget Hidden</span>
             <button onClick={() => toggleWidget('macroMetrics')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
           </div>
@@ -469,18 +552,19 @@ export default function DashboardHome() {
            ========================================== */}
         {widgetsVisibility.focusEngine ? (
           <EditorialCard
-            title="Today Focus"
-            subtitle="Focus Engine"
+            title="Now / Next"
+            subtitle={`${todayTasks.length} active focus item${todayTasks.length === 1 ? '' : 's'}`}
+            className="lg:col-span-5"
           >
             <div className="space-y-6">
-              <div className="space-y-3 pr-1">
+              <div className="space-y-3 pr-1 max-h-[420px] overflow-y-auto">
                 {todayTasks.length > 0 ? (
                   todayTasks.map((task) => {
                     const parentProject = projects.find((p) => p.id === task.project_id);
                     return (
                       <div
                         key={task.id}
-                        className="flex items-start space-x-3 p-3 bg-background border border-border rounded-none group transition-all"
+                        className="flex items-start space-x-3 p-3 bg-background border border-border rounded-none group transition-all hover:border-primary"
                       >
                         <button
                           onClick={() => {
@@ -554,9 +638,14 @@ export default function DashboardHome() {
 
               {/* Dashboard Quick Actions Form */}
               <div className="border-t border-border pt-4 space-y-3">
-                <span className="font-label text-xs text-secondary uppercase tracking-wider block font-semibold">
-                  Quick Action Intake
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="font-label text-xs text-secondary uppercase tracking-wider block font-semibold">
+                    Capture Without Leaving
+                  </span>
+                  <span className="font-label text-[10px] text-secondary uppercase tracking-wider">
+                    {qaType === 'task' ? 'Task' : 'Inbox'}
+                  </span>
+                </div>
                 <form onSubmit={handleQuickActionSubmit} className="space-y-3 font-label text-xs">
                   <div className="flex border border-border text-xs rounded-none overflow-hidden bg-background">
                     <button
@@ -633,7 +722,7 @@ export default function DashboardHome() {
             </div>
           </EditorialCard>
         ) : (
-          <div className="bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[300px]">
+          <div className="lg:col-span-5 bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[300px]">
             <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Focus Widget Hidden</span>
             <button onClick={() => toggleWidget('focusEngine')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
           </div>
@@ -642,7 +731,7 @@ export default function DashboardHome() {
         {/* ==========================================
             COLUMN 3: SECTORS & REFLECTIONS
            ========================================== */}
-        <div className="space-y-8 flex flex-col justify-start">
+        <div className="lg:col-span-3 space-y-6 flex flex-col justify-start">
           {/* Decision Queue Widget */}
           {widgetsVisibility.reviewQueuePreview ? (
             <EditorialCard
@@ -705,26 +794,32 @@ export default function DashboardHome() {
                     Active Projects
                   </span>
                   
-                  {projects.slice(0, 3).map((proj) => {
-                    const projTasks = tasks.filter((t) => t.project_id === proj.id);
-                    const progress = getWeightedProgress(projTasks);
-                    return (
-                      <div key={proj.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-sans text-xs font-semibold text-primary truncate hover:text-accent">
-                            <Link href={`/projects?projectId=${proj.id}`}>{proj.name}</Link>
-                          </span>
-                          <span className="font-label text-xs font-bold text-accent">{progress}%</span>
+                  {activeProjects.length > 0 ? (
+                    activeProjects.slice(0, 3).map((proj) => {
+                      const projTasks = tasks.filter((t) => t.project_id === proj.id);
+                      const progress = getWeightedProgress(projTasks);
+                      return (
+                        <div key={proj.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                          <div className="flex justify-between items-baseline mb-1 gap-3">
+                            <span className="font-sans text-xs font-semibold text-primary truncate hover:text-accent">
+                              <Link href={`/projects?projectId=${proj.id}`}>{proj.name}</Link>
+                            </span>
+                            <span className="font-label text-xs font-bold text-accent shrink-0">{progress}%</span>
+                          </div>
+                          <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
+                            <div
+                              className="bg-primary h-full transition-all duration-300"
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
-                          <div
-                            className="bg-primary h-full transition-all duration-300"
-                            style={{ width: `${progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <p className="font-sans text-xs text-secondary italic border border-dashed border-border p-3">
+                      No active projects are currently open.
+                    </p>
+                  )}
                 </div>
 
                 {/* Academy Course Progress */}
@@ -733,33 +828,39 @@ export default function DashboardHome() {
                     Learning Progress
                   </span>
 
-                  {courses.slice(0, 2).map((course) => {
-                    const courseLessons = lessons.filter(l => {
-                      const m = l.module_id;
-                      const matchedMod = courseModules.find(cm => cm.id === m);
-                      return matchedMod && matchedMod.course_id === course.id;
-                    });
-                    const progress = courseLessons.length > 0
-                      ? Math.round((courseLessons.filter(l => l.completed).length / courseLessons.length) * 100)
-                      : 0;
+                  {courses.length > 0 ? (
+                    courses.slice(0, 2).map((course) => {
+                      const courseLessons = lessons.filter(l => {
+                        const m = l.module_id;
+                        const matchedMod = courseModules.find(cm => cm.id === m);
+                        return matchedMod && matchedMod.course_id === course.id;
+                      });
+                      const progress = courseLessons.length > 0
+                        ? Math.round((courseLessons.filter(l => l.completed).length / courseLessons.length) * 100)
+                        : 0;
 
-                    return (
-                      <div key={course.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-sans text-xs font-semibold text-primary truncate hover:text-accent">
-                            <Link href={`/academy?courseId=${course.id}`}>{course.title}</Link>
-                          </span>
-                          <span className="font-label text-xs font-bold text-accent">{progress}%</span>
+                      return (
+                        <div key={course.id} className="border-b border-border pb-3 last:border-0 last:pb-0">
+                          <div className="flex justify-between items-baseline mb-1 gap-3">
+                            <span className="font-sans text-xs font-semibold text-primary truncate hover:text-accent">
+                              <Link href={`/academy?courseId=${course.id}`}>{course.title}</Link>
+                            </span>
+                            <span className="font-label text-xs font-bold text-accent shrink-0">{progress}%</span>
+                          </div>
+                          <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
+                            <div
+                              className="bg-primary h-full transition-all duration-300"
+                              style={{ width: `${progress}%` }}
+                            ></div>
+                          </div>
                         </div>
-                        <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
-                          <div
-                            className="bg-primary h-full transition-all duration-300"
-                            style={{ width: `${progress}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <p className="font-sans text-xs text-secondary italic border border-dashed border-border p-3">
+                      No courses have been added yet.
+                    </p>
+                  )}
                 </div>
 
                 <div className="pt-2">
@@ -833,7 +934,7 @@ export default function DashboardHome() {
         {/* =======================================================
             FULL WIDTH LOWER SECTION: DAILY BRIEFING & LEDGER
            ======================================================= */}
-        <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-primary pt-8 mt-4">
+        <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-primary pt-6 mt-2">
           
           {/* DAILY BRIEFING WIDGET */}
           <EditorialCard

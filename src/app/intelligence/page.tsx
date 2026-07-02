@@ -8,21 +8,16 @@ import { useRouter } from 'next/navigation';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import { PrimaryButton } from '@/components/ui/Buttons';
 import StatusBadge from '@/components/ui/StatusBadge';
 import {
-  Sparkles,
   HelpCircle,
   ArrowRight,
-  TrendingUp,
   Clock,
-  BookOpen,
-  CheckCircle,
-  FileText,
-  AlertCircle,
-  Plus,
   RefreshCw,
-  FolderOpen
+  CheckCircle,
+  AlertCircle,
+  BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -36,12 +31,9 @@ export default function IntelligenceFeed() {
     upsertDailyDigest,
     addKnowledgeItem,
     addTask,
-    updateInboxItemStatus,
     journalEntries,
     lessons,
     computedQueueItems,
-    resolveQueueItem,
-    snoozeQueueItem
   } = useDashboard();
 
   const { showToast } = useToast();
@@ -251,72 +243,144 @@ export default function IntelligenceFeed() {
 
   // Filter Needs Review computed queue items
   const urgentReviewItems = computedQueueItems.slice(0, 4);
+  const activeProjects = projects.filter((p) => !p.is_archived && p.status !== 'completed' && p.status !== 'cancelled');
+  const briefingStats = [
+    {
+      label: 'Open slips',
+      value: stats.unprocessedRemaining,
+      detail: 'waiting for structure',
+      icon: AlertCircle,
+      tone: stats.unprocessedRemaining > 0 ? 'text-accent' : 'text-primary'
+    },
+    {
+      label: 'Suggested actions',
+      value: computedSuggestedActions.length,
+      detail: 'ready to approve',
+      icon: CheckCircle,
+      tone: computedSuggestedActions.length > 0 ? 'text-primary' : 'text-secondary'
+    },
+    {
+      label: 'Open questions',
+      value: computedQuestions.length,
+      detail: 'need research or notes',
+      icon: HelpCircle,
+      tone: computedQuestions.length > 0 ? 'text-warning' : 'text-primary'
+    },
+    {
+      label: 'Active projects',
+      value: activeProjects.length,
+      detail: 'current work surface',
+      icon: BookOpen,
+      tone: 'text-primary'
+    }
+  ];
 
   return (
     <PageShell>
       <SectionHeader
-        title="Intelligence Feed"
-        subtitle="The Morning Briefing & Synthesis Deck"
+        title="Intelligence Brief"
+        subtitle="Daily synthesis, unresolved signals, and next actions"
         meta={new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
         action={
           <PrimaryButton onClick={handleGenerateDigest} disabled={generating} className="flex items-center gap-1">
             <RefreshCw className={`h-4 w-4 ${generating ? 'animate-spin' : ''}`} />
-            <span>{todayDigest ? 'Refresh Briefing' : 'Generate Briefing'}</span>
+            <span>{todayDigest ? 'Refresh Brief' : 'Generate Brief'}</span>
           </PrimaryButton>
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        
-        {/* LEFT COLUMN: THE TODAY BULLETIN */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Editorial summary */}
-          <EditorialCard title="Today's Summary" subtitle="Editorial Ledger">
-            <div className="space-y-4">
-              <div className="text-sm font-sans text-secondary leading-relaxed italic border-l border-accent/20 pl-4 py-1">
-                {todayDigest?.summary || (
-                  <div className="flex flex-col gap-2">
-                    <p>Nothing has entered the feed yet. Generate your morning briefing or capture a thought, link, or note to begin building today’s intelligence.</p>
-                    <button onClick={handleGenerateDigest} className="text-accent hover:underline font-label uppercase font-bold text-left text-xs tracking-wider mt-2">
-                      Generate Now →
-                    </button>
+      <section className="bg-surface border border-primary">
+        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.95fr)]">
+          <div className="p-5 md:p-7 border-b xl:border-b-0 xl:border-r border-border">
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              <span className="font-label text-[10px] bg-accent text-on-accent px-2 py-1 uppercase tracking-wider font-bold">
+                Daily Brief
+              </span>
+              <span className="font-label text-[10px] text-secondary uppercase tracking-[0.16em]">
+                {stats.capturesToday} captures today
+              </span>
+              {stats.unprocessedRemaining > 0 && (
+                <span className="font-label text-[10px] text-danger uppercase tracking-[0.16em] font-bold">
+                  {stats.unprocessedRemaining} unresolved
+                </span>
+              )}
+            </div>
+            <h2 className="font-display text-2xl md:text-4xl font-bold text-primary leading-tight max-w-3xl">
+              {todayDigest?.summary || 'No synthesis exists yet. Generate a brief to turn today’s captures into an actionable picture.'}
+            </h2>
+            <p className="font-sans text-sm text-secondary max-w-2xl leading-relaxed mt-4">
+              {computedSuggestedActions.length > 0
+                ? `${computedSuggestedActions.length} suggested action${computedSuggestedActions.length === 1 ? '' : 's'} are ready for approval, and ${computedQuestions.length} open question${computedQuestions.length === 1 ? '' : 's'} still need resolution.`
+                : 'The feed is quiet right now. Capture more material or regenerate the brief after you process today’s work.'}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 mt-6 font-label text-xs uppercase tracking-wider font-bold">
+              <Link
+                href="/inbox"
+                className="bg-accent text-on-accent hover:opacity-95 transition-all py-3 px-5 text-center btn-press"
+              >
+                Open Inbox Queue
+              </Link>
+              <Link
+                href="/review"
+                className="border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 px-5 text-center btn-press"
+              >
+                Open Review Room
+              </Link>
+            </div>
+          </div>
+          <div className="grid grid-cols-2">
+            {briefingStats.map((metric) => {
+              const Icon = metric.icon;
+              return (
+                <div key={metric.label} className="min-h-32 border-b border-r border-border even:border-r-0 xl:[&:nth-child(n+3)]:border-b-0 p-4 flex flex-col justify-between">
+                  <Icon className={`h-4 w-4 ${metric.tone}`} />
+                  <div>
+                    <div className={`font-display text-3xl font-bold ${metric.tone}`}>{metric.value}</div>
+                    <div className="font-label text-[10px] text-secondary uppercase tracking-[0.16em] mt-1">
+                      {metric.label} · {metric.detail}
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-              {/* Counts strip */}
-              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 border-t border-border pt-4 text-center font-label text-[10px] uppercase font-bold">
-                <div className="bg-background border border-border p-2">
-                  <span className="text-secondary block">Captured</span>
-                  <span className="text-sm font-bold text-primary block mt-0.5">{stats.capturesToday}</span>
-                </div>
-                <div className="bg-background border border-border p-2">
-                  <span className="text-secondary block">Processed</span>
-                  <span className="text-sm font-bold text-success block mt-0.5">{stats.processedToday}</span>
-                </div>
-                <div className="bg-background border border-border p-2">
-                  <span className="text-secondary block">Notes</span>
-                  <span className="text-sm font-bold text-primary block mt-0.5">{stats.notesToday}</span>
-                </div>
-                <div className="bg-background border border-border p-2">
-                  <span className="text-secondary block">Tasks Made</span>
-                  <span className="text-sm font-bold text-primary block mt-0.5">{stats.tasksToday}</span>
-                </div>
-                <div className="bg-background border border-border p-2">
-                  <span className="text-secondary block">Journal</span>
-                  <span className="text-sm font-bold text-primary block mt-0.5">{stats.journalsToday > 0 ? 'Logged' : 'None'}</span>
-                </div>
-                <div className="bg-background border border-border p-2">
-                  <span className="text-secondary text-danger block">Open Slips</span>
-                  <span className="text-sm font-bold text-danger block mt-0.5">{stats.unprocessedRemaining}</span>
-                </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <div className="lg:col-span-8 space-y-6">
+          <EditorialCard title="Activity Ledger" subtitle="Today across capture, learning, and execution">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center font-label text-[10px] uppercase font-bold">
+              <div className="bg-background border border-border p-3">
+                <span className="text-secondary block">Captured</span>
+                <span className="text-sm font-bold text-primary block mt-0.5">{stats.capturesToday}</span>
+              </div>
+              <div className="bg-background border border-border p-3">
+                <span className="text-secondary block">Processed</span>
+                <span className="text-sm font-bold text-success block mt-0.5">{stats.processedToday}</span>
+              </div>
+              <div className="bg-background border border-border p-3">
+                <span className="text-secondary block">Notes</span>
+                <span className="text-sm font-bold text-primary block mt-0.5">{stats.notesToday}</span>
+              </div>
+              <div className="bg-background border border-border p-3">
+                <span className="text-secondary block">Tasks</span>
+                <span className="text-sm font-bold text-primary block mt-0.5">{stats.tasksToday}</span>
+              </div>
+              <div className="bg-background border border-border p-3">
+                <span className="text-secondary block">Lessons</span>
+                <span className="text-sm font-bold text-primary block mt-0.5">{stats.lessonsToday}</span>
+              </div>
+              <div className="bg-background border border-border p-3">
+                <span className="text-secondary block">Journal</span>
+                <span className="text-sm font-bold text-primary block mt-0.5">{stats.journalsToday > 0 ? 'Logged' : 'None'}</span>
               </div>
             </div>
           </EditorialCard>
 
           {/* Themes detected */}
-          <EditorialCard title="Detected Activity Themes" subtitle="System Categorization">
+          <EditorialCard title="Detected Themes" subtitle="Signals emerging from today’s material">
             {computedThemes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {computedThemes.map((theme: any, i: number) => (
@@ -344,7 +408,7 @@ export default function IntelligenceFeed() {
           </EditorialCard>
 
           {/* Open Questions */}
-          <EditorialCard title="Open Inquiries & Questions" subtitle="Intellectual Backlog">
+          <EditorialCard title="Open Questions" subtitle="Unresolved threads worth turning into work">
             {computedQuestions.length > 0 ? (
               <div className="space-y-3">
                 {computedQuestions.map((q, i) => (
@@ -376,11 +440,9 @@ export default function IntelligenceFeed() {
 
         </div>
 
-        {/* RIGHT COLUMN: ACTION & REVIEW INTAKE */}
-        <div className="space-y-8">
+        <div className="lg:col-span-4 space-y-6">
           
-          {/* Suggested Actions */}
-          <EditorialCard title="Suggested Actions" subtitle="Approval-Based Triage">
+          <EditorialCard title="Suggested Actions" subtitle="Approve or dismiss the next move">
             {computedSuggestedActions.length > 0 ? (
               <div className="space-y-3">
                 {computedSuggestedActions.map((action, i) => (
@@ -413,8 +475,7 @@ export default function IntelligenceFeed() {
             )}
           </EditorialCard>
 
-          {/* Needs Review */}
-          <EditorialCard title="Attention Loops" subtitle="Staleness Detector">
+          <EditorialCard title="Attention Loops" subtitle="Signals already decaying or waiting for review">
             {urgentReviewItems.length > 0 ? (
               <div className="space-y-3">
                 {urgentReviewItems.map((item) => (

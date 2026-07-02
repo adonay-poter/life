@@ -13,20 +13,15 @@ import {
   Link2, 
   FileText, 
   Scissors, 
-  MoreVertical, 
-  FolderPlus, 
   GraduationCap, 
   Clock, 
   Archive, 
   Trash2, 
-  ExternalLink,
   Search,
   Sparkles,
-  GripVertical,
   BookOpen,
   Pencil,
   X,
-  Plus,
   HelpCircle,
   Bookmark,
   CheckSquare,
@@ -34,11 +29,9 @@ import {
   Quote,
   FileCode,
   Check,
-  Tag,
   ArrowRight,
   PlusCircle,
-  FileQuestion,
-  ListTodo
+  RotateCcw
 } from 'lucide-react';
 
 export default function InboxPage() {
@@ -47,7 +40,6 @@ export default function InboxPage() {
     projects,
     courses,
     courseModules,
-    loading,
     addInboxItem,
     updateInboxItemStatus,
     deleteInboxItem,
@@ -201,6 +193,24 @@ export default function InboxPage() {
       );
     });
   }, [inboxItems, statusFilter, searchQuery]);
+
+  const statusCounts = useMemo(() => {
+    return {
+      unprocessed: inboxItems.filter((item) => item.status === 'unprocessed' || item.status === 'unsorted').length,
+      processed: inboxItems.filter((item) => item.status === 'processed' || item.status === 'task' || item.status === 'academy' || item.status === 'knowledge').length,
+      snoozed: inboxItems.filter((item) => item.status === 'snoozed').length,
+      archived: inboxItems.filter((item) => item.status === 'archived').length,
+    };
+  }, [inboxItems]);
+
+  const capturedToday = inboxItems.filter((item) => item.created_at?.split('T')[0] === getLocalDateString()).length;
+  const hasSearch = searchQuery.trim().length > 0;
+  const channelTabs = [
+    { key: 'unprocessed' as const, label: 'Intake', icon: Inbox, count: statusCounts.unprocessed },
+    { key: 'processed' as const, label: 'Processed', icon: Check, count: statusCounts.processed },
+    { key: 'snoozed' as const, label: 'Snoozed', icon: Clock, count: statusCounts.snoozed },
+    { key: 'archived' as const, label: 'Archive', icon: Archive, count: statusCounts.archived },
+  ];
 
   // Select first item on desktop if nothing is selected or if selected item leaves the current filter list
   useEffect(() => {
@@ -949,18 +959,40 @@ export default function InboxPage() {
   return (
     <PageShell>
       <SectionHeader
-        title="Processing Desk"
-        subtitle="Capture Engine 2.0 • Intake Queue & Triage Channel"
+        title="Inbox Command"
+        subtitle={`${filteredSlips.length} visible · ${statusCounts.unprocessed} waiting for triage`}
         action={
           <button
             onClick={() => setShowQuickCapture(!showQuickCapture)}
-            className="btn-press border border-primary px-4 py-2 font-label text-xs uppercase tracking-widest font-bold flex items-center gap-1.5 bg-surface text-primary"
+            className="btn-press border border-primary px-4 py-2 font-label text-xs uppercase tracking-widest font-bold flex items-center gap-1.5 bg-primary text-on-primary"
           >
-            <PlusCircle className="h-4 w-4 text-accent" />
+            <PlusCircle className="h-4 w-4" />
             <span>Quick Slip</span>
           </button>
         }
       />
+
+      <section className="bg-surface border border-primary">
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {[
+            { label: 'Waiting', value: statusCounts.unprocessed, icon: Inbox, tone: statusCounts.unprocessed > 0 ? 'text-accent' : 'text-primary' },
+            { label: 'Processed', value: statusCounts.processed, icon: Check, tone: 'text-success' },
+            { label: 'Snoozed', value: statusCounts.snoozed, icon: Clock, tone: statusCounts.snoozed > 0 ? 'text-warning' : 'text-primary' },
+            { label: 'Captured today', value: capturedToday, icon: PlusCircle, tone: capturedToday > 0 ? 'text-accent' : 'text-primary' },
+          ].map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div key={metric.label} className="min-h-28 border-b border-r border-border even:border-r-0 md:even:border-r md:last:border-r-0 md:border-b-0 p-4 flex flex-col justify-between">
+                <Icon className={`h-4 w-4 ${metric.tone}`} />
+                <div>
+                  <div className={`font-display text-3xl font-bold ${metric.tone}`}>{metric.value}</div>
+                  <div className="font-label text-[10px] text-secondary uppercase tracking-[0.16em]">{metric.label}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
 
       {/* Quick Capture Form Drawer */}
       {showQuickCapture && (
@@ -1042,90 +1074,65 @@ export default function InboxPage() {
         </form>
       )}
 
-      {/* Main 3-Column Desk Workspace */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-        
-        {/* ====================================================
-            COLUMN 1: FILTERS (Span 3 on md, Span 2 on lg)
-           ==================================================== */}
-        <div className="space-y-6 font-label text-xs uppercase tracking-wider font-bold md:col-span-3 lg:col-span-2">
-          <div className="bg-surface border border-border p-4 space-y-4">
-            <span className="block text-secondary border-b border-border pb-2">Desk Channels</span>
-            <div className="space-y-1.5">
-              {[
-                { key: 'unprocessed', label: 'Intake Queue', icon: Inbox },
-                { key: 'processed', label: 'Processed Archive', icon: Check },
-                { key: 'snoozed', label: 'Snoozed Ledger', icon: Clock },
-                { key: 'archived', label: 'General Archives', icon: Archive },
-              ].map((tab) => {
-                const isActive = statusFilter === tab.key;
-                const Icon = tab.icon;
-                const count = inboxItems.filter((item) => {
-                  if (tab.key === 'unprocessed') return item.status === 'unprocessed' || item.status === 'unsorted';
-                  if (tab.key === 'processed') return item.status === 'processed' || item.status === 'task' || item.status === 'academy' || item.status === 'knowledge';
-                  return item.status === tab.key;
-                }).length;
-
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => {
-                      setStatusFilter(tab.key as any);
-                      setSelectedItemId(null);
-                    }}
-                    className={`w-full text-left px-3 py-2.5 rounded-none flex items-center justify-between transition-colors cursor-pointer btn-press ${
-                      isActive 
-                        ? 'bg-primary text-on-primary border-l-2 border-accent' 
-                        : 'text-primary hover:bg-neutral-bg border-l-2 border-transparent'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Icon className="h-4 w-4" />
-                      <span>{tab.label}</span>
-                    </div>
-                    <span className="text-[10px] opacity-75">{count}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Search Slip */}
-          <div className="bg-surface border border-border p-4 space-y-3">
-            <span className="block text-secondary border-b border-border pb-2">Filter Slips</span>
-            <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-secondary/60">
-                <Search className="h-3.5 w-3.5" />
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="SEARCH LEAKY SLIPS..."
-                className="w-full pl-9 pr-3 py-2 bg-neutral-bg border border-border text-sm focus:outline-none focus:border-accent font-sans placeholder:text-secondary/50 font-normal uppercase"
-              />
-            </div>
-            {searchQuery && (
-              <button 
-                onClick={() => setSearchQuery('')}
-                className="w-full py-1 text-center border border-dashed border-border text-[9px] hover:border-primary transition-colors"
+      <section className="bg-surface border border-border p-3 md:p-4 space-y-4">
+        <div className="grid grid-cols-4 border border-border bg-neutral-bg font-label text-[10px] md:text-xs uppercase tracking-wider font-bold">
+          {channelTabs.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = statusFilter === tab.key;
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => {
+                  setStatusFilter(tab.key);
+                  setSelectedItemId(null);
+                }}
+                className={`py-3 px-2 flex items-center justify-center gap-1.5 border-r border-border last:border-r-0 transition-all cursor-pointer btn-press ${
+                  isActive ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface'
+                }`}
               >
-                Clear Search Filter
+                <Icon className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span>{tab.count}</span>
               </button>
-            )}
-          </div>
+            );
+          })}
         </div>
 
-        {/* ====================================================
-            COLUMN 2: SLIP QUEUE LIST (Span 4)
-           ==================================================== */}
-        <div className="md:col-span-4 lg:col-span-4 space-y-4">
-          <div className="flex justify-between items-center font-label text-[10px] uppercase tracking-wider text-secondary border-b border-border pb-2 px-1">
-            <span>Intake Slips ({filteredSlips.length})</span>
-            <span>Use Arrow Keys to Navigate</span>
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto] gap-3 font-label text-xs">
+          <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+            <Search className="h-4 w-4 text-secondary shrink-0" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search title, content, or tags"
+              className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            disabled={!hasSearch}
+            className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center justify-center gap-2"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Clear
+          </button>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(320px,0.82fr)_minmax(0,1.18fr)] gap-6 items-start">
+        <div className="space-y-4">
+          <div className="flex justify-between items-end font-label text-[10px] uppercase tracking-wider text-secondary border-b border-border pb-2 px-1">
+            <div>
+              <span className="block text-primary font-bold">{filteredSlips.length} slips visible</span>
+              <span>{channelTabs.find((tab) => tab.key === statusFilter)?.label || 'Inbox'} channel</span>
+            </div>
+            <span className="hidden sm:block">Arrow keys navigate</span>
           </div>
 
-          <div className="space-y-3 max-h-[70vh] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[72vh] overflow-y-auto pr-1">
             {filteredSlips.length > 0 ? (
               filteredSlips.map((item) => {
                 const isSelected = selectedItemId === item.id;
@@ -1139,37 +1146,38 @@ export default function InboxPage() {
                         : 'border-border bg-neutral-bg/40 hover:border-secondary hover:bg-neutral-bg/75'
                     }`}
                   >
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-2">
+                    <div className="flex justify-between items-start gap-3">
+                      <div className="flex items-center space-x-2 min-w-0">
                         {getTypeIcon(item.type)}
-                        <span className="font-label text-[9px] uppercase tracking-wider text-secondary font-bold">
+                        <span className="font-label text-[9px] uppercase tracking-wider text-secondary font-bold truncate">
                           {item.type}
                         </span>
                       </div>
-                      <span className="font-label text-[8px] text-secondary">
+                      <span className="font-label text-[8px] text-secondary shrink-0">
                         {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
 
-                    <h4 className="font-sans text-xs font-semibold text-primary line-clamp-1">
+                    <h4 className="font-sans text-sm font-semibold text-primary line-clamp-2 leading-snug">
                       {item.title}
                     </h4>
 
                     {item.content && (
-                      <p className="font-sans text-[11px] text-secondary line-clamp-2 leading-relaxed">
+                      <p className="font-sans text-xs text-secondary line-clamp-2 leading-relaxed">
                         {item.content}
                       </p>
                     )}
 
-                    {item.tags && item.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1 pt-1.5">
-                        {item.tags.map((tag) => (
+                    <div className="flex items-center justify-between gap-3 pt-1">
+                      <div className="flex flex-wrap gap-1 min-w-0">
+                        {(item.tags || []).slice(0, 3).map((tag) => (
                           <span key={tag} className="font-label text-[8px] border border-secondary/20 bg-neutral-bg/30 text-secondary px-1.5 py-0.5 uppercase">
                             {tag}
                           </span>
                         ))}
                       </div>
-                    )}
+                      <ArrowRight className={`h-3.5 w-3.5 shrink-0 ${isSelected ? 'text-accent' : 'text-secondary/50'}`} />
+                    </div>
                   </div>
                 );
               })
@@ -1182,13 +1190,9 @@ export default function InboxPage() {
           </div>
         </div>
 
-        {/* ====================================================
-            COLUMN 3: PROCESSING DESK PANEL (Span 5 on md, Span 6 on lg)
-           ==================================================== */}
-        <div className="hidden md:block md:col-span-5 lg:col-span-6 bg-surface border border-primary p-6 space-y-6 self-start shadow-sm">
+        <div className="hidden md:block bg-surface border border-primary p-6 space-y-6 self-start shadow-sm">
           {renderPanelContent(false)}
         </div>
-
       </div>
 
       {/* Mobile Details Pop-up Modal overlay */}
