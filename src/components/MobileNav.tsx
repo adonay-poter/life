@@ -59,9 +59,8 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
   const { isOnline, tasks, habits, habitRecords, lessons } = useDashboard();
   
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-
-  const isTasksPage = pathname === '/tasks';
   const isModalActive = useModalActive();
+  const isTasksPage = pathname === '/tasks';
   const isActiveRoute = (href: string) => {
     if (href === '/') return pathname === '/';
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -144,7 +143,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
     [...coreMenuItems, ...moreMenuItems].find((item) => isActiveRoute(item.href))?.name || 'Dashboard';
 
   return (
-    <div className="md:hidden flex flex-col shrink-0">
+    <div className="app-mobile-nav md:hidden flex flex-col shrink-0">
       {/* Top Mobile Header */}
       <header className="sticky top-0 bg-surface/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between z-40">
         <div className="min-w-0">
@@ -214,6 +213,17 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
           </span>
         </button>
       </nav>
+
+      {/* Mobile Floating Action Button (FAB) for Quick Capture or Create Task */}
+      {!isModalActive && pathname !== '/academy' && (
+        <button
+          onClick={handleFabClick}
+          className="fixed bottom-20 right-6 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-40 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 active:rotate-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"
+          title={isTasksPage ? 'Create New Task' : 'Quick Capture'}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
 
       {/* Bottom Drawer Overlay */}
       {isDrawerOpen && (
@@ -292,16 +302,6 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
             </button>
           </div>
         </>
-      )}
-      {/* Mobile Floating Action Button (FAB) for Quick Capture or Create Task */}
-      {!isModalActive && (
-        <button
-          onClick={handleFabClick}
-          className="fixed bottom-20 right-6 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-40 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 active:rotate-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"
-          title={isTasksPage ? "Create New Task" : "Quick Capture"}
-        >
-          <Plus className="h-6 w-6" />
-        </button>
       )}
     </div>
   );

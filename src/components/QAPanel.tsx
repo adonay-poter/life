@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
+import { HelpCircle, MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
 
 interface QAPanelProps {
   topic: string;
@@ -51,19 +51,19 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
   if (!isOpen) {
     return (
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 p-4 border border-border bg-primary text-on-primary hover:bg-neutral-bg hover:text-primary transition-all z-40 flex items-center gap-2 group rounded-none shadow-none btn-press font-label text-xs uppercase tracking-widest font-bold cursor-pointer"
+        className="fixed bottom-20 right-6 md:bottom-6 md:right-28 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-50 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"
+        aria-label="Ask Academy AI"
+        title="Ask Academy AI"
       >
-        <Sparkles className="w-4 h-4 text-accent" />
-        <span className="hidden group-hover:inline-block pr-1">
-          Ask AI
-        </span>
+        <HelpCircle className="h-6 w-6" />
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-80 sm:w-96 bg-surface border border-border shadow-none rounded-none overflow-hidden z-50 flex flex-col h-[500px] animate-slide-up">
+    <div className="fixed inset-x-4 bottom-4 top-20 md:inset-auto md:bottom-6 md:right-28 md:w-96 md:h-[500px] bg-surface border border-border shadow-none rounded-none overflow-hidden z-[60] flex flex-col animate-slide-up">
       {/* Header */}
       <div className="p-4 border-b border-border bg-primary text-on-primary flex items-center justify-between">
         <div className="flex items-center gap-2 font-label uppercase tracking-[0.15em] font-bold text-xs">

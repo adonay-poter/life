@@ -118,6 +118,12 @@ body {
   animation: page-enter 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+body.academy-reader-open .app-sidebar-shell,
+body.academy-reader-open .app-mobile-nav {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* --- Fade in (backdrop, overlays) --- */
 @keyframes fade-in-overlay {
   from { opacity: 0; }
@@ -313,4 +319,3 @@ form textarea {
   --tw-enter-translate-y: -1rem;
   animation-name: enter;
 }
-

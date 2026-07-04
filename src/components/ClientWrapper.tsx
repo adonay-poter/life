@@ -78,8 +78,8 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
               {/* Global Floating Widget */}
               <PomodoroFloating />
 
-              {/* Global Quick Capture Modal */}
-              <UniversalCaptureModal isOpen={isCaptureOpen} onClose={() => setIsCaptureOpen(false)} />
+            {/* Global Quick Capture Modal */}
+            <UniversalCaptureModal isOpen={isCaptureOpen} onClose={() => setIsCaptureOpen(false)} />
             </div>
           </DashboardProvider>
         </AuthGuard>

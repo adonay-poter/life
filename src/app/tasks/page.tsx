@@ -127,6 +127,7 @@ function TasksContent() {
   const [selectedPriorityFilter, setSelectedPriorityFilter] = useState<string>('All');
   const [selectedProjectFilter, setSelectedProjectFilter] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [activeKanbanColumn, setActiveKanbanColumn] = useState<Task['status']>('todo');
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<string>(getLocalDateString());
@@ -203,6 +204,7 @@ function TasksContent() {
         setDeleteModalOpen(false);
         setShowAddTask(false);
         setShowDoneModal(false);
+        setShowMobileFilters(false);
       }
     };
 
@@ -379,6 +381,13 @@ function TasksContent() {
   const completionPct = filteredTasks.length > 0 ? Math.round((completedTasks.length / filteredTasks.length) * 100) : 0;
   const activeFilterCount = [selectedCategory, selectedPriorityFilter, selectedProjectFilter]
     .filter((value) => value !== 'All').length + (searchQuery.trim() ? 1 : 0);
+  const activeFilterLabels = [
+    selectedCategory !== 'All' ? `Category: ${selectedCategory}` : null,
+    selectedPriorityFilter !== 'All' ? `Priority: ${getPriorityLabel(selectedPriorityFilter as Task['priority'])}` : null,
+    selectedProjectFilter !== 'All'
+      ? `Project: ${projects.find((project) => project.id === selectedProjectFilter)?.name || 'Selected'}`
+      : null
+  ].filter(Boolean) as string[];
 
   const kanbanColumns = STATUS_META;
 
@@ -555,74 +564,177 @@ function TasksContent() {
             })}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))_auto] gap-3 font-label text-xs">
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-              <Search className="h-4 w-4 text-secondary shrink-0" />
-              <input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search tasks, descriptions, projects"
-                className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60"
-              />
-            </label>
-
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-              <Tag className="h-4 w-4 text-secondary shrink-0" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+          <div className="space-y-2 font-label text-xs">
+            <div className="flex gap-2 md:hidden">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 flex-1">
+                <Search className="h-4 w-4 text-secondary shrink-0" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tasks, descriptions, projects"
+                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(true)}
+                className="border border-border px-3 py-2 text-primary hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center gap-2 shrink-0"
               >
-                {CATEGORY_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option === 'All' ? 'All Categories' : option}
-                  </option>
-                ))}
-              </select>
-            </label>
+                <SlidersHorizontal className="h-4 w-4" />
+                <span>Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</span>
+              </button>
+            </div>
 
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-              <SlidersHorizontal className="h-4 w-4 text-secondary shrink-0" />
-              <select
-                value={selectedPriorityFilter}
-                onChange={(e) => setSelectedPriorityFilter(e.target.value)}
-                className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+            <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))_auto] gap-3">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+                <Search className="h-4 w-4 text-secondary shrink-0" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search tasks, descriptions, projects"
+                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60"
+                />
+              </label>
+
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+                <Tag className="h-4 w-4 text-secondary shrink-0" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+                >
+                  {CATEGORY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option === 'All' ? 'All Categories' : option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+                <SlidersHorizontal className="h-4 w-4 text-secondary shrink-0" />
+                <select
+                  value={selectedPriorityFilter}
+                  onChange={(e) => setSelectedPriorityFilter(e.target.value)}
+                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+                >
+                  {PRIORITY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option === 'All' ? 'All Priorities' : getPriorityLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+                <FolderKanban className="h-4 w-4 text-secondary shrink-0" />
+                <select
+                  value={selectedProjectFilter}
+                  onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+                >
+                  <option value="All">All Projects</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                onClick={resetFilters}
+                disabled={activeFilterCount === 0}
+                className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press"
               >
-                {PRIORITY_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option === 'All' ? 'All Priorities' : getPriorityLabel(option)}
-                  </option>
-                ))}
-              </select>
-            </label>
+                Reset {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
+              </button>
+            </div>
 
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-              <FolderKanban className="h-4 w-4 text-secondary shrink-0" />
-              <select
-                value={selectedProjectFilter}
-                onChange={(e) => setSelectedProjectFilter(e.target.value)}
-                className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-              >
-                <option value="All">All Projects</option>
-                {projects.map((project) => (
-                  <option key={project.id} value={project.id}>
-                    {project.name.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <button
-              type="button"
-              onClick={resetFilters}
-              disabled={activeFilterCount === 0}
-              className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press"
-            >
-              Reset {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
-            </button>
+            <div className="md:hidden text-[11px] text-secondary min-h-[1rem]">
+              {activeFilterLabels.length > 0 ? activeFilterLabels.join(' • ') : 'No filters applied'}
+            </div>
           </div>
         </div>
       </section>
+
+      {showMobileFilters && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[3px] p-4 md:hidden flex items-end">
+          <div className="w-full bg-surface border border-border shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-neutral-bg/50">
+              <div>
+                <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Task Filters</div>
+                <h3 className="font-display text-lg text-primary font-bold">Adjust the task view</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(false)}
+                className="text-secondary hover:text-primary transition-colors cursor-pointer btn-press"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 font-label text-xs">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3">
+                <Tag className="h-4 w-4 text-secondary shrink-0" />
+                <select
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+                >
+                  {CATEGORY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option === 'All' ? 'All Categories' : option}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3">
+                <SlidersHorizontal className="h-4 w-4 text-secondary shrink-0" />
+                <select
+                  value={selectedPriorityFilter}
+                  onChange={(e) => setSelectedPriorityFilter(e.target.value)}
+                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+                >
+                  {PRIORITY_OPTIONS.map((option) => (
+                    <option key={option} value={option}>
+                      {option === 'All' ? 'All Priorities' : getPriorityLabel(option)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3">
+                <FolderKanban className="h-4 w-4 text-secondary shrink-0" />
+                <select
+                  value={selectedProjectFilter}
+                  onChange={(e) => setSelectedProjectFilter(e.target.value)}
+                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
+                >
+                  <option value="All">All Projects</option>
+                  {projects.map((project) => (
+                    <option key={project.id} value={project.id}>
+                      {project.name.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 p-4 border-t border-border">
+              <SecondaryButton type="button" onClick={resetFilters} disabled={activeFilterCount === 0}>
+                Reset
+              </SecondaryButton>
+              <PrimaryButton type="button" onClick={() => setShowMobileFilters(false)}>
+                Apply
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showAddTask && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[3px] p-4 flex items-center justify-center">
@@ -820,7 +932,7 @@ function TasksContent() {
 
       {activeTab === 'kanban' && (
         <div className="space-y-5">
-          <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <section className="hidden xl:grid xl:grid-cols-4 gap-3">
             {kanbanColumns.map((column) => (
               <button
                 key={column.status}

@@ -32,7 +32,15 @@ import {
   Clock,
   Sparkles,
   Inbox,
-  Check
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  Minimize2,
+  Minus,
+  Type,
+  List,
+  X
 } from 'lucide-react';
 
 function AcademyContent() {
@@ -99,6 +107,11 @@ function AcademyContent() {
   const [academyTab, setAcademyTab] = useState<'matrix' | 'flashcards' | 'knowledge'>('matrix');
   const [isNotePreview, setIsNotePreview] = useState(false);
   const [mobileStudioTab, setMobileStudioTab] = useState<'index' | 'notepad'>('index');
+  const [isReaderOpen, setIsReaderOpen] = useState(false);
+  const [readerFontSize, setReaderFontSize] = useState(18);
+  const [readerLineHeight, setReaderLineHeight] = useState<'relaxed' | 'loose'>('loose');
+  const [readerWidth, setReaderWidth] = useState<'focused' | 'wide'>('focused');
+  const [showReaderSettings, setShowReaderSettings] = useState(false);
 
   const activeCourse = courses.find((c) => c.id === selectedCourseId);
   const activeModule = courseModules.find((m) => m.id === selectedModuleId);
@@ -110,6 +123,7 @@ function AcademyContent() {
   const notesRef = useRef(localNotes);
   const activeModuleIdRef = useRef(activeModule?.id);
   const courseModulesRef = useRef(courseModules);
+  const readerViewportRef = useRef<HTMLDivElement | null>(null);
 
   // Sync refs
   const lastSavedNotesRef = useRef(localNotes);
@@ -117,6 +131,33 @@ function AcademyContent() {
   useEffect(() => {
     notesRef.current = localNotes;
   }, [localNotes]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedFontSize = window.localStorage.getItem('heritage_reader_font_size');
+    const savedLineHeight = window.localStorage.getItem('heritage_reader_line_height');
+    const savedWidth = window.localStorage.getItem('heritage_reader_width');
+
+    if (savedFontSize) {
+      const parsed = Number(savedFontSize);
+      if (!Number.isNaN(parsed)) {
+        setReaderFontSize(Math.min(24, Math.max(14, parsed)));
+      }
+    }
+    if (savedLineHeight === 'relaxed' || savedLineHeight === 'loose') {
+      setReaderLineHeight(savedLineHeight);
+    }
+    if (savedWidth === 'focused' || savedWidth === 'wide') {
+      setReaderWidth(savedWidth);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('heritage_reader_font_size', String(readerFontSize));
+    window.localStorage.setItem('heritage_reader_line_height', readerLineHeight);
+    window.localStorage.setItem('heritage_reader_width', readerWidth);
+  }, [readerFontSize, readerLineHeight, readerWidth]);
 
   // Sync external changes to notes (e.g. from AI Research Agent)
   useEffect(() => {
@@ -253,6 +294,16 @@ function AcademyContent() {
       }
 
       if (e.key === 'Escape') {
+        if (showReaderSettings) {
+          e.preventDefault();
+          setShowReaderSettings(false);
+          return;
+        }
+        if (isReaderOpen) {
+          e.preventDefault();
+          setIsReaderOpen(false);
+          return;
+        }
         if (newModuleModalOpen) {
           e.preventDefault();
           setNewModuleModalOpen(false);
@@ -302,9 +353,27 @@ function AcademyContent() {
     editingModuleId,
     editingLessonId,
     showAddCourse,
+    isReaderOpen,
+    showReaderSettings,
     showToast,
     updateModuleNotes
   ]);
+
+  useEffect(() => {
+    if (!isReaderOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('academy-reader-open');
+    if (readerViewportRef.current) {
+      readerViewportRef.current.scrollTop = 0;
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.classList.remove('academy-reader-open');
+    };
+  }, [isReaderOpen, selectedModuleId]);
 
   // Clear search on tab/course change
   useEffect(() => {
@@ -317,6 +386,7 @@ function AcademyContent() {
       const course = courses.find((c) => c.id === targetCourseId);
       if (course) {
         setSelectedCourseId(targetCourseId);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         
         if (targetModuleId) {
           const mod = courseModules.find((m) => m.course_id === targetCourseId && m.id === targetModuleId);
@@ -521,6 +591,13 @@ function AcademyContent() {
   // ==========================================
   // SIMPLE MARKDOWN PARSER FOR PREVIEW
   // ==========================================
+  const getHeadingId = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .trim()
+      .replace(/\s+/g, '-');
+
   const renderMarkdownInline = (text: string) => {
     if (!text) return '';
     
@@ -647,8 +724,21 @@ function AcademyContent() {
     });
   };
 
-  const renderMarkdown = (text: string) => {
-    if (!text) return <p className="italic text-secondary">Empty notepad. Input notes on edit view...</p>;
+  const renderMarkdown = (
+    text: string,
+    options?: {
+      paragraphClassName?: string;
+      heading1ClassName?: string;
+      heading2ClassName?: string;
+      heading3ClassName?: string;
+      listClassName?: string;
+      blockquoteClassName?: string;
+      codeBlockClassName?: string;
+      tableClassName?: string;
+      emptyClassName?: string;
+    }
+  ) => {
+    if (!text) return <p className={options?.emptyClassName || 'italic text-secondary'}>Empty notepad. Input notes on edit view...</p>;
     
     const lines = text.split('\n');
     const elements: React.ReactNode[] = [];
@@ -666,7 +756,7 @@ function AcademyContent() {
           i++;
         }
         elements.push(
-          <pre key={`code-${i}`} className="bg-neutral-bg/60 border border-secondary/20 p-3 rounded-sm font-mono text-[11px] text-primary overflow-x-auto my-3 leading-relaxed whitespace-pre">
+          <pre key={`code-${i}`} className={`bg-neutral-bg/60 border border-secondary/20 p-3 rounded-sm font-mono text-[11px] text-primary overflow-x-auto my-3 leading-relaxed whitespace-pre ${options?.codeBlockClassName || ''}`}>
             <code>{codeLines.join('\n')}</code>
           </pre>
         );
@@ -700,7 +790,7 @@ function AcademyContent() {
           }
 
           elements.push(
-            <div key={`table-${i}`} className="overflow-x-auto my-3 border border-secondary/25 rounded-sm">
+            <div key={`table-${i}`} className={`overflow-x-auto my-3 border border-secondary/25 rounded-sm ${options?.tableClassName || ''}`}>
               <table className="w-full text-left border-collapse text-[11px] font-sans">
                 {hasHeader && (
                   <thead>
@@ -739,7 +829,7 @@ function AcademyContent() {
           i++;
         }
         elements.push(
-          <blockquote key={`quote-${i}`} className="border-l-2 border-tertiary pl-3 py-1 bg-neutral-bg/50 font-sans text-xs italic text-secondary my-3">
+          <blockquote key={`quote-${i}`} className={`border-l-2 border-tertiary pl-3 py-1 bg-neutral-bg/50 font-sans text-xs italic text-secondary my-3 ${options?.blockquoteClassName || ''}`}>
             {quoteLines.map((ql, qIdx) => (
               <p key={qIdx} className="my-0.5">{renderMarkdownInline(ql)}</p>
             ))}
@@ -756,7 +846,7 @@ function AcademyContent() {
           i++;
         }
         elements.push(
-          <ul key={`list-${i}`} className="list-disc pl-5 my-2 text-xs space-y-1">
+          <ul key={`list-${i}`} className={`list-disc pl-5 my-2 text-xs space-y-1 ${options?.listClassName || ''}`}>
             {listItems.map((item, lIdx) => (
               <li key={lIdx} className="text-primary font-sans">
                 {renderMarkdownInline(item)}
@@ -770,7 +860,7 @@ function AcademyContent() {
       // 5. Headings
       if (line.startsWith('# ')) {
         elements.push(
-          <h4 key={i} className="font-display text-lg font-bold text-primary mt-4 mb-2 border-b border-secondary/15 pb-1">
+          <h4 id={getHeadingId(line.slice(2))} key={i} className={`font-display text-lg font-bold text-primary mt-4 mb-2 border-b border-secondary/15 pb-1 scroll-mt-24 ${options?.heading1ClassName || ''}`}>
             {renderMarkdownInline(line.slice(2))}
           </h4>
         );
@@ -779,7 +869,7 @@ function AcademyContent() {
       }
       if (line.startsWith('## ')) {
         elements.push(
-          <h5 key={i} className="font-display text-md font-bold text-primary mt-3.5 mb-1.5">
+          <h5 id={getHeadingId(line.slice(3))} key={i} className={`font-display text-md font-bold text-primary mt-3.5 mb-1.5 scroll-mt-24 ${options?.heading2ClassName || ''}`}>
             {renderMarkdownInline(line.slice(3))}
           </h5>
         );
@@ -788,7 +878,7 @@ function AcademyContent() {
       }
       if (line.startsWith('### ')) {
         elements.push(
-          <h6 key={i} className="font-sans text-xs font-bold text-primary mt-3 mb-1">
+          <h6 id={getHeadingId(line.slice(4))} key={i} className={`font-sans text-xs font-bold text-primary mt-3 mb-1 scroll-mt-24 ${options?.heading3ClassName || ''}`}>
             {renderMarkdownInline(line.slice(4))}
           </h6>
         );
@@ -806,7 +896,7 @@ function AcademyContent() {
       // 7. Regular paragraph
       if (line.trim() !== '') {
         elements.push(
-          <p key={i} className="font-sans text-xs text-primary min-h-[1em] leading-relaxed my-2">
+          <p key={i} className={`font-sans text-xs text-primary min-h-[1em] leading-relaxed my-2 ${options?.paragraphClassName || ''}`}>
             {renderMarkdownInline(line)}
           </p>
         );
@@ -843,6 +933,39 @@ function AcademyContent() {
     return historyRaw ? JSON.parse(historyRaw) : [];
   };
   const notesHistory = getNotesHistory();
+
+  const activeCourseModules = selectedCourseId
+    ? courseModules
+        .filter((m) => m.course_id === selectedCourseId)
+        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+    : [];
+  const activeCourseLessons = activeCourseModules.flatMap((module) =>
+    lessons
+      .filter((lesson) => lesson.module_id === module.id)
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+  );
+  const completedActiveLessons = activeCourseLessons.filter((lesson) => lesson.completed).length;
+  const activeCourseCards = selectedCourseId
+    ? flashcards.filter((card) => card.course_id === selectedCourseId)
+    : [];
+  const activeModuleIndex = activeCourseModules.findIndex((module) => module.id === selectedModuleId);
+  const previousModule = activeModuleIndex > 0 ? activeCourseModules[activeModuleIndex - 1] : null;
+  const nextModule = activeModuleIndex >= 0 && activeModuleIndex < activeCourseModules.length - 1
+    ? activeCourseModules[activeModuleIndex + 1]
+    : null;
+  const noteWordCount = localNotes.trim() ? localNotes.trim().split(/\s+/).length : 0;
+  const estimatedReadMinutes = Math.max(1, Math.ceil(noteWordCount / 220));
+  const noteHeadings = localNotes
+    .split('\n')
+    .map((line) => {
+      const match = line.match(/^(#{1,3})\s+(.*)$/);
+      if (!match) return null;
+      return {
+        level: match[1].length,
+        title: match[2].trim()
+      };
+    })
+    .filter((heading): heading is { level: number; title: string } => Boolean(heading));
 
   // Flashcards statistics calculation
   const courseCards = flashcards.filter(fc => fc.course_id === selectedCourseId);
@@ -980,36 +1103,36 @@ function AcademyContent() {
             VIEW 1: COURSE & SKILL MATRIX LIST
            ========================================== */
         <div className="space-y-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div className="relative w-full md:w-72">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
               <input
                 type="text"
-                placeholder="Search matrices..."
+                placeholder="Search courses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 bg-surface border border-border text-xs focus:outline-none focus:border-primary font-sans rounded-none"
               />
             </div>
-            <div className="flex gap-2 w-full md:w-auto">
+
+            <div className="flex gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setResearchModalOpen(true)}
-                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer w-full md:w-auto bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 text-xs font-label font-bold border border-primary rounded-none"
+                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer flex-1 sm:flex-none bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 text-xs font-label font-bold border border-primary rounded-none"
               >
-                <Search className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 <span>AI RESEARCH</span>
               </button>
               <button
                 onClick={() => setShowAddCourse(!showAddCourse)}
-                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer w-full md:w-auto bg-surface border border-border text-primary hover:bg-neutral-bg/40 px-4 py-2 text-xs font-label font-bold rounded-none"
+                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer flex-1 sm:flex-none bg-surface border border-border text-primary hover:bg-neutral-bg/40 px-4 py-2 text-xs font-label font-bold rounded-none"
               >
                 <Plus className="h-4 w-4" />
-                <span>ADD SKILL MATRIX</span>
+                <span>ADD COURSE</span>
               </button>
             </div>
           </div>
 
-          {/* Add Course Form */}
           {showAddCourse && (
             <form onSubmit={handleAddCourse} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
               <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
@@ -1051,17 +1174,13 @@ function AcademyContent() {
                 <PrimaryButton type="submit" className="flex-1">
                   Save Skill Matrix
                 </PrimaryButton>
-                <SecondaryButton
-                  type="button"
-                  onClick={() => setShowAddCourse(false)}
-                >
+                <SecondaryButton type="button" onClick={() => setShowAddCourse(false)}>
                   Cancel
                 </SecondaryButton>
               </div>
             </form>
           )}
 
-          {/* Courses grid */}
           {courses.length === 0 ? (
             <div className="text-center py-20 bg-surface border border-border rounded-none shadow-none">
               <BookOpen className="h-12 w-12 text-secondary/40 mx-auto mb-4" />
@@ -1077,95 +1196,118 @@ function AcademyContent() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {courses
-                .filter(c => 
-                  c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  (c.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                  (c.category || '').toLowerCase().includes(searchQuery.toLowerCase())
-                )
-                .map((course) => {
-                  const progress = calculateCourseProgress(course.id);
-                  return (
-                    <div
-                      key={course.id}
-                      className="bg-surface border border-border p-5 flex flex-col justify-between space-y-6 rounded-none relative group hover:border-primary transition-all shadow-none"
-                    >
-                      <div className="space-y-2">
-                        <span className="font-label text-[10px] bg-neutral-bg/60 border border-border px-1.5 py-0.5 text-primary uppercase tracking-wide font-bold">
-                          {course.category}
-                        </span>
-                        <h4 className="font-serif text-lg font-bold text-primary tracking-tight line-clamp-1">
-                          {course.title}
-                        </h4>
-                        {course.description && (
-                          <p className="font-sans text-xs text-secondary line-clamp-2 leading-relaxed">
-                            {course.description}
-                          </p>
-                        )}
-                      </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                {courses
+                  .filter(c => 
+                    c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (c.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    (c.category || '').toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((course) => {
+                    const progress = calculateCourseProgress(course.id);
+                    const modules = courseModules.filter((m) => m.course_id === course.id);
+                    const courseLessons = lessons.filter((lesson) => modules.some((module) => module.id === lesson.module_id));
+                    const courseDueCards = flashcards.filter((card) => card.course_id === course.id && new Date(card.next_review_date) <= new Date()).length;
 
-                      <div className="border-t border-border pt-4 flex flex-col space-y-3">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <span className="font-label text-[10px] text-secondary uppercase tracking-wider block font-bold">
-                              Completion
-                            </span>
-                            <span className="font-serif text-md font-bold text-accent">
-                              {progress}%
-                            </span>
+                    return (
+                      <div
+                        key={course.id}
+                        className="bg-surface border border-border p-4 md:p-5 flex flex-col justify-between space-y-4 rounded-none relative group hover:border-primary transition-all shadow-none"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-2 min-w-0">
+                              <span className="inline-flex font-label text-[10px] bg-neutral-bg/60 border border-border px-1.5 py-0.5 text-primary uppercase tracking-wide font-bold">
+                                {course.category}
+                              </span>
+                              <h4 className="font-serif text-lg font-bold text-primary tracking-tight leading-tight">
+                                {course.title}
+                              </h4>
+                              {course.description && (
+                                <p className="font-sans text-xs text-secondary leading-relaxed line-clamp-2">
+                                  {course.description}
+                                </p>
+                              )}
+                            </div>
+
+                            <div className="flex space-x-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => {
+                                  setCourseToEdit(course);
+                                  setEditCourseTitle(course.title);
+                                  setEditCourseDesc(course.description || '');
+                                  setEditCourseCategory(course.category || '');
+                                  setEditCourseModalOpen(true);
+                                }}
+                                className="text-secondary hover:text-primary cursor-pointer btn-press"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setItemToDelete({ id: course.id, title: course.title, type: 'course' });
+                                  setDeleteModalOpen(true);
+                                }}
+                                className="text-secondary hover:text-tertiary cursor-pointer"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
 
-                          <button
-                            onClick={() => {
-                              setSelectedCourseId(course.id);
-                              const modules = courseModules.filter((m) => m.course_id === course.id);
-                              if (modules.length > 0) {
-                                setSelectedModuleId(modules[0].id);
-                              }
-                            }}
-                            className="border border-primary bg-primary text-on-primary hover:bg-primary/95 transition-all px-3 py-1.5 font-label text-xs uppercase tracking-widest font-bold cursor-pointer btn-press rounded-none"
-                          >
-                            ENTER STUDIO
-                          </button>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="border border-border bg-background px-3 py-2">
+                              <span className="block font-label text-[9px] uppercase tracking-[0.14em] text-secondary font-bold">Modules</span>
+                              <span className="block mt-1 text-sm font-semibold text-primary">{modules.length}</span>
+                            </div>
+                            <div className="border border-border bg-background px-3 py-2">
+                              <span className="block font-label text-[9px] uppercase tracking-[0.14em] text-secondary font-bold">Lessons</span>
+                              <span className="block mt-1 text-sm font-semibold text-primary">{courseLessons.length}</span>
+                            </div>
+                            <div className="border border-border bg-background px-3 py-2">
+                              <span className="block font-label text-[9px] uppercase tracking-[0.14em] text-secondary font-bold">Due</span>
+                              <span className="block mt-1 text-sm font-semibold text-accent">{courseDueCards}</span>
+                            </div>
+                          </div>
                         </div>
-                        
-                        {/* Animated Progress Bar */}
-                        <div className="w-full bg-border h-1.5 rounded-none overflow-hidden">
-                          <div 
-                            className="bg-accent h-full transition-all duration-500 ease-out rounded-none"
-                            style={{ width: `${progress}%` }}
-                          />
-                        </div>
-                      </div>
 
-                      {/* Edit/Delete Actions */}
-                      <div className="absolute right-4 top-4 flex space-x-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            setCourseToEdit(course);
-                            setEditCourseTitle(course.title);
-                            setEditCourseDesc(course.description || '');
-                            setEditCourseCategory(course.category || '');
-                            setEditCourseModalOpen(true);
-                          }}
-                          className="text-secondary hover:text-primary cursor-pointer btn-press"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setItemToDelete({ id: course.id, title: course.title, type: 'course' });
-                            setDeleteModalOpen(true);
-                          }}
-                          className="text-secondary hover:text-tertiary cursor-pointer"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <div className="border-t border-border pt-3 space-y-2">
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <span className="font-label text-[10px] text-secondary uppercase tracking-wider block font-bold">
+                                Completion
+                              </span>
+                              <span className="font-serif text-base font-bold text-accent">
+                                {progress}%
+                              </span>
+                            </div>
+
+                            <button
+                              onClick={() => {
+                                setSelectedCourseId(course.id);
+                                if (modules.length > 0) {
+                                  setSelectedModuleId(modules[0].id);
+                                }
+                                window.scrollTo({ top: 0, behavior: 'smooth' });
+                              }}
+                              className="border border-primary bg-primary text-on-primary hover:bg-primary/95 transition-all px-3 py-2 font-label text-xs uppercase tracking-widest font-bold cursor-pointer btn-press rounded-none"
+                            >
+                              Open Studio
+                            </button>
+                          </div>
+
+                          <div className="w-full bg-border h-1.5 rounded-none overflow-hidden">
+                            <div 
+                              className="bg-accent h-full transition-all duration-500 ease-out rounded-none"
+                              style={{ width: `${progress}%` }}
+                            />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+              </div>
             </div>
           )}
         </div>
@@ -1174,7 +1316,25 @@ function AcademyContent() {
             VIEW 2: SPLIT-SCREEN STUDY STUDIO
            ========================================== */
         <div className="space-y-6">
-          {/* Mobile tab switcher for split-screen */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+              <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Modules</span>
+              <span className="text-2xl font-bold text-primary">{activeCourseModules.length}</span>
+            </div>
+            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+              <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Lessons Done</span>
+              <span className="text-2xl font-bold text-primary">{completedActiveLessons}/{activeCourseLessons.length}</span>
+            </div>
+            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+              <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Reader Time</span>
+              <span className="text-2xl font-bold text-primary">{estimatedReadMinutes} min</span>
+            </div>
+            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+              <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Cards</span>
+              <span className="text-2xl font-bold text-accent">{activeCourseCards.length}</span>
+            </div>
+          </div>
+
           <div className="flex lg:hidden border border-border font-label text-xs rounded-none bg-background overflow-hidden">
             <button
               type="button"
@@ -1183,7 +1343,7 @@ function AcademyContent() {
                 mobileStudioTab === 'index' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'
               }`}
             >
-              Index
+              Outline
             </button>
             <button
               type="button"
@@ -1192,405 +1352,376 @@ function AcademyContent() {
                 mobileStudioTab === 'notepad' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'
               }`}
             >
-              Studio Notepad
+              Notes
             </button>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-h-[500px]">
-            
-            {/* LEFT SIDE: HIERARCHICAL INDEX CHECKLIST */}
-            <section className={`bg-surface border border-border p-6 rounded-none space-y-6 max-h-[600px] overflow-y-auto shadow-none ${
-              mobileStudioTab !== 'index' ? 'hidden lg:block' : ''
-            }`}>
-            <div className="border-b border-border pb-2 space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-bold">
-                  Modules & Lessons Index
-                </span>
-                <button
-                  onClick={() => setNewModuleModalOpen(true)}
-                  className="bg-primary text-on-primary text-[10px] font-bold px-2.5 py-1 uppercase tracking-wider rounded-none cursor-pointer hover:bg-opacity-90 btn-press flex items-center space-x-1 border border-primary"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>New Module</span>
-                </button>
+          <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6 items-start">
+            <section className={`space-y-4 ${mobileStudioTab !== 'index' ? 'hidden lg:block' : ''}`}>
+              <div className="border border-border bg-surface p-5 space-y-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="space-y-1 min-w-0">
+                    <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Course Overview</span>
+                    <h3 className="font-display text-xl font-bold text-primary">{activeCourse?.title}</h3>
+                    {activeCourse?.description && (
+                      <p className="text-sm text-secondary leading-relaxed">{activeCourse.description}</p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setNewModuleModalOpen(true)}
+                    className="bg-primary text-on-primary text-[10px] font-bold px-2.5 py-2 uppercase tracking-wider rounded-none cursor-pointer hover:bg-opacity-90 btn-press flex items-center justify-center space-x-1 border border-primary shrink-0 self-start lg:self-auto"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>New Module</span>
+                  </button>
+                </div>
+
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
+                  <input
+                    type="text"
+                    placeholder="Search modules or lessons..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-none text-xs focus:outline-none focus:border-primary font-sans"
+                  />
+                </div>
               </div>
-              <div className="relative w-full">
-                <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-secondary" />
-                <input
-                  type="text"
-                  placeholder="Search modules or lessons..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-4 py-1.5 bg-neutral-bg/50 border border-border rounded-none text-xs focus:outline-none focus:border-primary font-sans"
-                />
-              </div>
-            </div>
 
-            {/* Modules map */}
-            <div className="space-y-6">
-              {courseModules
-                .filter((m) => m.course_id === selectedCourseId)
-                .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-                .filter((mod) => {
-                  const titleMatch = mod.title.toLowerCase().includes(searchQuery.toLowerCase());
-                  const hasMatchingLesson = lessons.some(
-                    (l) => l.module_id === mod.id && l.title.toLowerCase().includes(searchQuery.toLowerCase())
-                  );
-                  return titleMatch || hasMatchingLesson;
-                })
-                .map((mod) => {
-                  const modLessons = lessons
-                    .filter((l) => l.module_id === mod.id)
-                    .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-                    .filter((l) => 
-                      l.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                      mod.title.toLowerCase().includes(searchQuery.toLowerCase())
-                    );
-                  const isSelected = selectedModuleId === mod.id;
+              <div className="border border-border bg-surface overflow-visible lg:max-h-[calc(100vh-19rem)] lg:overflow-y-auto">
+                <div className="p-4 space-y-4">
+                  {activeCourseModules
+                    .filter((mod) => {
+                      const titleMatch = mod.title.toLowerCase().includes(searchQuery.toLowerCase());
+                      const hasMatchingLesson = lessons.some(
+                        (lesson) => lesson.module_id === mod.id && lesson.title.toLowerCase().includes(searchQuery.toLowerCase())
+                      );
+                      return titleMatch || hasMatchingLesson;
+                    })
+                    .map((mod) => {
+                      const modLessons = lessons
+                        .filter((lesson) => lesson.module_id === mod.id)
+                        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+                        .filter((lesson) =>
+                          lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          mod.title.toLowerCase().includes(searchQuery.toLowerCase())
+                        );
+                      const isSelected = selectedModuleId === mod.id;
+                      const completedCount = modLessons.filter((lesson) => lesson.completed).length;
 
-                  return (
-                    <div
-                      key={mod.id}
-                      className={`p-4 border transition-all rounded-none ${
-                        isSelected ? 'border-primary bg-neutral-bg/40 shadow-none' : 'border-border bg-surface'
-                      }`}
-                    >
-                      <div className="flex justify-between items-baseline mb-3 group/mod">
-                        {editingModuleId === mod.id ? (
-                          <div className="flex-grow flex gap-2">
-                            <input
-                              type="text"
-                              value={editModuleName}
-                              onChange={(e) => setEditModuleName(e.target.value)}
-                              className="flex-grow bg-surface border border-border px-2 py-0.5 font-sans text-sm text-primary focus:outline-none rounded-none"
-                            />
-                            <div className="flex gap-1">
-                              <button
-                                onClick={async () => {
-                                  if (!editModuleName.trim()) return;
-                                  await updateModule(mod.id, { title: editModuleName });
-                                  setEditingModuleId(null);
-                                  showToast('Module title updated.', 'success');
-                                }}
-                                className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
-                              >
-                                Save
-                              </button>
-                              <button
-                                onClick={() => setEditingModuleId(null)}
-                                className="border border-border bg-surface hover:bg-neutral-bg px-2 py-0.5 text-[10px] uppercase rounded-none cursor-pointer btn-press"
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center space-x-2 flex-grow min-w-0">
-                            <h5
-                              onClick={() => {
-                                  setSelectedModuleId(mod.id);
-                                  setMobileStudioTab('notepad');
-                              }}
-                              className="font-serif text-md font-bold text-primary hover:text-accent cursor-pointer truncate max-w-[150px] sm:max-w-[200px] md:max-w-[250px]"
-                            >
-                              {mod.title}
-                            </h5>
-                            
-                            <div className="hidden group-hover/mod:flex items-center space-x-1 opacity-60 hover:opacity-100 transition-opacity shrink-0">
-                              <button
-                                onClick={() => {
-                                  setEditingModuleId(mod.id);
-                                  setEditModuleName(mod.title);
-                                }}
-                                className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
-                              >
-                                <Edit3 className="h-3 w-3" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setItemToDelete({ id: mod.id, title: mod.title, type: 'module' });
-                                  setDeleteModalOpen(true);
-                                }}
-                                className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                              <button
-                                onClick={() => handleReorderModule(mod.id, 'up')}
-                                className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
-                              >
-                                <ArrowUp className="h-3 w-3" />
-                              </button>
-                              <button
-                                onClick={() => handleReorderModule(mod.id, 'down')}
-                                className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
-                              >
-                                <ArrowDown className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                        <span className="font-label text-[10px] text-secondary uppercase shrink-0 bg-neutral-bg/60 border border-border px-1.5 py-0.5 rounded-none font-bold">
-                          Module {mod.order_index}
-                        </span>
-                      </div>
-
-                      {/* Lessons checklist */}
-                      <div className="space-y-2 mb-4">
-                        {modLessons.map((l) => (
-                          <div key={l.id} className="flex items-center justify-between p-2 bg-surface border border-border rounded-none group/les">
-                            {editingLessonId === l.id ? (
-                              <div className="flex-grow flex flex-col gap-1.5 font-label text-xs w-full">
+                      return (
+                        <div
+                          key={mod.id}
+                          className={`border p-4 space-y-3 transition-all ${isSelected ? 'border-primary bg-background' : 'border-border bg-surface'}`}
+                        >
+                          <div className="flex justify-between items-start gap-3 group/mod">
+                            {editingModuleId === mod.id ? (
+                              <div className="flex-grow flex gap-2">
                                 <input
                                   type="text"
-                                  value={editLessonName}
-                                  onChange={(e) => setEditLessonName(e.target.value)}
-                                  className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
-                                  placeholder="Lesson title"
+                                  value={editModuleName}
+                                  onChange={(e) => setEditModuleName(e.target.value)}
+                                  className="flex-grow bg-surface border border-border px-2 py-1 font-sans text-sm text-primary focus:outline-none rounded-none"
                                 />
-                                <input
-                                  type="text"
-                                  value={editLessonLink}
-                                  onChange={(e) => setEditLessonLink(e.target.value)}
-                                  className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
-                                  placeholder="Link (optional)"
-                                />
-                                <div className="flex gap-1.5 justify-end mt-1">
-                                  <button
-                                    onClick={async () => {
-                                      if (!editLessonName.trim()) return;
-                                      const { isValid, formatted } = formatAndValidateUrl(editLessonLink);
-                                      if (!isValid) {
-                                        showToast('Please enter a valid URL', 'error');
-                                        return;
-                                      }
-                                      await updateLesson(l.id, { title: editLessonName, link: formatted || undefined });
-                                      setEditingLessonId(null);
-                                      showToast('Lesson updated.', 'success');
-                                    }}
-                                    className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
-                                  >
-                                    Save
-                                  </button>
-                                  <button
-                                    onClick={() => setEditingLessonId(null)}
-                                    className="border border-border bg-surface hover:bg-neutral-bg px-2 py-0.5 text-[10px] uppercase rounded-none cursor-pointer btn-press"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
+                                <button
+                                  onClick={async () => {
+                                    if (!editModuleName.trim()) return;
+                                    await updateModule(mod.id, { title: editModuleName });
+                                    setEditingModuleId(null);
+                                    showToast('Module title updated.', 'success');
+                                  }}
+                                  className="bg-primary text-on-primary px-2 py-1 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
+                                >
+                                  Save
+                                </button>
                               </div>
                             ) : (
                               <>
-                                <div className="flex items-center space-x-2 flex-grow min-w-0">
-                                  <input
-                                    type="checkbox"
-                                    checked={l.completed}
-                                    onChange={() => toggleLessonCompleted(l.id, !l.completed)}
-                                    className="h-4.5 w-4.5 accent-accent shrink-0 cursor-pointer"
-                                  />
-                                  <span className={`font-sans text-xs truncate font-semibold ${l.completed ? 'line-through text-secondary opacity-65' : 'text-primary'}`}>
-                                    {l.title}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedModuleId(mod.id);
+                                    setMobileStudioTab('notepad');
+                                  }}
+                                  className="text-left min-w-0"
+                                >
+                                  <span className="block font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">
+                                    Module {mod.order_index}
                                   </span>
-                                </div>
-
-                                <div className="flex items-center space-x-2 shrink-0">
-                                  {l.link && (
-                                    <a
-                                      href={l.link}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-secondary hover:text-accent btn-press"
-                                    >
-                                      <ExternalLink className="h-3.5 w-3.5" />
-                                    </a>
-                                  )}
-                                  
-                                  <div className="hidden group-hover/les:flex items-center space-x-1 opacity-60 hover:opacity-100 transition-opacity">
-                                    <button
-                                      onClick={() => {
-                                        setEditingLessonId(l.id);
-                                        setEditLessonName(l.title);
-                                        setEditLessonLink(l.link || '');
-                                      }}
-                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
-                                    >
-                                      <Edit3 className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setItemToDelete({ id: l.id, title: l.title, type: 'lesson' });
-                                        setDeleteModalOpen(true);
-                                      }}
-                                      className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleReorderLesson(l.id, 'up')}
-                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
-                                    >
-                                      <ArrowUp className="h-3 w-3" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleReorderLesson(l.id, 'down')}
-                                      className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
-                                    >
-                                      <ArrowDown className="h-3 w-3" />
-                                    </button>
-                                  </div>
+                                  <h4 className="font-serif text-base font-bold text-primary leading-tight mt-1">{mod.title}</h4>
+                                </button>
+                                <div className="hidden group-hover/mod:flex items-center space-x-1 opacity-70 transition-opacity shrink-0">
+                                  <button onClick={() => { setEditingModuleId(mod.id); setEditModuleName(mod.title); }} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><Edit3 className="h-3 w-3" /></button>
+                                  <button onClick={() => { setItemToDelete({ id: mod.id, title: mod.title, type: 'module' }); setDeleteModalOpen(true); }} className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"><Trash2 className="h-3 w-3" /></button>
+                                  <button onClick={() => handleReorderModule(mod.id, 'up')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowUp className="h-3 w-3" /></button>
+                                  <button onClick={() => handleReorderModule(mod.id, 'down')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowDown className="h-3 w-3" /></button>
                                 </div>
                               </>
                             )}
                           </div>
-                        ))}
-                      </div>
 
-                      {/* Add Lesson Input */}
-                      {isSelected && (
-                        <div className="mt-3 pt-3 border-t border-border space-y-2 font-label text-xs">
-                          <div className="flex flex-col gap-2">
-                            <input
-                              type="text"
-                              value={newLessonName}
-                              onChange={(e) => setNewLessonName(e.target.value)}
-                              placeholder="Add Lesson Title..."
-                              className="w-full bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
-                            />
-                            <div className="flex gap-2">
+                          <div className="flex items-center justify-between text-[11px] text-secondary">
+                            <span>{completedCount}/{modLessons.length} lessons complete</span>
+                            {isSelected && <span className="font-label uppercase tracking-[0.14em] text-primary font-bold">Open</span>}
+                          </div>
+
+                          <div className="space-y-2">
+                            {modLessons.map((lesson) => (
+                              <div key={lesson.id} className="flex items-center justify-between gap-2 p-2 bg-background border border-border group/les">
+                                {editingLessonId === lesson.id ? (
+                                  <div className="flex-grow flex flex-col gap-1.5 font-label text-xs w-full">
+                                    <input
+                                      type="text"
+                                      value={editLessonName}
+                                      onChange={(e) => setEditLessonName(e.target.value)}
+                                      className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
+                                      placeholder="Lesson title"
+                                    />
+                                    <input
+                                      type="text"
+                                      value={editLessonLink}
+                                      onChange={(e) => setEditLessonLink(e.target.value)}
+                                      className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
+                                      placeholder="Link (optional)"
+                                    />
+                                    <div className="flex gap-1.5 justify-end mt-1">
+                                      <button
+                                        onClick={async () => {
+                                          if (!editLessonName.trim()) return;
+                                          const { isValid, formatted } = formatAndValidateUrl(editLessonLink);
+                                          if (!isValid) {
+                                            showToast('Please enter a valid URL', 'error');
+                                            return;
+                                          }
+                                          await updateLesson(lesson.id, { title: editLessonName, link: formatted || undefined });
+                                          setEditingLessonId(null);
+                                          showToast('Lesson updated.', 'success');
+                                        }}
+                                        className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
+                                      >
+                                        Save
+                                      </button>
+                                      <button onClick={() => setEditingLessonId(null)} className="border border-border bg-surface hover:bg-neutral-bg px-2 py-0.5 text-[10px] uppercase rounded-none cursor-pointer btn-press">Cancel</button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={lesson.completed}
+                                        onChange={() => toggleLessonCompleted(lesson.id, !lesson.completed)}
+                                        className="h-4.5 w-4.5 accent-accent shrink-0 cursor-pointer"
+                                      />
+                                      <span className={`font-sans text-xs truncate font-semibold ${lesson.completed ? 'line-through text-secondary opacity-65' : 'text-primary'}`}>
+                                        {lesson.title}
+                                      </span>
+                                    </label>
+                                    <div className="flex items-center space-x-2 shrink-0">
+                                      {lesson.link && (
+                                        <a href={lesson.link} target="_blank" rel="noreferrer" className="text-secondary hover:text-accent btn-press">
+                                          <ExternalLink className="h-3.5 w-3.5" />
+                                        </a>
+                                      )}
+                                      <div className="hidden group-hover/les:flex items-center space-x-1 opacity-70 transition-opacity">
+                                        <button onClick={() => { setEditingLessonId(lesson.id); setEditLessonName(lesson.title); setEditLessonLink(lesson.link || ''); }} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><Edit3 className="h-3 w-3" /></button>
+                                        <button onClick={() => { setItemToDelete({ id: lesson.id, title: lesson.title, type: 'lesson' }); setDeleteModalOpen(true); }} className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"><Trash2 className="h-3 w-3" /></button>
+                                        <button onClick={() => handleReorderLesson(lesson.id, 'up')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowUp className="h-3 w-3" /></button>
+                                        <button onClick={() => handleReorderLesson(lesson.id, 'down')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowDown className="h-3 w-3" /></button>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          {isSelected && (
+                            <div className="pt-3 border-t border-border space-y-2 font-label text-xs">
                               <input
                                 type="text"
-                                value={newLessonLink}
-                                onChange={(e) => setNewLessonLink(e.target.value)}
-                                placeholder="Link (optional)..."
-                                className="flex-grow bg-neutral-bg border border-border px-2 py-1 text-xs focus:outline-none rounded-none font-sans"
+                                value={newLessonName}
+                                onChange={(e) => setNewLessonName(e.target.value)}
+                                placeholder="Add lesson title..."
+                                className="w-full bg-background border border-border px-2 py-2 text-xs focus:outline-none rounded-none font-sans"
                               />
-                              <button
-                                onClick={() => handleAddLesson(mod.id)}
-                                className="bg-primary text-on-primary px-4 py-1 font-bold uppercase tracking-wider cursor-pointer rounded-none shrink-0 btn-press border border-primary"
-                              >
-                                Add
-                              </button>
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  value={newLessonLink}
+                                  onChange={(e) => setNewLessonLink(e.target.value)}
+                                  placeholder="Link (optional)..."
+                                  className="flex-grow bg-background border border-border px-2 py-2 text-xs focus:outline-none rounded-none font-sans"
+                                />
+                                <button
+                                  onClick={() => handleAddLesson(mod.id)}
+                                  className="bg-primary text-on-primary px-4 py-2 font-bold uppercase tracking-wider cursor-pointer rounded-none shrink-0 btn-press border border-primary"
+                                >
+                                  Add
+                                </button>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-            </div>
-          </section>
-
-          {/* RIGHT SIDE: INTEGRATED MARKDOWN NOTES NOTEPAD */}
-          <section className={`bg-surface border border-border p-6 rounded-none flex flex-col justify-between min-h-[500px] shadow-none ${
-            mobileStudioTab !== 'notepad' ? 'hidden lg:block' : ''
-          }`}>
-            {activeModule ? (
-              <div className="space-y-4 flex-grow flex flex-col justify-between h-full">
-                <div className="flex justify-between items-center border-b border-border pb-2">
-                  <div className="truncate pr-4 flex-grow">
-                    <span className="font-label text-[10px] text-secondary uppercase font-bold">Studio Notepad</span>
-                    <h5 className="font-serif text-md font-bold text-primary truncate max-w-xs sm:max-w-md lg:max-w-lg">
-                      {activeModule.title}
-                    </h5>
-                  </div>
-
-                  {/* Toggle Preview / Edit / Version History */}
-                  <div className="flex items-center space-x-2 shrink-0">
-                    <div className="relative">
-                      <button
-                        onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-                        className="p-1 border border-border bg-surface hover:bg-neutral-bg/40 transition-all text-primary flex items-center justify-center cursor-pointer rounded-none btn-press"
-                        title="Version History"
-                      >
-                        <History className="h-3.5 w-3.5" />
-                      </button>
-                      
-                      {showHistoryDropdown && (
-                        <div className="absolute right-0 mt-1 w-64 bg-surface border border-border shadow-none rounded-none z-50 text-[11px] max-h-48 overflow-y-auto">
-                          <span className="block p-2 font-bold border-b border-border bg-neutral-bg uppercase text-[10px]">
-                            Notes Version History
-                          </span>
-                          {notesHistory.length === 0 ? (
-                            <p className="p-3 text-center text-secondary italic">No saved history yet</p>
-                          ) : (
-                            notesHistory.map((historyItem: any, hIdx: number) => (
-                              <button
-                                key={hIdx}
-                                onClick={() => {
-                                  setLocalNotes(historyItem.notes);
-                                  setShowHistoryDropdown(false);
-                                  showToast('Notes restored to historical version.', 'info');
-                                }}
-                                className="w-full text-left p-2 border-b border-border hover:bg-neutral-bg flex flex-col justify-start btn-press"
-                              >
-                                <span className="font-bold text-primary">
-                                  {hIdx === 0 ? 'Current Session' : `Version ${notesHistory.length - hIdx}`}
-                                </span>
-                                <span className="text-[9px] text-secondary">
-                                  {new Date(historyItem.timestamp).toLocaleString()}
-                                </span>
-                                <span className="text-[9px] text-secondary truncate w-full mt-0.5">
-                                  {historyItem.notes.slice(0, 40) || '(empty)'}
-                                </span>
-                              </button>
-                            ))
                           )}
                         </div>
+                      );
+                    })}
+                </div>
+              </div>
+            </section>
+
+            <section className={`space-y-4 ${mobileStudioTab !== 'notepad' ? 'hidden lg:block' : ''}`}>
+              {activeModule ? (
+                <>
+                  <div className="border border-border bg-surface p-5 space-y-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="space-y-2 min-w-0">
+                        <span className="font-label text-[10px] text-secondary uppercase tracking-[0.16em] font-bold">Study Studio</span>
+                        <h3 className="font-display text-xl font-bold text-primary">{activeModule.title}</h3>
+                        <div className="flex flex-wrap gap-2 text-[11px] text-secondary">
+                          <span className="border border-border bg-background px-2 py-1">{noteWordCount} words</span>
+                          <span className="border border-border bg-background px-2 py-1">{estimatedReadMinutes} min read</span>
+                          <span className="border border-border bg-background px-2 py-1">{noteHeadings.length} sections</span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2 shrink-0">
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
+                            className="p-2 border border-border bg-surface hover:bg-neutral-bg/40 transition-all text-primary flex items-center justify-center cursor-pointer rounded-none btn-press"
+                            title="Version History"
+                          >
+                            <History className="h-4 w-4" />
+                          </button>
+                          {showHistoryDropdown && (
+                            <div className="absolute right-0 mt-1 w-64 bg-surface border border-border shadow-none rounded-none z-50 text-[11px] max-h-48 overflow-y-auto">
+                              <span className="block p-2 font-bold border-b border-border bg-neutral-bg uppercase text-[10px]">Notes Version History</span>
+                              {notesHistory.length === 0 ? (
+                                <p className="p-3 text-center text-secondary italic">No saved history yet</p>
+                              ) : (
+                                notesHistory.map((historyItem: any, hIdx: number) => (
+                                  <button
+                                    key={hIdx}
+                                    onClick={() => {
+                                      setLocalNotes(historyItem.notes);
+                                      setShowHistoryDropdown(false);
+                                      showToast('Notes restored to historical version.', 'info');
+                                    }}
+                                    className="w-full text-left p-2 border-b border-border hover:bg-neutral-bg flex flex-col justify-start btn-press"
+                                  >
+                                    <span className="font-bold text-primary">{hIdx === 0 ? 'Current Session' : `Version ${notesHistory.length - hIdx}`}</span>
+                                    <span className="text-[9px] text-secondary">{new Date(historyItem.timestamp).toLocaleString()}</span>
+                                    <span className="text-[9px] text-secondary truncate w-full mt-0.5">{historyItem.notes.slice(0, 40) || '(empty)'}</span>
+                                  </button>
+                                ))
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex border border-border font-label text-xs rounded-none overflow-hidden bg-background">
+                          <button onClick={() => setIsNotePreview(false)} className={`px-3 py-2 flex items-center space-x-1 cursor-pointer btn-press font-bold ${!isNotePreview ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/50'}`}><Edit3 className="h-3 w-3" /><span>Edit</span></button>
+                          <button onClick={() => setIsNotePreview(true)} className={`px-3 py-2 flex items-center space-x-1 border-l border-border cursor-pointer btn-press font-bold ${isNotePreview ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/50'}`}><Eye className="h-3 w-3" /><span>Preview</span></button>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setIsNotePreview(true);
+                            setIsReaderOpen(true);
+                          }}
+                          className="border border-border bg-surface px-3 py-2 text-xs font-label uppercase font-bold tracking-[0.16em] text-primary hover:bg-neutral-bg/40 btn-press flex items-center gap-2"
+                        >
+                          <Maximize2 className="h-3.5 w-3.5" />
+                          <span>Reader</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {(previousModule || nextModule) && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          disabled={!previousModule}
+                          onClick={() => previousModule && setSelectedModuleId(previousModule.id)}
+                          className="border border-border bg-background px-3 py-3 text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
+                        >
+                          <span className="font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold flex items-center gap-1"><ChevronLeft className="h-3 w-3" />Previous</span>
+                          <span className="block mt-1 text-sm font-semibold text-primary truncate">{previousModule?.title || 'Start of course'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          disabled={!nextModule}
+                          onClick={() => nextModule && setSelectedModuleId(nextModule.id)}
+                          className="border border-border bg-background px-3 py-3 text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
+                        >
+                          <span className="font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold flex items-center justify-end gap-1">Next<ChevronRight className="h-3 w-3" /></span>
+                          <span className="block mt-1 text-sm font-semibold text-primary truncate text-left">{nextModule?.title || 'End of course'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {noteHeadings.length > 0 && (
+                    <div className="border border-border bg-surface p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <List className="h-4 w-4 text-secondary" />
+                        <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Section Guide</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {noteHeadings.slice(0, 8).map((heading, index) => (
+                          <button
+                            key={`${heading.title}-${index}`}
+                            type="button"
+                            onClick={() => {
+                              setIsNotePreview(true);
+                              setIsReaderOpen(true);
+                              requestAnimationFrame(() => {
+                                requestAnimationFrame(() => {
+                                  const target = document.getElementById(getHeadingId(heading.title));
+                                  target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                });
+                              });
+                            }}
+                            className="border border-border bg-background px-2.5 py-1.5 text-xs text-primary hover:border-primary btn-press"
+                          >
+                            {heading.title}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="border border-border bg-surface p-5 min-h-[560px] flex flex-col">
+                    <div className="flex-grow mt-1 flex flex-col">
+                      {!isNotePreview ? (
+                        <textarea
+                          value={localNotes}
+                          onChange={(e) => setLocalNotes(e.target.value)}
+                          placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
+                          className="w-full flex-grow min-h-[420px] bg-neutral-bg/45 border border-border px-4 py-4 text-sm text-primary focus:outline-none font-mono resize-none leading-relaxed rounded-none"
+                        />
+                      ) : (
+                        <div className="w-full flex-grow min-h-[420px] bg-background border border-border px-4 py-4 overflow-y-auto rounded-none">
+                          {renderMarkdown(localNotes)}
+                        </div>
                       )}
                     </div>
 
-                    <div className="flex border border-border font-label text-xs rounded-none overflow-hidden bg-background">
-                      <button
-                        onClick={() => setIsNotePreview(false)}
-                        className={`px-2.5 py-1 flex items-center space-x-1 cursor-pointer btn-press font-bold ${!isNotePreview ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'}`}
-                      >
-                        <Edit3 className="h-3 w-3" />
-                        <span>EDIT</span>
-                      </button>
-                      <button
-                        onClick={() => setIsNotePreview(true)}
-                        className={`px-2.5 py-1 flex items-center space-x-1 border-l border-border cursor-pointer btn-press font-bold ${isNotePreview ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'}`}
-                      >
-                        <Eye className="h-3 w-3" />
-                        <span>PREVIEW</span>
-                      </button>
+                    <div className="border-t border-border pt-3 mt-4 flex flex-col sm:flex-row justify-between gap-2 text-xs font-label text-secondary font-bold">
+                      <span>{isSavingNotes ? 'Saving...' : 'Notes auto-saved to backend'}</span>
+                      <span className="font-mono text-secondary/65 font-normal">Markdown syntax supported</span>
                     </div>
                   </div>
+                </>
+              ) : (
+                <div className="text-center py-24 border border-border bg-surface">
+                  <BookOpen className="h-10 w-10 text-secondary/40 mx-auto mb-2" />
+                  <p className="font-sans text-xs text-secondary italic">No active module selected. Select a module from the outline.</p>
                 </div>
-
-                {/* Edit notepad area */}
-                <div className="flex-grow mt-4 flex flex-col">
-                  {!isNotePreview ? (
-                    <textarea
-                      value={localNotes}
-                      onChange={(e) => setLocalNotes(e.target.value)}
-                      placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                      className="w-full flex-grow h-[350px] lg:h-[450px] bg-neutral-bg/45 border border-border px-4 py-3 text-xs text-primary focus:outline-none font-mono resize-none leading-relaxed rounded-none"
-                    />
-                  ) : (
-                    <div className="w-full flex-grow h-[350px] lg:h-[450px] bg-surface border border-border px-4 py-3 overflow-y-auto space-y-2 rounded-none border-heritage prose prose-stone max-w-none">
-                      {renderMarkdown(localNotes)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="border-t border-border pt-3 flex justify-between items-center text-xs font-label text-secondary font-bold">
-                  <span>{isSavingNotes ? 'Saving...' : 'Notes auto-saved to backend'}</span>
-                  <span className="font-mono text-secondary/65 font-normal">Markdown syntax supported</span>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center py-24 flex-grow flex flex-col justify-center">
-                <BookOpen className="h-10 w-10 text-secondary/40 mx-auto mb-2" />
-                <p className="font-sans text-xs text-secondary italic">No active module selected. Select a module from index hierarchy.</p>
-              </div>
-            )}
-          </section>
-
+              )}
+            </section>
+          </div>
         </div>
-      </div>
       ) : (
         /* ==========================================
             VIEW 3: SPACED REPETITION (SRS) FLASHCARDS
@@ -1950,6 +2081,124 @@ function AcademyContent() {
             </section>
           )}
 
+        </div>
+      )}
+
+      {isReaderOpen && activeModule && (
+        <div className="fixed inset-0 z-[120] h-dvh bg-background">
+          <div className="flex h-full flex-col">
+            <div className="border-b border-border bg-surface/95 backdrop-blur px-3 py-2 md:px-4">
+              <div className="flex items-center gap-2">
+                <div className="min-w-0 flex-1">
+                  <h3 className="truncate font-display text-sm font-bold text-primary md:text-base">{activeModule.title}</h3>
+                  <p className="mt-0.5 text-[11px] text-secondary">{noteWordCount} words • {estimatedReadMinutes} min</p>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button type="button" onClick={() => setReaderFontSize((value) => Math.max(14, value - 1))} className="border border-border bg-background p-2 text-primary hover:bg-neutral-bg/40 btn-press" aria-label="Decrease font size">
+                    <Minus className="h-4 w-4" />
+                  </button>
+                  <span className="min-w-[46px] text-center text-xs font-semibold text-primary">{readerFontSize}px</span>
+                  <button type="button" onClick={() => setReaderFontSize((value) => Math.min(24, value + 1))} className="border border-border bg-background p-2 text-primary hover:bg-neutral-bg/40 btn-press" aria-label="Increase font size">
+                    <Plus className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsNotePreview((value) => !value)}
+                    className="border border-border bg-background px-2.5 py-2 text-primary hover:bg-neutral-bg/40 btn-press"
+                    aria-label={isNotePreview ? 'Edit notes' : 'Preview notes'}
+                  >
+                    <Type className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowReaderSettings((value) => !value)}
+                    className={`border border-border px-2.5 py-2 text-primary btn-press ${showReaderSettings ? 'bg-primary text-on-primary' : 'bg-background hover:bg-neutral-bg/40'}`}
+                    aria-label="Reader settings"
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowReaderSettings(false);
+                      setIsReaderOpen(false);
+                    }}
+                    className="border border-border bg-background p-2 text-primary hover:bg-neutral-bg/40 btn-press"
+                    aria-label="Exit reader"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {showReaderSettings && (
+                <div className="mt-2 border border-border bg-background p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex border border-border bg-surface overflow-hidden">
+                      <button type="button" onClick={() => setReaderLineHeight('relaxed')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerLineHeight === 'relaxed' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Tight</button>
+                      <button type="button" onClick={() => setReaderLineHeight('loose')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold border-l border-border ${readerLineHeight === 'loose' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Open</button>
+                    </div>
+
+                    <div className="flex border border-border bg-surface overflow-hidden">
+                      <button type="button" onClick={() => setReaderWidth('focused')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerWidth === 'focused' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Focused</button>
+                      <button type="button" onClick={() => setReaderWidth('wide')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold border-l border-border ${readerWidth === 'wide' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Wide</button>
+                    </div>
+                  </div>
+
+                  {noteHeadings.length > 0 && (
+                    <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+                      {noteHeadings.map((heading, index) => (
+                        <button
+                          key={`${heading.title}-${index}`}
+                          type="button"
+                          onClick={() => {
+                            const target = document.getElementById(getHeadingId(heading.title));
+                            target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            setShowReaderSettings(false);
+                          }}
+                          className="border border-border bg-surface px-2 py-1.5 text-[11px] text-primary whitespace-nowrap hover:border-primary btn-press"
+                        >
+                          {heading.title}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div ref={readerViewportRef} className="flex-1 overflow-y-auto px-3 py-3 md:px-5 md:py-4">
+              <div className={`mx-auto ${readerWidth === 'focused' ? 'max-w-2xl' : 'max-w-4xl'}`}>
+                {!isNotePreview ? (
+                  <textarea
+                    value={localNotes}
+                    onChange={(e) => setLocalNotes(e.target.value)}
+                    placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
+                    className="w-full min-h-[calc(100dvh-5.5rem)] bg-surface border border-border px-4 py-4 text-primary focus:outline-none font-mono resize-none rounded-none"
+                    style={{ fontSize: `${Math.max(14, readerFontSize - 1)}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
+                  />
+                ) : (
+                  <div
+                    className="bg-surface border border-border px-4 py-4 md:px-8 md:py-7"
+                    style={{ fontSize: `${readerFontSize}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
+                  >
+                    {renderMarkdown(localNotes, {
+                      paragraphClassName: 'text-[1em] leading-[inherit] my-3',
+                      heading1ClassName: 'text-[1.6em] mt-6',
+                      heading2ClassName: 'text-[1.3em] mt-5',
+                      heading3ClassName: 'text-[1.05em] mt-4 uppercase tracking-[0.08em]',
+                      listClassName: 'text-[1em] leading-[inherit] my-3 space-y-2',
+                      blockquoteClassName: 'text-[0.95em] py-3 px-4',
+                      codeBlockClassName: 'text-[0.82em] leading-relaxed',
+                      tableClassName: 'text-[0.88em]',
+                      emptyClassName: 'italic text-secondary'
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
