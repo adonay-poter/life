@@ -29,6 +29,8 @@ interface TaskDetailsModalProps {
   onClose: () => void;
 }
 
+const CLOSE_ANIMATION_MS = 240;
+
 const STATUS_OPTIONS: Array<{ value: Task['status']; label: string }> = [
   { value: 'backlog', label: 'Backlog' },
   { value: 'todo', label: 'Todo' },
@@ -114,6 +116,13 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
   const [newSubtaskName, setNewSubtaskName] = useState('');
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState<{ id: string; name: string } | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
+
+  useEffect(() => {
+    if (taskId) {
+      setIsClosing(false);
+    }
+  }, [taskId]);
 
   useEffect(() => {
     if (!activeTask) return;
@@ -201,7 +210,11 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
       return;
     }
 
-    onClose();
+    setIsClosing(true);
+    window.setTimeout(() => {
+      onClose();
+      setIsClosing(false);
+    }, CLOSE_ANIMATION_MS);
   }, [deleteConfirmOpen, hasUnsavedChanges, isEditingTask, onClose, showToast]);
 
   useEffect(() => {
@@ -319,6 +332,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
     if (taskToDelete.id === activeTask.id) {
       setTaskToDelete(null);
+      setIsClosing(false);
       onClose();
       return;
     }
@@ -328,24 +342,35 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm animate-backdrop"
+      className={`fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm md:overflow-hidden ${isClosing ? 'animate-backdrop-out' : 'animate-backdrop'}`}
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           requestClose();
         }
       }}
     >
-      <div className="flex h-full items-end justify-center p-0 md:items-center md:p-6">
+      <div className="flex min-h-full items-start justify-center p-0 md:h-full md:items-center md:p-6">
         <div
           role="dialog"
           aria-modal="true"
           aria-labelledby="task-detail-title"
-          className="animate-drawer md:animate-modal flex h-[92dvh] w-full max-w-5xl flex-col overflow-hidden rounded-t-[28px] border border-white/10 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.22)] md:h-auto md:max-h-[92vh] md:rounded-[28px]"
+          className={`${isClosing ? 'animate-drawer-out md:animate-modal-out' : 'animate-drawer md:animate-modal'} flex min-h-dvh w-full max-w-5xl flex-col rounded-none border-x-0 border-b-0 border-t border-white/10 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.22)] md:max-h-[92vh] md:min-h-0 md:overflow-hidden md:rounded-[28px] md:border md:border-white/10`}
         >
-          <div className="border-b border-border bg-[linear-gradient(135deg,rgba(184,66,46,0.14),rgba(26,28,30,0.03)_42%,rgba(26,28,30,0.01))] px-4 pb-4 pt-4 md:px-6 md:pb-5 md:pt-5">
+          <div className="sticky top-0 z-10 flex justify-end px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:hidden">
+            <button
+              type="button"
+              onClick={requestClose}
+              className="btn-press flex h-12 w-12 items-center justify-center rounded-full border border-border bg-surface/95 text-primary shadow-[0_16px_40px_rgba(0,0,0,0.24)] backdrop-blur"
+              aria-label="Close task details"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          <div className="border-b border-border bg-[linear-gradient(135deg,rgba(184,66,46,0.14),rgba(26,28,30,0.03)_42%,rgba(26,28,30,0.01))] px-4 pb-4 pt-[max(1rem,env(safe-area-inset-top))] md:px-6 md:pb-5 md:pt-5">
             <div className="flex items-start gap-3">
               <div className="min-w-0 flex-1">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
+                <div className="mb-3 flex flex-wrap items-center gap-1.5 md:gap-2">
                   <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 font-label text-[10px] font-bold uppercase tracking-[0.24em] ${getStatusPillClass(activeTask.status)}`}>
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     {activeTask.status.replace('_', ' ')}
@@ -413,7 +438,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               <button
                 type="button"
                 onClick={requestClose}
-                className="btn-press flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background/80 text-secondary hover:text-primary"
+                className="btn-press hidden h-11 w-11 items-center justify-center rounded-full border border-border bg-background/80 text-secondary hover:text-primary md:flex"
                 aria-label="Close task details"
               >
                 <X className="h-5 w-5" />
@@ -485,7 +510,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 py-4 md:px-6 md:py-6">
+          <div className="px-4 py-4 md:flex-1 md:overflow-y-auto md:px-6 md:py-6">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(300px,0.9fr)]">
               <div className="space-y-6">
                 <section className="rounded-[24px] border border-border bg-background/70 p-4 md:p-5">
@@ -838,7 +863,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
             </div>
           </div>
 
-          <div className="border-t border-border bg-surface/95 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-6">
+          <div className="mt-auto border-t border-border bg-surface/95 px-4 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] md:px-6">
             {showDiscardPrompt && isEditingTask && hasUnsavedChanges && (
               <div className="mb-4 flex flex-col gap-3 rounded-[20px] border border-warning/25 bg-warning/10 px-4 py-3 md:flex-row md:items-center md:justify-between">
                 <div>
@@ -857,7 +882,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                     type="button"
                     onClick={() => {
                       handleDiscardTaskEdit();
-                      onClose();
+                      requestClose();
                     }}
                     className="btn-press rounded-[16px] border border-warning/30 bg-warning/10 px-4 py-2.5 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-warning"
                   >

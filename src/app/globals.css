@@ -133,6 +133,14 @@ body.academy-reader-open .app-mobile-nav {
   animation: fade-in-overlay 0.2s ease both;
 }
 
+@keyframes fade-out-overlay {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.animate-backdrop-out {
+  animation: fade-out-overlay 0.22s ease both;
+}
+
 /* --- Modal slide up --- */
 @keyframes modal-slide-up {
   from { opacity: 0; transform: translateY(24px) scale(0.98); }
@@ -142,6 +150,14 @@ body.academy-reader-open .app-mobile-nav {
   animation: modal-slide-up 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+@keyframes modal-slide-down {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(20px) scale(0.985); }
+}
+.animate-modal-out {
+  animation: modal-slide-down 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
 /* --- Bottom drawer slide up (mobile) --- */
 @keyframes drawer-slide-up {
   from { opacity: 0; transform: translateY(100%); }
@@ -149,6 +165,14 @@ body.academy-reader-open .app-mobile-nav {
 }
 .animate-drawer {
   animation: drawer-slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes drawer-slide-down {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(100%); }
+}
+.animate-drawer-out {
+  animation: drawer-slide-down 0.24s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 /* --- Notification dropdown slide down --- */
@@ -231,8 +255,11 @@ body.academy-reader-open .app-mobile-nav {
 @media (prefers-reduced-motion: reduce) {
   .animate-page-enter,
   .animate-backdrop,
+  .animate-backdrop-out,
   .animate-modal,
+  .animate-modal-out,
   .animate-drawer,
+  .animate-drawer-out,
   .animate-dropdown,
   .stagger-item {
     animation: none;
