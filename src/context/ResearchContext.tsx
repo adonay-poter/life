@@ -5,6 +5,11 @@ import { useAcademy } from './AcademyContext';
 import { useToast } from './ToastContext';
 import { useRateLimit } from '@/hooks/useRateLimit';
 
+interface ResearchOutlineModule {
+  title: string;
+  description?: string;
+}
+
 interface ResearchContextProps {
   status: 'idle' | 'running' | 'success' | 'error';
   progress: number;
@@ -15,6 +20,65 @@ interface ResearchContextProps {
 }
 
 const ResearchContext = createContext<ResearchContextProps | undefined>(undefined);
+
+function stripMarkdown(markdown: string) {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`([^`]+)`/g, '$1')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/^>\s?/gm, '')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/[*_~]/g, '')
+    .replace(/\[\^.+?\]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function summarizeNotes(markdown: string, maxLength = 700) {
+  const plainText = stripMarkdown(markdown);
+  if (!plainText) return '';
+  if (plainText.length <= maxLength) return plainText;
+
+  const truncated = plainText.slice(0, maxLength);
+  const lastSentenceBoundary = Math.max(
+    truncated.lastIndexOf('. '),
+    truncated.lastIndexOf('? '),
+    truncated.lastIndexOf('! ')
+  );
+
+  if (lastSentenceBoundary > maxLength * 0.55) {
+    return `${truncated.slice(0, lastSentenceBoundary + 1).trim()} ...`;
+  }
+
+  const lastWordBoundary = truncated.lastIndexOf(' ');
+  return `${truncated.slice(0, lastWordBoundary > 0 ? lastWordBoundary : maxLength).trim()} ...`;
+}
+
+function buildCourseMemory(params: {
+  existingContext: string;
+  outlineModules: ResearchOutlineModule[];
+  priorModuleSummaries: string[];
+  currentModuleIndex: number;
+}) {
+  const { existingContext, outlineModules, priorModuleSummaries, currentModuleIndex } = params;
+  const orderedOutline = outlineModules
+    .map((module, index) => `${index + 1}. ${module.title}${module.description ? ` - ${module.description}` : ''}`)
+    .join('\n');
+
+  const previousModulesSection = priorModuleSummaries.length > 0
+    ? priorModuleSummaries.join('\n\n')
+    : 'None yet. This is the first newly generated module in this run.';
+
+  return [
+    existingContext ? `Existing Course Context:\n${existingContext.trim()}` : '',
+    `Planned Module Sequence:\n${orderedOutline}`,
+    `Current Module Position: ${currentModuleIndex + 1} of ${outlineModules.length}`,
+    `Previously Generated Module Summaries:\n${previousModulesSection}`
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+}
 
 export const useResearch = () => {
   const context = useContext(ResearchContext);
@@ -173,13 +237,20 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
       }
 
       // 5. Generate Modules and Notes sequentially
-      const modulesToCreate = outline.modules || [];
+      const modulesToCreate: ResearchOutlineModule[] = outline.modules || [];
+      const priorModuleSummaries: string[] = [];
       for (let i = 0; i < modulesToCreate.length; i++) {
         if (i > 0) {
           // Add a 1.5-second pacing delay to prevent hitting Gemini's RPM rate limits
           await new Promise((resolve) => setTimeout(resolve, 1500));
         }
         const mod = modulesToCreate[i];
+        const courseMemory = buildCourseMemory({
+          existingContext,
+          outlineModules: modulesToCreate,
+          priorModuleSummaries,
+          currentModuleIndex: i
+        });
         setProgress(60 + Math.floor((40 * i) / modulesToCreate.length));
         setProgressMsg(`Writing notes for module: ${mod.title}...`);
 
@@ -188,7 +259,17 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
         // Generate Notes
         const notesRes = await fetch('/api/research/generate-module', {
           method: 'POST',
-          body: JSON.stringify({ topic, module: mod, researchContent, model: selectedModel, existingContext }),
+          body: JSON.stringify({
+            topic,
+            module: mod,
+            researchContent,
+            model: selectedModel,
+            existingContext,
+            courseMemory,
+            moduleIndex: i,
+            totalModules: modulesToCreate.length,
+            moduleSequence: modulesToCreate
+          }),
           headers: { 'Content-Type': 'application/json' }
         });
 
@@ -196,6 +277,15 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
           const notesData = await notesRes.json();
           recordUsage(notesData.tokens || 0);
           await updateModuleNotes(modId, notesData.markdown);
+          priorModuleSummaries.push(
+            [
+              `Module ${i + 1}: ${mod.title}`,
+              mod.description ? `Focus: ${mod.description}` : '',
+              `Key points already covered: ${summarizeNotes(notesData.markdown)}`
+            ]
+              .filter(Boolean)
+              .join('\n')
+          );
         }
 
         // Create a dummy lesson for each source url just so there are lessons

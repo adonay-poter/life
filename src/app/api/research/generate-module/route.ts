@@ -2,11 +2,29 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { topic, module, researchContent, model = 'gemini-2.5-flash', existingContext } = await request.json();
+    const {
+      topic,
+      module,
+      researchContent,
+      model = 'gemini-2.5-flash',
+      existingContext,
+      courseMemory,
+      moduleIndex,
+      totalModules,
+      moduleSequence
+    } = await request.json();
 
     if (!topic || !module || !researchContent) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    const moduleSequenceText = Array.isArray(moduleSequence)
+      ? moduleSequence
+          .map((item: { title?: string; description?: string }, index: number) =>
+            `${index + 1}. ${item?.title || 'Untitled'}${item?.description ? ` - ${item.description}` : ''}`
+          )
+          .join('\n')
+      : '';
 
     const apiKey = process.env.GEMINI_API_KEY;
 
@@ -19,6 +37,7 @@ Write detailed, engaging, and highly informative course notes for a specific mod
 The notes must be written in rich Markdown format.
 Use headings, bold text, bullet points, and blockquotes where appropriate.
 CRITICAL REQUIREMENT: You MUST cite your sources using markdown footnotes or inline links to verify facts, based on the provided research content.
+CRITICAL COURSE-FLOW REQUIREMENT: This module is part of a sequence. Assume the learner has already completed earlier modules. Do NOT restart the course from scratch or re-teach prior modules in full.
 
 IMPORTANT: Do NOT output any internal monologue, drafting steps, scratchpads, or planning. Output ONLY the final, polished Markdown content ready for publication. Do not write things like "I need to draft this..." or "Drafting Section 1...". 
 
@@ -27,7 +46,20 @@ Return ONLY the raw markdown content.
 Course Topic: ${topic}
 Module Title: ${module.title}
 Module Description: ${module.description}
-${existingContext ? `\nIMPORTANT CONTEXT ABOUT THE EXISTING COURSE:\n${existingContext}\n\nPlease ensure your new notes complement this existing context without being redundant.\n` : ''}
+${typeof moduleIndex === 'number' && typeof totalModules === 'number' ? `Module Position in Sequence: ${moduleIndex + 1} of ${totalModules}\n` : ''}
+${moduleSequenceText ? `Full Planned Module Sequence:\n${moduleSequenceText}\n` : ''}
+${existingContext ? `\nEXISTING COURSE CONTEXT:\n${existingContext}\n` : ''}
+${courseMemory ? `\nCOURSE MEMORY TO BUILD ON:\n${courseMemory}\n` : ''}
+
+Follow these rules strictly:
+- Treat previous modules as known prerequisites, not as unknown material.
+- Spend at most 10-15% of the module on brief recap or transitions from earlier modules.
+- Spend at least 85% of the module on concepts, examples, implications, methods, or case studies that are unique to this module.
+- If you must reference earlier material, do it briefly in phrases like "Building on the previous module..." instead of redefining everything.
+- Avoid repeating full definitions, background sections, or introductory framing that already belongs in earlier modules.
+- Make the opening immediately specific to this module's role in the sequence.
+- End with a short "Connection to the Course" section that explains how this module extends prior ones and prepares for later ones.
+
 Raw Research Content (use this to write the notes and cite sources):
 ${researchContent.substring(0, 30000)}
 
