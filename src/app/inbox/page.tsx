@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
+import { supabase } from '@/utils/supabaseClient';
+import { INTAKE_IMAGES_BUCKET, isExternalAttachmentUrl } from '@/utils/storage';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { getLocalDateString } from '@/utils/dateUtils';
 import PageShell from '@/components/ui/PageShell';
@@ -83,6 +85,7 @@ export default function InboxPage() {
   const [editContent, setEditContent] = useState('');
   const [editUrl, setEditUrl] = useState('');
   const [editTags, setEditTags] = useState('');
+  const [selectedAttachmentPreviewUrl, setSelectedAttachmentPreviewUrl] = useState('');
 
   // Selected item active processing tab: 'task' | 'knowledge' | 'project' | 'journal' | 'flashcard' | 'snooze'
   const [activeActionTab, setActiveActionTab] = useState<'task' | 'knowledge' | 'project' | 'journal' | 'flashcard' | 'snooze'>('task');
@@ -130,6 +133,42 @@ export default function InboxPage() {
       setFlashcardBack(selectedItem.content || '');
       setKnowledgeSummary(selectedItem.summary || selectedItem.content?.slice(0, 150) || '');
     }
+  }, [selectedItem]);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const resolveAttachmentPreview = async () => {
+      if (!selectedItem?.attachment_url) {
+        setSelectedAttachmentPreviewUrl('');
+        return;
+      }
+
+      if (isExternalAttachmentUrl(selectedItem.attachment_url)) {
+        setSelectedAttachmentPreviewUrl(selectedItem.attachment_url);
+        return;
+      }
+
+      const { data, error } = await supabase.storage
+        .from(INTAKE_IMAGES_BUCKET)
+        .createSignedUrl(selectedItem.attachment_url, 3600);
+
+      if (!isActive) return;
+
+      if (error) {
+        console.error('Failed to resolve attachment preview:', error);
+        setSelectedAttachmentPreviewUrl('');
+        return;
+      }
+
+      setSelectedAttachmentPreviewUrl(data.signedUrl);
+    };
+
+    void resolveAttachmentPreview();
+
+    return () => {
+      isActive = false;
+    };
   }, [selectedItem]);
 
   // Set default sub-selectors when project/course changes
@@ -582,6 +621,16 @@ export default function InboxPage() {
               {selectedItem.content && (
                 <div className="bg-neutral-bg/40 border border-border p-3 font-sans text-xs text-primary leading-relaxed whitespace-pre-wrap">
                   {selectedItem.content}
+                </div>
+              )}
+              {selectedAttachmentPreviewUrl && (
+                <div className="border border-border bg-neutral-bg/30 p-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={selectedAttachmentPreviewUrl}
+                    alt={selectedItem.title}
+                    className="max-h-72 w-full object-contain bg-surface"
+                  />
                 </div>
               )}
               {(selectedItem.url || selectedItem.source_url) && (

@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useDashboard } from '@/context/DashboardContext';
+import React, { useEffect, useRef, useState } from 'react';
+import { useInbox } from '@/context/InboxContext';
+import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { X, Sparkles, Plus, Link2, Paperclip, HelpCircle } from 'lucide-react';
+import { supabase } from '@/utils/supabaseClient';
+import { INTAKE_IMAGES_BUCKET } from '@/utils/storage';
+import { ImagePlus, Sparkles, Upload, X } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './ui/Buttons';
 
 interface UniversalCaptureModalProps {
@@ -11,50 +14,49 @@ interface UniversalCaptureModalProps {
   onClose: () => void;
 }
 
-const CAPTURE_TYPES = [
-  { value: 'thought', label: 'Thought' },
-  { value: 'idea', label: 'Idea' },
-  { value: 'task', label: 'Task' },
-  { value: 'url', label: 'Link / URL' },
-  { value: 'photo', label: 'Photo' },
-  { value: 'quote', label: 'Quote' },
-  { value: 'code', label: 'Code Snippet' },
-  { value: 'question', label: 'Question' },
-  { value: 'journal', label: 'Journal Slip' },
-  { value: 'book_note', label: 'Book Note' },
-  { value: 'course_note', label: 'Course Note' },
-  { value: 'decision', label: 'Decision' },
-  { value: 'resource', label: 'Resource Reference' },
-];
+const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+
+function isProbablyUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed || /\s/.test(trimmed)) return false;
+  return /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$/i.test(trimmed);
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Failed to read image.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+function sanitizeFileName(fileName: string) {
+  return fileName.replace(/[^a-zA-Z0-9._-]/g, '-');
+}
 
 export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCaptureModalProps) {
-  const { addInboxItem, projects } = useDashboard();
+  const { addInboxItem } = useInbox();
+  const { user } = useAuth();
   const { showToast } = useToast();
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [type, setType] = useState<any>('thought');
-  const [sourceUrl, setSourceUrl] = useState('');
-  const [attachmentUrl, setAttachmentUrl] = useState('');
-  const [projectId, setProjectId] = useState('');
-  const [tags, setTags] = useState('');
+  const [rawInput, setRawInput] = useState('');
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentPreviewUrl, setAttachmentPreviewUrl] = useState('');
+  const [attachmentName, setAttachmentName] = useState('');
   const [loading, setLoading] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
-  const titleInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Focus trap & Escape close
   useEffect(() => {
     if (!isOpen) return;
 
-    // Reset fields on open
-    setTitle('');
-    setContent('');
-    setType('thought');
-    setSourceUrl('');
-    setAttachmentUrl('');
-    setProjectId('');
-    setTags('');
+    setRawInput('');
+    setAttachmentFile(null);
+    setAttachmentPreviewUrl('');
+    setAttachmentName('');
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -73,69 +75,101 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
             lastElement.focus();
             e.preventDefault();
           }
-        } else {
-          if (document.activeElement === lastElement) {
-            firstElement.focus();
-            e.preventDefault();
-          }
+        } else if (document.activeElement === lastElement) {
+          firstElement.focus();
+          e.preventDefault();
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    
-    // Autofocus title input
-    setTimeout(() => {
-      titleInputRef.current?.focus();
-    }, 50);
+    setTimeout(() => textareaRef.current?.focus(), 50);
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) {
-      showToast('Capture slip requires a title.', 'error');
+  const clearAttachment = () => {
+    setAttachmentFile(null);
+    setAttachmentPreviewUrl('');
+    setAttachmentName('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const uploadAttachmentIfNeeded = async (file?: File | null) => {
+    if (!file) {
+      return { attachmentPath: '', fileName: '' };
+    }
+    if (!user) {
+      throw new Error('You need to be signed in to upload an image.');
+    }
+
+    const sanitizedName = sanitizeFileName(file.name || 'capture-image');
+    const storagePath = `${user.id}/${crypto.randomUUID()}-${sanitizedName}`;
+    const { data, error } = await supabase.storage.from(INTAKE_IMAGES_BUCKET).upload(storagePath, file, {
+      cacheControl: '3600',
+      contentType: file.type,
+      upsert: false,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    return { attachmentPath: data.path, fileName: file.name };
+  };
+
+  const enrichAndSaveCapture = async (payload?: { rawText?: string; attachmentFile?: File | null; fileName?: string }) => {
+    const nextRawText = payload?.rawText ?? rawInput;
+    const nextAttachmentFile = payload?.attachmentFile ?? attachmentFile;
+    const nextFileName = payload?.fileName ?? attachmentName;
+
+    if (!nextRawText.trim() && !nextAttachmentFile) {
+      showToast('Paste text, a link, or an image to capture it.', 'error');
       return;
     }
 
     setLoading(true);
     try {
-      let finalUrl = sourceUrl.trim();
-      if (type === 'url' || type === 'resource') {
-        if (finalUrl && !finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
-          finalUrl = 'https://' + finalUrl;
-        }
+      const uploadedAttachment = await uploadAttachmentIfNeeded(nextAttachmentFile);
+      const response = await fetch('/api/capture/enrich', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rawText: nextRawText,
+          attachmentUrl: uploadedAttachment.attachmentPath,
+          fileName: nextFileName || uploadedAttachment.fileName,
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to prepare capture.');
       }
 
-      const tagsArray = tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter((tag) => tag.length > 0)
-        .map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
-
-      const extraFields = {
-        source_url: finalUrl || undefined,
-        attachment_url: attachmentUrl.trim() || undefined,
-        summary: content.slice(0, 150) || undefined
-      };
-
       await addInboxItem(
-        type,
-        title.trim(),
-        finalUrl || undefined,
-        content.trim() || undefined,
-        tagsArray,
+        data.storageType,
+        data.title,
+        data.sourceUrl || undefined,
+        data.content || undefined,
+        [],
         'unprocessed',
-        projectId || undefined,
-        extraFields
+        undefined,
+        {
+          source_url: data.sourceUrl || undefined,
+          attachment_url: data.attachmentUrl || undefined,
+          summary: data.summary || undefined,
+          ai_suggested_type: data.aiSuggestedType || undefined,
+          ai_suggested_action: data.aiSuggestedAction || undefined,
+        }
       );
 
-      showToast('Slip captured into Intake Inbox.', 'success');
+      showToast(data.storageType === 'url' ? 'Link captured into Intake Inbox.' : 'Capture saved into Intake Inbox.', 'success');
+      setRawInput('');
+      clearAttachment();
       onClose();
     } catch (err: any) {
       console.error('Failed to capture:', err);
@@ -145,25 +179,63 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
     }
   };
 
-  const activeProjects = projects.filter((p) => !p.is_archived);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await enrichAndSaveCapture();
+  };
+
+  const handleFileSelection = async (file?: File) => {
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      showToast('Only image files are supported here.', 'error');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      showToast('Image is too large. Keep it under 2MB for intake capture.', 'error');
+      return;
+    }
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setAttachmentFile(file);
+      setAttachmentPreviewUrl(dataUrl);
+      setAttachmentName(file.name);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to read image.', 'error');
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const pastedText = e.clipboardData.getData('text');
+    const imageFile = Array.from(e.clipboardData.files).find((file) => file.type.startsWith('image/'));
+
+    if (imageFile) {
+      e.preventDefault();
+      await handleFileSelection(imageFile);
+      return;
+    }
+
+    if (pastedText && isProbablyUrl(pastedText)) {
+      e.preventDefault();
+      setRawInput(pastedText.trim());
+      await enrichAndSaveCapture({ rawText: pastedText.trim(), attachmentFile: null, fileName: '' });
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[20000] flex items-center justify-center p-4">
-      {/* Backdrop with slight blur */}
-      <div 
-        className="fixed inset-0 bg-black/45 backdrop-blur-[2px] animate-backdrop" 
+      <div
+        className="fixed inset-0 bg-black/45 backdrop-blur-[2px] animate-backdrop"
         onClick={onClose}
       />
-      
-      {/* Modal Card */}
-      <div 
+
+      <div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="capture-modal-title"
         className="animate-modal relative bg-surface border-2 border-primary p-6 md:p-8 max-w-xl w-full shadow-2xl rounded-none flex flex-col space-y-5"
       >
-        {/* Close Button */}
         <button
           onClick={onClose}
           className="absolute right-4 top-4 text-secondary hover:text-primary p-1 cursor-pointer transition-colors btn-press"
@@ -172,13 +244,12 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
           <X className="h-5 w-5" />
         </button>
 
-        {/* Header */}
         <div className="border-b border-border pb-3">
           <div className="flex items-center space-x-2">
             <div className="bg-accent/10 p-1.5 text-accent border border-accent/20">
               <Sparkles className="h-4 w-4" />
             </div>
-            <h3 
+            <h3
               id="capture-modal-title"
               className="font-display text-lg md:text-xl font-bold text-primary uppercase tracking-wide"
             >
@@ -186,136 +257,84 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
             </h3>
           </div>
           <p className="font-sans text-[11px] text-secondary mt-1 uppercase tracking-wider">
-            Slip-based thought ledger • Save directly to Inbox Queue
+            Paste first. Categorize later.
           </p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Title */}
-            <div className="space-y-1 md:col-span-2">
-              <label htmlFor="cap-title" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
-                Slip Title / Headline
-              </label>
-              <input
-                ref={titleInputRef}
-                id="cap-title"
-                type="text"
-                required
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="What is on your mind?"
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors"
-              />
-            </div>
-
-            {/* Type Selector */}
-            <div className="space-y-1">
-              <label htmlFor="cap-type" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
-                Capture Category
-              </label>
-              <select
-                id="cap-type"
-                value={type}
-                onChange={(e) => setType(e.target.value)}
-                className="w-full bg-surface border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none cursor-pointer transition-colors"
-              >
-                {CAPTURE_TYPES.map((t) => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Project Selection */}
-            <div className="space-y-1">
-              <label htmlFor="cap-project" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
-                Link to Project (Optional)
-              </label>
-              <select
-                id="cap-project"
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className="w-full bg-surface border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none cursor-pointer transition-colors"
-              >
-                <option value="">No Project</option>
-                {activeProjects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Source URL / Link */}
-            <div className="space-y-1">
-              <label htmlFor="cap-url" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold flex items-center gap-1">
-                <Link2 className="h-3 w-3 text-secondary" />
-                <span>Reference URL (Optional)</span>
-              </label>
-              <input
-                id="cap-url"
-                type="text"
-                value={sourceUrl}
-                onChange={(e) => setSourceUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors"
-              />
-            </div>
-
-            {/* Attachment URL */}
-            <div className="space-y-1">
-              <label htmlFor="cap-attach" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold flex items-center gap-1">
-                <Paperclip className="h-3 w-3 text-secondary" />
-                <span>Attachment Link (Optional)</span>
-              </label>
-              <input
-                id="cap-attach"
-                type="text"
-                value={attachmentUrl}
-                onChange={(e) => setAttachmentUrl(e.target.value)}
-                placeholder="Direct image or file URL"
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors"
-              />
-            </div>
-
-            {/* Tags */}
-            <div className="space-y-1 md:col-span-2">
-              <label htmlFor="cap-tags" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
-                Tags (comma separated)
-              </label>
-              <input
-                id="cap-tags"
-                type="text"
-                value={tags}
-                onChange={(e) => setTags(e.target.value)}
-                placeholder="ideas, reads, design"
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors"
-              />
-            </div>
-
-            {/* Description/Content */}
-            <div className="space-y-1 md:col-span-2">
-              <label htmlFor="cap-content" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
-                Content Notes / Code / Quotes
-              </label>
-              <textarea
-                id="cap-content"
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Type your notes, quotes, or snippets here..."
-                rows={4}
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors resize-none"
-              />
-            </div>
+          <div className="space-y-2">
+            <label htmlFor="cap-raw-input" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
+              Paste text, quotes, ideas, or links
+            </label>
+            <textarea
+              ref={textareaRef}
+              id="cap-raw-input"
+              value={rawInput}
+              onChange={(e) => setRawInput(e.target.value)}
+              onPaste={handlePaste}
+              placeholder="Drop the raw thing here. A pasted link files itself automatically."
+              rows={7}
+              className="w-full bg-neutral-bg border border-border px-3 py-3 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors resize-none"
+            />
+            <p className="font-sans text-xs text-secondary">
+              Titles, metadata, and AI suggestions are inferred for you. Review happens later.
+            </p>
           </div>
 
-          {/* Action buttons */}
-          <div className="flex justify-end gap-3 pt-3 border-t border-border font-label text-xs uppercase tracking-wider font-bold">
-            <SecondaryButton type="button" onClick={onClose}>
-              Cancel
-            </SecondaryButton>
-            <PrimaryButton type="submit" disabled={loading}>
-              {loading ? 'Filing Slip...' : 'File Slip to Intake'}
-            </PrimaryButton>
+          <div className="border border-dashed border-border p-3 space-y-3 bg-neutral-bg/40">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-primary">
+                <ImagePlus className="h-4 w-4 text-accent" />
+                <span className="font-medium">Optional image capture</span>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => void handleFileSelection(e.target.files?.[0])}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex w-full items-center justify-center gap-2 border border-border px-3 py-2 text-xs font-label uppercase tracking-wider text-primary hover:border-accent transition-colors cursor-pointer"
+              >
+                <Upload className="h-3.5 w-3.5" />
+                Upload Image
+              </button>
+            </div>
+
+            {attachmentPreviewUrl ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3 text-xs text-secondary">
+                  <span className="truncate">{attachmentName || 'Image capture ready'}</span>
+                  <button
+                    type="button"
+                    onClick={clearAttachment}
+                    className="text-primary hover:text-accent transition-colors cursor-pointer"
+                  >
+                    Remove
+                  </button>
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={attachmentPreviewUrl}
+                  alt={attachmentName || 'Capture preview'}
+                  className="max-h-48 w-full object-contain border border-border bg-surface"
+                />
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex gap-3 pt-3 border-t border-border font-label text-xs uppercase tracking-wider font-bold">
+            <div className="grid w-full grid-cols-2 gap-3">
+              <SecondaryButton type="button" onClick={onClose}>
+                Cancel
+              </SecondaryButton>
+              <PrimaryButton type="submit" disabled={loading}>
+                {loading ? 'Capturing...' : 'Capture'}
+              </PrimaryButton>
+            </div>
           </div>
         </form>
       </div>

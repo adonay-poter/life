@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { question, rawResearch, moduleNotes, model = 'gemini-2.5-flash' } = await request.json();
+    const { question, rawResearch, moduleNotes, courseTitle, moduleTitle, model = 'gemini-2.5-flash' } = await request.json();
 
     if (!question || !rawResearch) {
       return NextResponse.json({ error: 'Missing question or research context' }, { status: 400 });
@@ -15,11 +15,14 @@ export async function POST(request: Request) {
     }
 
     const prompt = `You are a helpful AI tutor for a learning academy.
-Your goal is to answer the user's question accurately based ONLY on the provided research context and module notes.
-If the answer is not contained in the context, politely inform the user that you don't have enough information to answer.
-Keep your answers concise, direct, and formatted in clean Markdown.
+Answer the user's question using ONLY the provided academy context. Prefer the current module notes over the course context.
+If the answer is not supported by the context, say that you do not have enough information instead of guessing.
+Keep the response concise, direct, and formatted in clean Markdown.
 
-Research Context:
+Course: ${courseTitle || 'Unknown'}
+Module: ${moduleTitle || 'Unknown'}
+
+Academy Context:
 ${rawResearch.substring(0, 20000)}
 
 ${moduleNotes ? `Current Module Notes:\n${moduleNotes.substring(0, 5000)}\n` : ''}

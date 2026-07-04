@@ -2376,6 +2376,8 @@ function AcademyContent() {
 
       {selectedCourseId && activeCourse && academyTab === 'matrix' && activeModule && (
         <QAPanel
+          courseTitle={activeCourse.title}
+          moduleTitle={activeModule.title}
           topic={activeCourse.title}
           moduleNotes={activeModule.notes || ''}
         />

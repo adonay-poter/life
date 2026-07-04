@@ -2,11 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { HelpCircle, MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
 
 interface QAPanelProps {
+  courseTitle: string;
+  moduleTitle: string;
   topic: string;
   moduleNotes: string;
 }
 
-export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
+export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }: QAPanelProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [conversation, setConversation] = useState<{ role: 'user' | 'agent', text: string }[]>([]);
@@ -32,7 +34,16 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
         method: 'POST',
         body: JSON.stringify({
           question: q,
-          rawResearch: `Topic: ${topic}\n\nContext:\n${moduleNotes}`
+          rawResearch: [
+            `Course: ${courseTitle}`,
+            `Module: ${moduleTitle}`,
+            `Topic: ${topic}`,
+            '',
+            'Module Notes:',
+            moduleNotes
+          ].join('\n'),
+          courseTitle,
+          moduleTitle
         }),
         headers: { 'Content-Type': 'application/json' }
       });
@@ -53,7 +64,7 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-6 md:bottom-6 md:right-28 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-50 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"
+        className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 md:bottom-28 md:right-6 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-50 cursor-pointer flex items-center justify-center transition-all duration-300 ease-out transform active:scale-90 hover:-translate-y-1 hover:opacity-95 rounded-none btn-press hover:shadow-xl"
         aria-label="Ask Academy AI"
         title="Ask Academy AI"
       >
@@ -63,7 +74,7 @@ export default function QAPanel({ topic, moduleNotes }: QAPanelProps) {
   }
 
   return (
-    <div className="fixed inset-x-4 bottom-4 top-20 md:inset-auto md:bottom-6 md:right-28 md:w-96 md:h-[500px] bg-surface border border-border shadow-none rounded-none overflow-hidden z-[60] flex flex-col animate-slide-up">
+    <div className="fixed inset-x-4 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] top-20 md:inset-auto md:bottom-28 md:right-6 md:w-96 md:h-[500px] bg-surface border border-border shadow-none rounded-none overflow-hidden z-[60] flex flex-col motion-safe:animate-slide-up transition-all duration-300 ease-out">
       {/* Header */}
       <div className="p-4 border-b border-border bg-primary text-on-primary flex items-center justify-between">
         <div className="flex items-center gap-2 font-label uppercase tracking-[0.15em] font-bold text-xs">
