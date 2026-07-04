@@ -10,6 +10,12 @@ interface ResearchOutlineModule {
   description?: string;
 }
 
+interface RelevantCourseContext {
+  courseTitle: string;
+  summary: string;
+  score: number;
+}
+
 interface ResearchContextProps {
   status: 'idle' | 'running' | 'success' | 'error';
   progress: number;
@@ -55,13 +61,86 @@ function summarizeNotes(markdown: string, maxLength = 700) {
   return `${truncated.slice(0, lastWordBoundary > 0 ? lastWordBoundary : maxLength).trim()} ...`;
 }
 
+function tokenizeForMatch(value: string) {
+  return new Set(
+    value
+      .toLowerCase()
+      .split(/[^a-z0-9]+/)
+      .map((token) => token.trim())
+      .filter((token) => token.length >= 4)
+  );
+}
+
+function getOverlapScore(topicTokens: Set<string>, haystack: string) {
+  if (topicTokens.size === 0 || !haystack.trim()) return 0;
+
+  const haystackTokens = tokenizeForMatch(haystack);
+  let score = 0;
+  topicTokens.forEach((token) => {
+    if (haystackTokens.has(token)) score += 1;
+  });
+  return score;
+}
+
+function buildRelevantCourseContext(params: {
+  topic: string;
+  existingCourseId: string;
+  courses: { id: string; title: string; description?: string }[];
+  courseModules: { course_id: string; title: string; notes: string }[];
+}) {
+  const { topic, existingCourseId, courses, courseModules } = params;
+  const topicTokens = tokenizeForMatch(topic);
+
+  const relatedCourses: RelevantCourseContext[] = courses
+    .filter((course) => course.id !== existingCourseId)
+    .map((course) => {
+      const modules = courseModules
+        .filter((module) => module.course_id === course.id)
+        .sort((a, b) => a.title.localeCompare(b.title));
+
+      const notesSummaries = modules
+        .filter((module) => module.notes)
+        .slice(0, 2)
+        .map((module) => `${module.title}: ${summarizeNotes(module.notes, 240)}`);
+
+      const searchableText = [
+        course.title,
+        course.description || '',
+        modules.map((module) => module.title).join(' '),
+        notesSummaries.join(' ')
+      ].join(' ');
+
+      const score = getOverlapScore(topicTokens, searchableText);
+      const summaryLines = [
+        `Course: ${course.title}`,
+        course.description ? `Description: ${course.description}` : '',
+        modules.length > 0 ? `Relevant Modules: ${modules.slice(0, 3).map((module) => module.title).join('; ')}` : '',
+        notesSummaries.length > 0 ? `Key ideas: ${notesSummaries.join(' | ')}` : ''
+      ].filter(Boolean);
+
+      return {
+        courseTitle: course.title,
+        summary: summaryLines.join('\n'),
+        score
+      };
+    })
+    .filter((course) => course.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+
+  if (relatedCourses.length === 0) return '';
+
+  return `Related Course References:\n${relatedCourses.map((course) => course.summary).join('\n\n')}`;
+}
+
 function buildCourseMemory(params: {
   existingContext: string;
+  relatedCourseContext: string;
   outlineModules: ResearchOutlineModule[];
   priorModuleSummaries: string[];
   currentModuleIndex: number;
 }) {
-  const { existingContext, outlineModules, priorModuleSummaries, currentModuleIndex } = params;
+  const { existingContext, relatedCourseContext, outlineModules, priorModuleSummaries, currentModuleIndex } = params;
   const orderedOutline = outlineModules
     .map((module, index) => `${index + 1}. ${module.title}${module.description ? ` - ${module.description}` : ''}`)
     .join('\n');
@@ -72,6 +151,7 @@ function buildCourseMemory(params: {
 
   return [
     existingContext ? `Existing Course Context:\n${existingContext.trim()}` : '',
+    relatedCourseContext.trim(),
     `Planned Module Sequence:\n${orderedOutline}`,
     `Current Module Position: ${currentModuleIndex + 1} of ${outlineModules.length}`,
     `Previously Generated Module Summaries:\n${previousModulesSection}`
@@ -140,6 +220,13 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
           }
         }
       }
+
+      const relatedCourseContext = buildRelevantCourseContext({
+        topic,
+        existingCourseId,
+        courses,
+        courseModules
+      });
 
       // 1. Search
       const searchRes = await fetch('/api/research/search', {
@@ -247,6 +334,7 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
         const mod = modulesToCreate[i];
         const courseMemory = buildCourseMemory({
           existingContext,
+          relatedCourseContext,
           outlineModules: modulesToCreate,
           priorModuleSummaries,
           currentModuleIndex: i
@@ -265,6 +353,7 @@ export const ResearchProvider: React.FC<{ children: ReactNode }> = ({ children }
             researchContent,
             model: selectedModel,
             existingContext,
+            relatedCourseContext,
             courseMemory,
             moduleIndex: i,
             totalModules: modulesToCreate.length,

@@ -8,6 +8,7 @@ export async function POST(request: Request) {
       researchContent,
       model = 'gemini-2.5-flash',
       existingContext,
+      relatedCourseContext,
       courseMemory,
       moduleIndex,
       totalModules,
@@ -49,6 +50,7 @@ Module Description: ${module.description}
 ${typeof moduleIndex === 'number' && typeof totalModules === 'number' ? `Module Position in Sequence: ${moduleIndex + 1} of ${totalModules}\n` : ''}
 ${moduleSequenceText ? `Full Planned Module Sequence:\n${moduleSequenceText}\n` : ''}
 ${existingContext ? `\nEXISTING COURSE CONTEXT:\n${existingContext}\n` : ''}
+${relatedCourseContext ? `\nRELATED COURSES YOU MAY CROSS-REFERENCE:\n${relatedCourseContext}\n` : ''}
 ${courseMemory ? `\nCOURSE MEMORY TO BUILD ON:\n${courseMemory}\n` : ''}
 
 Follow these rules strictly:
@@ -57,7 +59,10 @@ Follow these rules strictly:
 - Spend at least 85% of the module on concepts, examples, implications, methods, or case studies that are unique to this module.
 - If you must reference earlier material, do it briefly in phrases like "Building on the previous module..." instead of redefining everything.
 - Avoid repeating full definitions, background sections, or introductory framing that already belongs in earlier modules.
-- Make the opening immediately specific to this module's role in the sequence.
+- Make the opening immediately specific to this module's subject matter, not a long recap of sequence position.
+- You may reference other courses only when they provide a genuinely useful comparison, extension, or contrasting frame.
+- Treat other courses as optional related knowledge, not assumed prerequisites for understanding this module.
+- Keep cross-course references brief and integrated; do not turn the module into a tour of other courses.
 - End with a short "Connection to the Course" section that explains how this module extends prior ones and prepares for later ones.
 
 Raw Research Content (use this to write the notes and cite sources):
