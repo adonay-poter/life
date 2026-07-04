@@ -32,7 +32,7 @@ export default function PomodoroFloating() {
 
   // Listen to pomodoro_sync event dispatched when focus starts elsewhere
   useEffect(() => {
-    const handleSync = () => {
+    const handleSync = (e?: Event) => {
       const storedTime = localStorage.getItem('pomodoro_timeRemaining');
       const storedRunning = localStorage.getItem('pomodoro_isRunning');
       const storedBreak = localStorage.getItem('pomodoro_isBreak');
@@ -44,8 +44,18 @@ export default function PomodoroFloating() {
       if (storedTaskId !== null) setActiveTaskId(storedTaskId || '');
       
       // Auto-expand the floating pomodoro timer widget when started
-      if (storedRunning === 'true') {
-        setIsOpen(true);
+      if (e) {
+        if (e.type === 'pomodoro_sync') {
+          if (storedRunning === 'true') {
+            setIsOpen(true);
+          }
+        } else if (e.type === 'storage') {
+          const se = e as StorageEvent;
+          // Only expand if the running state was changed from false to true in another tab
+          if (se.key === 'pomodoro_isRunning' && se.newValue === 'true') {
+            setIsOpen(true);
+          }
+        }
       }
     };
 
