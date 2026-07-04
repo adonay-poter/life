@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import { supabase } from '@/utils/supabaseClient';
@@ -37,6 +38,14 @@ import {
 } from 'lucide-react';
 
 export default function InboxPage() {
+  return (
+    <Suspense fallback={<div className="py-20 text-center text-secondary font-label uppercase tracking-widest text-xs">Loading Inbox Triage...</div>}>
+      <InboxContent />
+    </Suspense>
+  );
+}
+
+function InboxContent() {
   const {
     inboxItems,
     projects,
@@ -56,6 +65,7 @@ export default function InboxPage() {
   } = useDashboard();
 
   const { showToast } = useToast();
+  const searchParams = useSearchParams();
 
   // Selected slip state
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
@@ -66,6 +76,27 @@ export default function InboxPage() {
   const [typeFilter, setTypeFilter] = useState<'All' | InboxItem['type']>('All');
   const [signalFilter, setSignalFilter] = useState<'all' | 'tagged' | 'with_url' | 'with_content'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'type'>('newest');
+
+  // Load itemId query param if present
+  useEffect(() => {
+    const itemId = searchParams ? searchParams.get('itemId') : null;
+    if (itemId) {
+      const item = inboxItems.find((i) => i.id === itemId);
+      if (item) {
+        setSelectedItemId(itemId);
+        // Auto-adjust statusFilter to match item status
+        let targetStatus: typeof statusFilter = 'unprocessed';
+        if (item.status === 'processed' || item.status === 'task' || item.status === 'academy' || item.status === 'knowledge') {
+          targetStatus = 'processed';
+        } else if (item.status === 'snoozed') {
+          targetStatus = 'snoozed';
+        } else if (item.status === 'archived') {
+          targetStatus = 'archived';
+        }
+        setStatusFilter(targetStatus);
+      }
+    }
+  }, [searchParams, inboxItems]);
 
   // Delete modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -1330,7 +1361,14 @@ export default function InboxPage() {
 
       {/* Mobile Details Pop-up Modal overlay */}
       {selectedItem && (
-        <div className="md:hidden fixed inset-0 bg-black/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedItemId(null);
+            }
+          }}
+          className="md:hidden fixed inset-0 bg-black/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
+        >
           <div className="bg-surface border-2 border-primary w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 space-y-6 shadow-lg animate-modal rounded-none">
             {renderPanelContent(true)}
           </div>

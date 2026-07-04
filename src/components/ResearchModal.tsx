@@ -79,7 +79,14 @@ export default function ResearchModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-primary/25 backdrop-blur-[2px] p-4 animate-in fade-in duration-200">
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-primary/25 backdrop-blur-[2px] p-4 animate-in fade-in duration-200"
+    >
       <div className="bg-surface border border-border rounded-none shadow-none max-w-lg w-full">
         
         {/* Header */}

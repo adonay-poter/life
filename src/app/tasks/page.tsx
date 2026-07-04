@@ -1,7 +1,7 @@
 'use client';
 
 import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useDashboard, Task } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
@@ -105,6 +105,7 @@ function TasksContent() {
   const dragCounters = useRef<Record<string, number>>({});
   const dragTimeout = useRef<NodeJS.Timeout | null>(null);
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const {
     projects,
@@ -1114,7 +1115,7 @@ function TasksContent() {
                             <div
                               onClick={(e) => {
                                 e.stopPropagation();
-                                window.location.href = `/inbox?itemId=${task.inbox_item_id}`;
+                                router.push(`/inbox?itemId=${task.inbox_item_id}`);
                               }}
                               className="mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase font-bold tracking-[0.16em] text-secondary hover:text-accent transition-colors cursor-pointer border border-border px-2 py-1 bg-neutral-bg/55 btn-press"
                             >

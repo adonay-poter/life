@@ -2204,7 +2204,15 @@ function AcademyContent() {
 
       {/* Edit Course Modal */}
       {editCourseModalOpen && courseToEdit && (
-        <div className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setEditCourseModalOpen(false);
+              setCourseToEdit(null);
+            }
+          }}
+          className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+        >
           <div className="bg-surface border border-border p-6 rounded-none w-full max-w-lg space-y-4 font-label text-xs shadow-none">
             <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
               Edit Skill Matrix

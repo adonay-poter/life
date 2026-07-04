@@ -4,6 +4,7 @@ import React, { useState, useMemo } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
+import { useRouter } from 'next/navigation';
 import ReviewFlowShell from '@/components/ui/ReviewFlowShell';
 import { Input } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
@@ -41,6 +42,7 @@ export default function MiddayReview() {
   } = useDashboard();
 
   const { showToast } = useToast();
+  const router = useRouter();
   const todayStr = getLocalDateString();
   const [currentStep, setCurrentStep] = useState(0);
 
@@ -108,7 +110,7 @@ export default function MiddayReview() {
         completed_at: new Date().toISOString()
       });
       showToast('Midday review complete. Rest of the day is structured.', 'success');
-      window.location.href = '/review';
+      router.push('/review');
     } catch (err) {
       console.error(err);
       showToast('Failed to save midday review.', 'error');

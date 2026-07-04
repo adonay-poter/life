@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hulu — Personal Life Operating System Technical Documentation</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            hulu: {
+              bg: 'var(--background)',
+              fg: 'var(--foreground)',
+              primary: 'var(--primary)',
+              secondary: 'var(--secondary)',
+              tertiary: 'var(--tertiary)',
+              surface: 'var(--surface)',
+              onPrimary: 'var(--on-primary)',
+              border: 'var(--border)',
+            }
+          },
+          fontFamily: {
+            display: ['Fraunces', 'Georgia', 'serif'],
+            sans: ['"Public Sans"', 'sans-serif'],
+            mono: ['"Space Grotesk"', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --background: #F7F5F2; /* Warm Limestone */
+      --foreground: #1A1C1E; /* Charcoal Ink */
+      --primary: #1A1C1E;
+      --secondary: #6C7278; /* Muted Slate */
+      --tertiary: #B8422E;  /* Crimson Accent */
+      --surface: #FFFFFF;
+      --on-primary: #FFFFFF;
+      --border: #E5E2DC;
+    }
+    
+    .dark {
+      --background: #101112; /* Slate Black */
+      --foreground: #F7F5F2; /* Warm Limestone */
+      --primary: #F7F5F2;
+      --secondary: #9BA1A6;  /* Light Slate */
+      --tertiary: #E2583E;   /* Coral Accent */
+      --surface: #1A1C1E;
+      --on-primary: #101112;
+      --border: #2D3033;
+    }
+
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Public Sans', sans-serif;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .serif-title {
+      font-family: 'Fraunces', Georgia, serif;
+    }
+
+    .mono-label {
+      font-family: 'Space Grotesk', monospace;
+    }
+
+    /* Scrollbar style */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: var(--background);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: var(--secondary);
+      border-radius: 0px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--tertiary);
+    }
+
+    /* Flashcard Flip CSS */
+    .flashcard-inner {
+      transition: transform 0.6s;
+      transform-style: preserve-3d;
+    }
+    .flashcard-flipped {
+      transform: rotateY(180deg);
+    }
+    .flashcard-front, .flashcard-back {
+      backface-visibility: hidden;
+    }
+    .flashcard-back {
+      transform: rotateY(180deg);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col antialiased">
+
+  <!-- Header / Navigation Bar -->
+  <header class="sticky top-0 z-50 bg-hulu-bg border-b border-hulu-border backdrop-blur-md bg-opacity-90 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="h-8 w-8 bg-hulu-tertiary flex items-center justify-center text-hulu-onPrimary font-bold serif-title">ሁ</div>
+      <div>
+        <h1 class="serif-title text-xl font-bold tracking-tight">Hulu — ሁሉ</h1>
+        <p class="mono-label text-[10px] uppercase tracking-wider text-hulu-secondary">System Engineering & Architecture Blueprint</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-6">
+      <nav class="hidden lg:flex space-x-6 text-sm font-medium">
+        <a href="#philosophy" class="hover:text-hulu-tertiary transition-colors">Philosophy</a>
+        <a href="#pipelines" class="hover:text-hulu-tertiary transition-colors">Pipelines</a>
+        <a href="#database" class="hover:text-hulu-tertiary transition-colors">Schemas</a>
+        <a href="#apis" class="hover:text-hulu-tertiary transition-colors">API Spec</a>
+        <a href="#sandbox" class="hover:text-hulu-tertiary transition-colors">Sandboxes</a>
+        <a href="#setup" class="hover:text-hulu-tertiary transition-colors">Setup</a>
+      </nav>
+      
+      <button id="globalThemeToggle" class="p-2 border border-hulu-border rounded-none hover:bg-hulu-surface hover:border-hulu-tertiary transition-all" aria-label="Toggle Dark Mode">
+        <i class="fa-solid fa-moon text-hulu-secondary" id="themeIcon"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sidebar + Content Wrapper -->
+  <div class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+    <!-- Sidebar Navigation (Desktop only) -->
+    <aside class="hidden lg:block w-72 bg-hulu-surface border-r border-hulu-border p-6 overflow-y-auto shrink-0">
+      <div class="space-y-8">
+        <div>
+          <h3 class="mono-label text-xs uppercase text-hulu-secondary tracking-widest font-semibold mb-3">OVERVIEW</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#intro" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">Introduction</a></li>
+            <li><a href="#philosophy" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">Design Philosophy</a></li>
+            <li><a href="#structure" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">Project Directory</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="mono-label text-xs uppercase text-hulu-secondary tracking-widest font-semibold mb-3">FEATURES & FLOWS</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#feat-dashboard" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-gauge mr-2"></i>Executive Home</a></li>
+            <li><a href="#feat-inbox" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-inbox mr-2"></i>Inbox Capture</a></li>
+            <li><a href="#feat-tasks" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-list-check mr-2"></i>Projects & Tasks</a></li>
+            <li><a href="#feat-habits" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-calendar-check mr-2"></i>Habits & Health</a></li>
+            <li><a href="#feat-journal" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-book mr-2"></i>Reflective Journal</a></li>
+            <li><a href="#feat-academy" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-graduation-cap mr-2"></i>Academy & SRS</a></li>
+            <li><a href="#feat-ai" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-robot mr-2"></i>AI Research</a></li>
+            <li><a href="#feat-reviews" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-arrows-spin mr-2"></i>Review Room</a></li>
+            <li><a href="#feat-pomo" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-clock mr-2"></i>Pomodoro focus</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-hulu-secondary tracking-widest font-semibold mb-3">ARCHITECTURE</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#pipelines" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">Data Pipelines</a></li>
+            <li><a href="#database" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">Relational Database</a></li>
+            <li><a href="#security" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">RLS Security</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-hulu-secondary tracking-widest font-semibold mb-3">API INTERFACES</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#api-enrich" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">/api/capture/enrich</a></li>
+            <li><a href="#api-digest" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">/api/intelligence/digest</a></li>
+            <li><a href="#api-search" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">/api/research/search</a></li>
+            <li><a href="#api-outline" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">/api/research/outline</a></li>
+            <li><a href="#api-module" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">/api/research/generate-module</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-hulu-secondary tracking-widest font-semibold mb-3">SANDBOX SIMULATORS</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#sandbox-inbox" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-terminal mr-2"></i>Inbox Slip Ingester</a></li>
+            <li><a href="#sandbox-habits" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-table-cells mr-2"></i>Habit Grid & Streaks</a></li>
+            <li><a href="#sandbox-flashcard" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-layer-group mr-2"></i>Flashcard SRS Engine</a></li>
+            <li><a href="#sandbox-pomodoro" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-stopwatch mr-2"></i>Focus Timer (Audio)</a></li>
+            <li><a href="#sandbox-score" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-calculator mr-2"></i>Composite Life Score</a></li>
+            <li><a href="#sandbox-rate" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3"><i class="fa-solid fa-chart-line mr-2"></i>AI Token Rate Limits</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h3 class="mono-label text-xs uppercase text-hulu-secondary tracking-widest font-semibold mb-3">DEVELOPMENT</h3>
+          <ul class="space-y-2 text-sm">
+            <li><a href="#setup" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-tertiary pl-3">Local Setup</a></li>
+            <li><a href="#deploy" class="block py-1 hover:text-hulu-tertiary transition-colors border-l-2 border-transparent hover:border-hulu-terhulu pl-3">Deployment Guide</a></li>
+          </ul>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 overflow-y-auto px-6 py-8 lg:px-16 lg:py-12 space-y-16">
+      
+      <!-- Intro Section -->
+      <section id="intro" class="space-y-6">
+        <h2 class="serif-title text-4xl lg:text-5xl font-bold tracking-tight text-hulu-primary leading-tight">
+          Hulu — ሁሉ OS: Personal Life Operating System
+        </h2>
+        <div class="h-1 w-20 bg-hulu-tertiary"></div>
+        <p class="text-lg text-hulu-secondary leading-relaxed max-w-4xl font-sans">
+          Hulu — ሁሉ (meaning <strong>"Everything"</strong> or <strong>"All"</strong> in Amharic) is a premium, high-integrity personal operating workspace. Rooted in Next.js 16 (Turbopack), React 19, Tailwind CSS v4, and Supabase, Hulu transforms standard task tracking into a calm, broadsheet-inspired executive platform. By coupling <strong>rigid architectural layouts</strong> with a <strong>selective crimson accent system</strong>, Hulu provides focus, clarity, and visual peace for daily operations.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none">
+            <h3 class="serif-title text-xl font-semibold mb-2">Flat Aesthetics</h3>
+            <p class="text-sm text-hulu-secondary font-sans">Strictly devoid of gradients, round curves, or glowing overlays. Structure is guided by empty space, sharp borders, and fine borders.</p>
+          </div>
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none">
+            <h3 class="serif-title text-xl font-semibold mb-2">Journalistic Typography</h3>
+            <p class="text-sm text-hulu-secondary font-sans">Broadsheet-inspired typeface hierarchy. Serif titles (Fraunces/Zemach), structural UI monospacing (Space Grotesk), and reading screens (Public Sans).</p>
+          </div>
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none">
+            <h3 class="serif-title text-xl font-semibold mb-2">Focused Interaction</h3>
+            <p class="text-sm text-hulu-secondary font-sans">Exactly one active focus point is highlighted in Crimson/Coral on any page view, aligning visual flow with immediate focus.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Design Philosophy & Specs -->
+      <section id="philosophy" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Design Philosophy & System Spec</h2>
+          <p class="text-hulu-secondary mt-2">The core aesthetic design guidelines of the Hulu OS.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div class="space-y-6">
+            <h3 class="serif-title text-2xl font-semibold">System Color Tokens</h3>
+            <p class="text-sm text-hulu-secondary">Curated flat color variables designed for reading comfort and high accessibility contrast across themes.</p>
+            
+            <div class="space-y-4 font-sans">
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-none border border-hulu-border bg-[#F7F5F2] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Warm Limestone (Neutral Light)</h4>
+                  <p class="text-xs text-hulu-secondary">`#F7F5F2` • Light mode background. Invokes texture of newsprint or physical paper.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-none border border-hulu-border bg-[#101112] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Slate Black (Neutral Dark)</h4>
+                  <p class="text-xs text-hulu-secondary">`#101112` • Dark mode background. Designed to reduce fatigue in late reviews.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-none border border-hulu-border bg-[#1A1C1E] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Charcoal Ink (Primary Ink)</h4>
+                  <p class="text-xs text-hulu-secondary">`#1A1C1E` • Default text and borders in light mode; secondary contrast in dark mode.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-none border border-hulu-border bg-[#B8422E] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Crimson Accent (Light Primary Action)</h4>
+                  <p class="text-xs text-hulu-secondary">`#B8422E` • Guides light mode user focus to primary CTA button, active checkboxes, and select indicators.</p>
+                </div>
+              </div>
+
+              <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 rounded-none border border-hulu-border bg-[#E2583E] shrink-0"></div>
+                <div>
+                  <h4 class="mono-label text-sm font-semibold">Coral Accent (Dark Primary Action)</h4>
+                  <p class="text-xs text-hulu-secondary">`#E2583E` • Contrast-adjusted crimson equivalent driving attention in dark mode.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-6">
+            <h3 class="serif-title text-2xl font-semibold">Rules of the Layout Grid</h3>
+            <ul class="space-y-3 text-sm text-hulu-secondary font-sans">
+              <li class="flex items-start">
+                <i class="fa-solid fa-square-check text-hulu-tertiary mt-1 mr-3 shrink-0"></i>
+                <span><strong>The Single-Accent Constraint</strong>: Exactly one major interactive CTA is styled in Crimson/Coral per viewport. Side-actions are styled as muted outlines.</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa-solid fa-square-check text-hulu-tertiary mt-1 mr-3 shrink-0"></i>
+                <span><strong>Structured Empty Space</strong>: Margins and empty areas are structural. Grid columns are separated by empty spaces or standard 1px borders.</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa-solid fa-ban text-red-500 mt-1 mr-3 shrink-0"></i>
+                <span><strong>Zero Gradients or Shadows</strong>: Avoid Tailwind gradients (`bg-gradient-to-r`) or shadow drop-shadow classes. Borders and backgrounds are strictly solid.</span>
+              </li>
+              <li class="flex items-start">
+                <i class="fa-solid fa-square-check text-hulu-tertiary mt-1 mr-3 shrink-0"></i>
+                <span><strong>Typography Hierarchy</strong>: Display titles use `Fraunces` / `Zemach` (Amharic). Structural controls use `Space Grotesk`. Read notes use `Public Sans`.</span>
+              </li>
+            </ul>
+
+            <div class="p-4 border-l-4 border-hulu-tertiary bg-hulu-bg text-xs">
+              <p class="mono-label font-bold text-hulu-primary uppercase tracking-wide mb-1 font-mono">Typography Mapping</p>
+              <div class="grid grid-cols-3 gap-2 mt-2 font-sans">
+                <div><strong>Display Headings</strong></div>
+                <div class="col-span-2">Fraunces (Georgia / Serif fallback)</div>
+                <div><strong>Body / Lists</strong></div>
+                <div class="col-span-2">Public Sans (Arial / Sans fallback)</div>
+                <div><strong>Monospace Labels</strong></div>
+                <div class="col-span-2">Space Grotesk (Courier / Mono fallback)</div>
+                <div><strong>Amharic Display</strong></div>
+                <div class="col-span-2">Zemach (Ethiopic Serif font)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Project Structure Section -->
+      <section id="structure" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Project Directory & Codebase Layout</h2>
+          <p class="text-hulu-secondary mt-2">Physical file structure of the Next.js App Router codebase.</p>
+        </div>
+
+        <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none">
+          <pre class="font-mono text-xs text-hulu-secondary leading-relaxed overflow-x-auto">
+/home/adonaymick/Documents/Life
+├── src/
+│   ├── app/                    # Next.js App Router Pages
+│   │   ├── academy/            # Learning Ledger matrix, notes viewer, SRS flashcard panels (page.tsx)
+│   │   ├── api/                # API Endpoints (enrich, digest, research search/outline/writing/qa)
+│   │   ├── habits/             # Weekly checklist matrix, wellness logs (mood, sleep, water) (page.tsx)
+│   │   ├── inbox/              # Capture desk, AI metadata suggestions, conversion triggers (page.tsx)
+│   │   ├── intelligence/       # AI Daily briefs page, suggested actions (page.tsx)
+│   │   ├── journal/            # Structured diary logs, auto-save state markdown editor (page.tsx)
+│   │   ├── projects/           # Area divisions, client profiles, deadline metrics (page.tsx)
+│   │   ├── review/             # Midday, Evening, and Weekly reviews, staleness queue (page.tsx)
+│   │   ├── tasks/              # Kanban execute board, calendar scheduler (page.tsx)
+│   │   ├── globals.css         # Theme mapping tokens, base broadsheet styles
+│   │   ├── layout.tsx          # App root, ThemeProvider, ToastProvider integrations
+│   │   └── page.tsx            # Home executive dashboard: Briefings, Life Score, Today's focus
+│   ├── components/             # Reusable UI Components
+│   │   ├── ui/                 # Atomic design units: Button, Input, EditorialCard, PageShell
+│   │   ├── AuthGuard.tsx       # Route protection, Supabase session checker
+│   │   ├── PomodoroFloating.tsx# Focus stopwatch sync, Web Audio beeps
+│   │   ├── QAPanel.tsx         # Slide-out AI search context chat drawer
+│   │   └── ResearchModal.tsx   # Topic prompt outline and syllabus generator modal
+│   ├── context/                # Global React Context state files
+│   │   ├── DashboardContext.tsx# Main state machine fetching and syncing all Supabase data
+│   │   ├── AuthContext.tsx     # Supabase auth session wrappers
+│   │   └── ToastContext.tsx    # Visual validation toasts
+│   ├── hooks/                  # Custom react hooks
+│   │   └── useRateLimit.ts     # LocalStorage rate limit monitor (RPM, TPM, RPD)
+│   └── utils/                  # Shared helper scripts
+│       ├── dateUtils.ts        # Date formatting, ISO strings
+│       └── supabaseClient.ts   # Supabase client initialize config
+├── supabase/                   # Database migrations and seed configs
+└── hulu-documentation.html     # This system blueprint file</pre>
+        </div>
+      </section>
+
+      <!-- Features Encyclopedia -->
+      <section id="features" class="space-y-12 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Features Encyclopedia</h2>
+          <p class="text-hulu-secondary mt-2">Deep catalog of the Hulu OS core features, mechanics, and user flows.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          
+          <!-- Feature: Dashboard Home -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-dashboard">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">🏛️ Executive Dashboard</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Overview</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                The central control room. Provides aggregate metrics, immediate action queues, and brief logs summarizing daily activities.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Today's Briefing</strong>: Read or edit the daily focus, displaying urgent project deadlines and outstanding captures.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Learning Ledger</strong>: Quick overview of study modules, lessons completed, and questions logged today.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Life Score Engine</strong>: A composite metric evaluating your productivity: 40% task completions + 30% habit streaks + 30% learning module updates.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-score" class="text-sm font-semibold text-hulu-tertiary hover:underline">Calculate your Life Score &rarr;</a>
+          </div>
+
+          <!-- Feature: Inbox Capture Desk -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-inbox">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">📥 Inbox Capture Desk</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Ingest</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                A low-friction capturing inbox. Users dump raw text, links, code, quotes, or questions so they can maintain focus on their active session.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>AI Ingestion API</strong>: `/api/capture/enrich` triggers Gemini to parse title, description, category, tags, and suggested next-steps.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Attachment System</strong>: Upload intake slip images directly to Supabase storage buckets (`intake-images`).</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Triage Actions</strong>: Convert slips instantly into tasks, journal reflections, study materials, or snooze them to a later date.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-inbox" class="text-sm font-semibold text-hulu-tertiary hover:underline">Launch Inbox simulator &rarr;</a>
+          </div>
+
+          <!-- Feature: Projects & Tasks -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-tasks">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">📋 Projects & Tasks</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Execute</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                A decoupled coordination engine. Projects act as folders with timelines and deadlines; Tasks represent concrete actionable steps.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Work Areas</strong>: Projects are grouped by focus areas (e.g. Business, Health, Mind, Relationships).</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Task Board Views</strong>: Multi-layout dashboard toggling between Kanban grids and monthly calendar planners.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Dependency Locks</strong>: Subtasks can block parent task completion, marking blocked items with clear indicator states.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Task Pinning</strong>: Pin high-value tasks so they sit prominently on the today dashboard.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-pomodoro" class="text-sm font-semibold text-hulu-tertiary hover:underline font-sans">Link focus to active tasks &rarr;</a>
+          </div>
+
+          <!-- Feature: Habits Consistency -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-habits">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">⚡ Habits Consistency</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Build</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                A tracking ledger to record daily habits and wellness variables without intrusive notifications.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Habit Types</strong>: Tracks binary checkbox targets (e.g. exercise) and numerical metrics (e.g. sleep hours, water ML).</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Streaks Calculator</strong>: Real-time streak tracking verifying consecutive completions.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Heatmap Logs</strong>: 180-day consistency grids tracking daily ticks over six months.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Daily Wellness</strong>: Record sleep hours, water intake, and subjective mood ratings on a slider.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-habits" class="text-sm font-semibold text-hulu-tertiary hover:underline font-sans font-sans">Tick habits checklist &rarr;</a>
+          </div>
+
+          <!-- Feature: Journal Reflections -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-journal">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">📝 Journal Reflections</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Contemplate</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                A daily reflection space that structures tracking into intent planning and debriefing phases.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Morning Intentions</strong>: Pre-populate core focus items to anchor your morning.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Evening Reviews</strong>: Prompts to log daily wins, friction points, and lessons.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Markdown Editor</strong>: Free-text section with dirty-state change tracking and local storage auto-save backups.</li>
+              </ul>
+            </div>
+            <span class="text-xs text-hulu-secondary italic font-sans">Auto-saves drafts locally to prevent data loss.</span>
+          </div>
+
+          <!-- Feature: Academy & SRS -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-academy">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">🎓 Academy Library & SRS</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Learn</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                A reference library integrated with a spaced repetition review engine to cement retention.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Outlines</strong>: Courses structured hierarchically: Course (Matrix) &rarr; Modules &rarr; Lessons.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Module Notes & QA</strong>: Clean markdown notes fields accompanied by a slide-out QA chat engine reading notes context (`/api/research/qa`).</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>SRS Flashcards Deck</strong>: Flip cards and score your recollection (PASS / FAIL). Failed cards reappear immediately; passed cards are pushed out in days.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-flashcard" class="text-sm font-semibold text-hulu-tertiary hover:underline">Flip flashcard deck &rarr;</a>
+          </div>
+
+          <!-- Feature: AI Research Agent -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-ai">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">🤖 AI Research Agent</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Research</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans font-sans">
+                A background researcher generating custom curriculum outlines, modules, lessons, and references from a single topic prompt.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Exa Web Crawl</strong>: Scrapes authoritative web sources via Exa API to extract clean lesson materials.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Sequential Writing</strong>: Uses Gemini models to write course modules, syllabi, study summaries, and card sets.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Rate-Limit Logs</strong>: Tracks API token consumption, cost estimates, and daily usage allowances to protect keys.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-rate" class="text-sm font-semibold text-hulu-tertiary hover:underline font-sans">View AI Token limits logs &rarr;</a>
+          </div>
+
+          <!-- Feature: Review Room -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-reviews">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">🔄 Review Room Checkpoints</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Audit</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                Periodic reviews ensuring database integrity and system alignment. Keeps goals tight and filters backlogs.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Midday Checkpoint</strong>: Clean morning captures, state focus priorities, answer unresolved loops.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Evening Review</strong>: Record completed tasks, log lessons, inherit tomorrow's focus.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Weekly Review</strong>: Re-organize inbox, archive completed/stale projects, log weekly takeaways.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Triage Decision Queue</strong>: Resolves system-flagged stale projects, overdue tasks, or long-forgotten captures in a single queue.</li>
+              </ul>
+            </div>
+            <span class="text-xs text-hulu-secondary italic font-sans font-sans">Flags database staleness automatically based on inactivity rules.</span>
+          </div>
+
+          <!-- Feature: Focus Pomodoro -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="feat-pomo">
+            <div>
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="serif-title text-2xl font-semibold">⏱️ Focus Pomodoro</h3>
+                <span class="mono-label text-xs uppercase px-2 py-1 bg-hulu-bg border border-hulu-border text-hulu-secondary">Focus</span>
+              </div>
+              <p class="text-sm text-hulu-secondary leading-relaxed mb-4 font-sans">
+                A persistent countdown timer widget that drives deep concentration blocks.
+              </p>
+              <ul class="text-xs space-y-2 text-hulu-secondary mb-6 font-sans font-sans">
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Tab Title Sync</strong>: Synchronizes countdown ticks to the browser document tab title.</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Audio Synth Alerts</strong>: Triggers sound synthesizers directly via the Web Audio API (avoiding bulky audio assets).</li>
+                <li><i class="fa-solid fa-check text-hulu-tertiary mr-2"></i><strong>Task Linkage</strong>: Links active Pomodoro sessions directly to a specific task to record total focused effort.</li>
+              </ul>
+            </div>
+            <a href="#sandbox-pomodoro" class="text-sm font-semibold text-hulu-tertiary hover:underline">Start pomodoro simulation &rarr;</a>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Data Flows & Architecture -->
+      <section id="pipelines" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Data Pipelines & Flows</h2>
+          <p class="text-hulu-secondary mt-2">Flow diagrams and core processing steps driving Hulu OS.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 font-sans text-sm">
+          <div class="bg-hulu-surface border border-hulu-border p-6 space-y-4">
+            <h3 class="serif-title text-xl font-bold font-serif">Inbox Capture to Action Flow</h3>
+            <p class="text-hulu-secondary leading-relaxed">
+              When an input is captured, it flows through a sequential pipeline from extraction to persistence:
+            </p>
+            <ol class="list-decimal pl-5 space-y-2 text-hulu-secondary">
+              <li><strong>Ingestion Trigger</strong>: User submits text or uploads a photo from [UniversalCaptureModal](file:///home/adonaymick/Documents/Life/src/components/UniversalCaptureModal.tsx).</li>
+              <li><strong>Resilient Scraping</strong>: If the input is a URL, `/api/capture/enrich` uses a custom HTTP client with fallback headers to bypass Cloudflare and parse the page metadata.</li>
+              <li><strong>AI Structuring</strong>: Gemini extracts the core concept. If Gemini is down/limited, local heuristic parsers intercept, scanning regular expressions (like checking `?` to force a `question` category).</li>
+              <li><strong>Supabase Persistence</strong>: The enriched object is stored in `inbox_items` and loaded asynchronously into `DashboardContext` state.</li>
+              <li><strong>Triage Conversion</strong>: Reviewing an item creates a corresponding `tasks` row or `knowledge_items` note, linking the entities together.</li>
+            </ol>
+          </div>
+
+          <div class="bg-hulu-surface border border-hulu-border p-6 space-y-4">
+            <h3 class="serif-title text-xl font-bold font-serif">AI Research Agent Pipeline</h3>
+            <p class="text-hulu-secondary leading-relaxed">
+              Generating study guides runs sequentially as an asynchronous pipeline with pacing delays:
+            </p>
+            <ol class="list-decimal pl-5 space-y-2 text-hulu-secondary">
+              <li><strong>Source Discovery</strong>: `/api/research/search` queries Exa API. If Exa is limited, it queries DuckDuckGo HTML directly, scrapes matches, and resolves to Wikipedia API as a third-tier fail-safe.</li>
+              <li><strong>Syllabus Outline</strong>: `/api/research/outline` consumes research data and structures a course syllabus JSON with modules and descriptions.</li>
+              <li><strong>Asynchronous Writing</strong>: Loops through each module to generate comprehensive Markdown notes, using retry backoffs to protect against Gemini API rate limits.</li>
+              <li><strong>Rate-Limiter Interceptor</strong>: `useRateLimit` intercepts operations, checking local request logs (limiting to 20 daily calls, 5 RPM, and 250k TPM). It locks inputs if quotas are exceeded.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Relational Database Schema -->
+      <section id="database" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Database Schemas & Relations</h2>
+          <p class="text-hulu-secondary mt-2">Comprehensive table structures and relations of the PostgreSQL database on Supabase.</p>
+        </div>
+
+        <div class="space-y-6 font-sans text-xs">
+          <!-- Table: inbox_items -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3">
+            <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2 flex justify-between items-baseline">
+              <span>public.inbox_items</span>
+              <span class="text-[10px] text-hulu-secondary uppercase font-sans">Slip captures table</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div class="md:col-span-1 space-y-1">
+                <p><strong>id</strong>: uuid (PK)</p>
+                <p><strong>user_id</strong>: uuid (FK)</p>
+                <p><strong>title</strong>: text (not null)</p>
+                <p><strong>content</strong>: text</p>
+              </div>
+              <div class="md:col-span-1 space-y-1">
+                <p><strong>type</strong>: text (check constraint)</p>
+                <p><strong>status</strong>: text (check constraint)</p>
+                <p><strong>source_url</strong>: text</p>
+                <p><strong>attachment_url</strong>: text</p>
+              </div>
+              <div class="md:col-span-1 space-y-1">
+                <p><strong>summary</strong>: text</p>
+                <p><strong>ai_suggested_type</strong>: text</p>
+                <p><strong>ai_suggested_action</strong>: text</p>
+                <p><strong>tags</strong>: text[]</p>
+              </div>
+              <div class="md:col-span-1 space-y-1">
+                <p><strong>snoozed_until</strong>: timestamptz</p>
+                <p><strong>processed_at</strong>: timestamptz</p>
+                <p><strong>created_at</strong>: timestamptz</p>
+              </div>
+            </div>
+            <p class="text-[10px] text-hulu-secondary font-mono">Constraints: type in ('text', 'url', 'snippet', 'thought', 'idea', 'task', 'photo', 'quote', 'code', 'question', 'journal', 'book_note', 'course_note', 'decision', 'resource') | status in ('unprocessed', 'processed', 'snoozed', 'archived')</p>
+          </div>
+
+          <!-- Table: tasks -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3">
+            <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2 flex justify-between items-baseline">
+              <span>public.tasks</span>
+              <span class="text-[10px] text-hulu-secondary uppercase font-sans">Actionable Items</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div class="space-y-1">
+                <p><strong>id</strong>: uuid (PK)</p>
+                <p><strong>user_id</strong>: uuid (FK)</p>
+                <p><strong>project_id</strong>: uuid (FK -> projects.id)</p>
+                <p><strong>inbox_item_id</strong>: uuid (FK -> inbox_items.id)</p>
+              </div>
+              <div class="space-y-1">
+                <p><strong>name</strong>: text (not null)</p>
+                <p><strong>description</strong>: text</p>
+                <p><strong>status</strong>: text (backlog, todo, in_progress, done)</p>
+                <p><strong>priority</strong>: text (low, medium, high)</p>
+              </div>
+              <div class="space-y-1">
+                <p><strong>due_date</strong>: date</p>
+                <p><strong>recurring</strong>: text (none, daily, weekly, monthly)</p>
+                <p><strong>completed_at</strong>: timestamptz</p>
+                <p><strong>pinned</strong>: boolean (default false)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Table: review_entries & review_queue_items -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3">
+              <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2">public.review_entries</h3>
+              <p>Holds periodic reviews to track focuses and lessons.</p>
+              <div class="space-y-1 font-mono text-[10px]">
+                <p><strong>id</strong>: uuid (PK)</p>
+                <p><strong>review_type</strong>: text (midday, evening, weekly)</p>
+                <p><strong>review_date</strong>: date</p>
+                <p><strong>focus_text</strong>: text (daily target)</p>
+                <p><strong>tomorrow_inherits</strong>: text</p>
+                <p><strong>answers</strong>: jsonb (answers to review prompt steps)</p>
+                <p><strong>completed_at</strong>: timestamptz</p>
+              </div>
+            </div>
+
+            <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3">
+              <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2">public.review_queue_items</h3>
+              <p>Decision queue containing stale indicators and overdue tasks.</p>
+              <div class="space-y-1 font-mono text-[10px]">
+                <p><strong>id</strong>: uuid (PK)</p>
+                <p><strong>item_type</strong>: text (e.g., 'project', 'task', 'inbox_item')</p>
+                <p><strong>item_id</strong>: uuid (generic pointer)</p>
+                <p><strong>reason</strong>: text (e.g. 'Project stale: no progress in 14 days')</p>
+                <p><strong>status</strong>: text (open, resolved, snoozed)</p>
+                <p><strong>snoozed_until</strong>: timestamptz</p>
+                <p><strong>detected_at</strong>: timestamptz</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Row-Level Security Section -->
+      <section id="security" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Row-Level Security Policies</h2>
+          <p class="text-hulu-secondary mt-2">Security constraints locking database modifications to authenticated owners.</p>
+        </div>
+
+        <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-4 font-sans text-sm">
+          <h3 class="serif-title text-xl font-bold font-serif">Enforcing Security at the Database Layer</h3>
+          <p class="text-hulu-secondary leading-relaxed">
+            All tables include `ENABLE ROW LEVEL SECURITY`. Hulu partitions data by validating the active authorization token against the row owner column:
+          </p>
+          <pre class="bg-hulu-bg p-4 border border-hulu-border text-xs text-hulu-secondary font-mono overflow-x-auto">
+-- 1. Enable RLS on review entries
+ALTER TABLE public.review_entries ENABLE ROW LEVEL SECURITY;
+
+-- 2. Restrict all operations to the authenticated user owning the row
+CREATE POLICY "Users can manage their own review entries"
+  ON public.review_entries
+  FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- 3. Lock down research jobs
+ALTER TABLE public.research_jobs ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow authenticated users full access to research_jobs"
+  ON public.research_jobs
+  FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);</pre>
+        </div>
+      </section>
+
+      <!-- API Specification Section -->
+      <section id="apis" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">API Interfaces Specification</h2>
+          <p class="text-hulu-secondary mt-2">Complete request and response specifications for the backend API routes.</p>
+        </div>
+
+        <div class="space-y-6 font-sans text-sm">
+          
+          <!-- API: /api/capture/enrich -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3" id="api-enrich">
+            <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2 flex justify-between items-baseline">
+              <span>POST /api/capture/enrich</span>
+              <span class="text-[10px] text-hulu-secondary font-sans font-bold">Inbox Ingestion</span>
+            </h3>
+            <p class="text-xs text-hulu-secondary">Scrapes URLs (fallback to hostname if Cloudflare-blocked) and prompts Gemini to extract category classifications.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Request Body (JSON)</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto">
+{
+  "rawText": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API",
+  "fileName": null,
+  "attachmentUrl": null
+}</pre>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Response JSON</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto">
+{
+  "storageType": "url",
+  "title": "Web Audio API - Web APIs | MDN",
+  "sourceUrl": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API",
+  "summary": "The Web Audio API provides a powerful and versatile system for controlling audio on the Web...",
+  "aiSuggestedType": "resource",
+  "aiSuggestedAction": "Add to Web Audio study reference notes in Academy."
+}</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API: /api/intelligence/digest -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3" id="api-digest">
+            <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2 flex justify-between items-baseline">
+              <span>POST /api/intelligence/digest</span>
+              <span class="text-[10px] text-hulu-secondary font-sans font-bold">Daily Brief Synthesis</span>
+            </h3>
+            <p class="text-xs text-hulu-secondary">Aggregates inbox items, active tasks, knowledge items, and journal reflections into a structured briefing.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Request Body (JSON)</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto font-sans">
+{
+  "date": "2026-07-04",
+  "inboxItems": [...],
+  "tasks": [...],
+  "knowledgeItems": [...],
+  "journalEntries": [...]
+}</pre>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Response JSON</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto">
+{
+  "summary": "Today you finalized your design audit and updated documentation.",
+  "themes": [
+    {
+      "title": "System Security",
+      "summary": "Captured notes regarding Supabase Row Level Security configurations.",
+      "related_item_ids": ["uuid-1"],
+      "suggested_action": "Verify tasks RLS policy in local migrations."
+    }
+  ],
+  "important_insights": [
+    {
+      "title": "Pacing API Calls",
+      "content": "Pacing delays prevent API query failures.",
+      "why_it_matters": "Reduces API costs and avoids limit blocks."
+    }
+  ],
+  "open_questions": [],
+  "suggested_actions": [
+    {
+      "type": "task",
+      "title": "Configure RLS",
+      "reason": "Outstanding policy note waiting to be processed."
+    }
+  ],
+  "tomorrow_inherits": "Implement RLS security verification."
+}</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API: /api/research/search -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3" id="api-search">
+            <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2 flex justify-between items-baseline">
+              <span>POST /api/research/search</span>
+              <span class="text-[10px] text-hulu-secondary font-sans font-bold">Authoritative Source Scraping</span>
+            </h3>
+            <p class="text-xs text-hulu-secondary font-sans">Resilient search pipeline traversing: Exa Search API &rarr; DuckDuckGo HTML parser &rarr; Wikipedia Search API &rarr; Gemini Search Grounding.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Request Body (JSON)</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto">
+{
+  "topic": "Supabase Row Level Security configuration"
+}</pre>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Response JSON</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto">
+{
+  "urls": [
+    "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  ],
+  "preExtracted": [
+    {
+      "url": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+      "title": "Row Level Security | Supabase Docs",
+      "content": "PostgreSQL Row Level Security (RLS) restricts access to rows based on auth.uid()..."
+    }
+  ],
+  "tokens": 0
+}</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- API: /api/research/outline -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none space-y-3" id="api-outline">
+            <h3 class="font-mono text-sm font-bold text-hulu-primary border-b border-hulu-border pb-2 flex justify-between items-baseline">
+              <span>POST /api/research/outline</span>
+              <span class="text-[10px] text-hulu-secondary font-sans font-bold">Curriculum Outlining</span>
+            </h3>
+            <p class="text-xs text-hulu-secondary font-sans">Designs a 3-6 chapter syllabus from research texts, using backoff retries on rate limit responses.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Request Body (JSON)</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto">
+{
+  "topic": "Row Level Security",
+  "researchContent": "RLS is a database feature in Postgres..."
+}</pre>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs uppercase text-hulu-secondary mb-2">Response JSON</h4>
+                <pre class="bg-hulu-bg p-3 border border-hulu-border text-xs font-mono text-hulu-secondary overflow-x-auto font-sans">
+{
+  "outline": {
+    "title": "Row Level Security Blueprint",
+    "description": "Understanding policies, testing constraints, and hardening schemas in Postgres.",
+    "category": "Database Security",
+    "modules": [
+      {
+        "title": "Introduction to Postgres RLS",
+        "description": "How RLS intercept constraints work on SELECT and INSERT queries."
+      }
+    ]
+  },
+  "tokens": 12450
+}</pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Live Interactive Sandbox Section -->
+      <section id="sandbox" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Interactive Component Sandboxes</h2>
+          <p class="text-hulu-secondary mt-2">Test drive simulated widgets modeled after the Hulu design system.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <!-- Sandbox 1: Inbox Ingest Simulator -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="sandbox-inbox">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4">📥 Live Inbox Slip Ingester</h3>
+              <p class="text-xs text-hulu-secondary mb-4 font-sans font-sans">Capture unstructured notes. Capturing triggers a mock AI enrichment API parsing categories and next-steps.</p>
+              <form id="sandboxInboxForm" class="space-y-4 font-sans text-xs">
+                <div>
+                  <label class="block text-[10px] mono-label uppercase text-hulu-secondary mb-1 font-bold">Quick Ingest Capture</label>
+                  <input type="text" id="sandboxInboxTitle" placeholder="e.g. Scrape Exa API documentation for course research" class="w-full bg-hulu-bg border border-hulu-border p-2 rounded-none focus:outline-none focus:border-hulu-tertiary" required>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div>
+                    <label class="block text-[10px] mono-label uppercase text-hulu-secondary mb-1 font-bold">Type</label>
+                    <select id="sandboxInboxType" class="w-full bg-hulu-bg border border-hulu-border p-2 rounded-none focus:outline-none">
+                      <option value="text">Quick Slip</option>
+                      <option value="url">URL Bookmark</option>
+                      <option value="snippet">Code Snippet</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-[10px] mono-label uppercase text-hulu-secondary mb-1 font-bold">Status</label>
+                    <select id="sandboxInboxStatus" class="w-full bg-hulu-bg border border-hulu-border p-2 rounded-none focus:outline-none">
+                      <option value="unprocessed">Unprocessed</option>
+                      <option value="processed">Processed</option>
+                    </select>
+                  </div>
+                </div>
+                <button type="submit" class="w-full bg-hulu-tertiary text-hulu-onPrimary text-[10px] mono-label uppercase py-2 hover:opacity-90 transition-opacity rounded-none">Ingest Slip</button>
+              </form>
+            </div>
+            
+            <div class="mt-6 border-t border-hulu-border pt-4">
+              <h4 class="mono-label text-[10px] uppercase text-hulu-secondary mb-2 font-bold">Inbox Ledger (Simulation)</h4>
+              <div class="space-y-2 max-h-40 overflow-y-auto" id="sandboxInboxList">
+                <div class="flex flex-col p-2.5 bg-hulu-bg border border-hulu-border text-xs space-y-1 font-sans">
+                  <div class="flex items-center justify-between font-sans">
+                    <span class="font-bold">[Quick Slip]</span> Study Spaced Repetition systems
+                    <span class="text-[9px] mono-label text-hulu-tertiary uppercase font-bold">Unprocessed</span>
+                  </div>
+                  <div class="text-[10px] text-hulu-secondary italic font-serif">Enriched tags: #learning, #srs. AI Step: Convert to Course.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sandbox 2: Habits Completion Matrix -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="sandbox-habits">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4">⚡ Habit Check-In Ledger</h3>
+              <p class="text-xs text-hulu-secondary mb-4 font-sans">Tick off habits for the week. The streak engine automatically updates based on your consistency.</p>
+              
+              <div class="space-y-4">
+                <div class="p-3 border border-hulu-border bg-hulu-bg">
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="font-semibold text-sm">Read 10 Pages (Academy)</span>
+                    <span class="mono-label text-[10px] text-hulu-tertiary font-bold" id="habitStreakDisplay">Streak: 3 days</span>
+                  </div>
+                  <div class="flex justify-between items-center px-1 font-mono text-[9px]">
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">M</span>
+                      <input type="checkbox" checked class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">T</span>
+                      <input type="checkbox" checked class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">W</span>
+                      <input type="checkbox" checked class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">T</span>
+                      <input type="checkbox" class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">F</span>
+                      <input type="checkbox" class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">S</span>
+                      <input type="checkbox" class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">S</span>
+                      <input type="checkbox" class="habit-chk accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-3 border border-hulu-border bg-hulu-bg">
+                  <div class="flex items-center justify-between mb-2 font-sans">
+                    <span class="font-semibold text-sm">Focused Focus Block (Pomodoro)</span>
+                    <span class="mono-label text-[10px] text-hulu-tertiary font-bold" id="habitStreakDisplay2">Streak: 1 day</span>
+                  </div>
+                  <div class="flex justify-between items-center px-1 font-mono text-[9px]">
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">M</span>
+                      <input type="checkbox" class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">T</span>
+                      <input type="checkbox" class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">W</span>
+                      <input type="checkbox" class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">T</span>
+                      <input type="checkbox" class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">F</span>
+                      <input type="checkbox" class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">S</span>
+                      <input type="checkbox" class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                    <div class="flex flex-col items-center">
+                      <span class="text-hulu-secondary mb-1 font-bold">S</span>
+                      <input type="checkbox" checked class="habit-chk-2 accent-hulu-tertiary w-3.5 h-3.5">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="pt-4 mt-6 border-t border-hulu-border text-center">
+              <span class="text-[10px] text-hulu-secondary block font-sans">Completed ticks calculate consecutive days checking left-to-right.</span>
+            </div>
+          </div>
+
+          <!-- Sandbox 3: Flashcard SRS Engine -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="sandbox-flashcard">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4 font-serif">🃏 Spaced Repetition Card Flipper</h3>
+              <p class="text-xs text-hulu-secondary mb-4 font-sans">Click the card body to flip and reveal the answer. Score your recall to test the scheduling algorithm.</p>
+              
+              <!-- Flashcard Component -->
+              <div class="w-full h-40 bg-transparent group cursor-pointer perspective" id="flashcardBox">
+                <div class="relative w-full h-full text-center shadow-none border border-hulu-border flashcard-inner">
+                  <!-- Front -->
+                  <div class="absolute inset-0 bg-hulu-bg flex flex-col items-center justify-center p-4 flashcard-front">
+                    <span class="text-[9px] mono-label uppercase text-hulu-secondary mb-1 font-bold font-mono">Front (Concept)</span>
+                    <p class="font-serif text-sm font-semibold">What is Row Level Security (RLS) in Supabase?</p>
+                    <span class="text-[9px] text-hulu-secondary mt-3 italic font-sans">(Click Card to Flip)</span>
+                  </div>
+                  <!-- Back -->
+                  <div class="absolute inset-0 bg-hulu-surface flex flex-col items-center justify-center p-4 flashcard-back">
+                    <span class="text-[9px] mono-label uppercase text-hulu-secondary mb-1 font-bold font-mono">Back (Answer)</span>
+                    <p class="text-xs text-hulu-secondary leading-relaxed px-4 font-sans">A PostgreSQL feature checking auth.uid() on queries to restrict database row access to the owner.</p>
+                    
+                    <div class="flex space-x-2 mt-3 text-[10px]">
+                      <button id="srsIncorrect" class="bg-red-600 hover:bg-red-700 text-white font-mono px-3 py-1 font-bold">FAIL (Retry)</button>
+                      <button id="srsCorrect" class="bg-green-600 hover:bg-green-700 text-white font-mono px-3 py-1 font-bold">PASS (Learned)</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-hulu-bg border border-hulu-border text-center text-xs">
+              <span id="cardStatusLabel" class="text-hulu-secondary font-mono text-[10px] block mb-1">Queue Status: Unreviewed</span>
+              <p id="srsFeedback" class="text-[10px] text-hulu-secondary italic font-sans font-sans">Flipped state displays score controls.</p>
+            </div>
+          </div>
+
+          <!-- Sandbox 4: Pomodoro Focus Timer -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between" id="sandbox-pomodoro">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4 font-serif">⏱️ Pomodoro Focus Timer</h3>
+              <p class="text-xs text-hulu-secondary mb-4 font-sans font-sans">Start the deep-focus countdown block. Sound synthesizer indicators beep when the time completes.</p>
+              
+              <div class="bg-hulu-bg border border-hulu-border p-6 text-center space-y-4">
+                <span class="font-mono text-3xl font-bold tracking-wider text-hulu-primary" id="pomodoroTimer">25:00</span>
+                
+                <!-- Progress Bar -->
+                <div class="w-full bg-hulu-border h-1 rounded-none overflow-hidden font-sans">
+                  <div id="pomodoroProgress" class="bg-hulu-tertiary h-full w-full transition-all duration-1000"></div>
+                </div>
+
+                <div class="flex justify-center space-x-2 text-[10px] mono-label">
+                  <button id="pomoStart" class="border border-hulu-primary hover:bg-hulu-tertiary hover:text-hulu-onPrimary px-3 py-1.5 uppercase font-bold tracking-wide">Start</button>
+                  <button id="pomoPause" class="border border-hulu-primary hover:bg-hulu-tertiary hover:text-hulu-onPrimary px-3 py-1.5 uppercase font-bold tracking-wide">Pause</button>
+                  <button id="pomoReset" class="border border-hulu-primary hover:bg-hulu-tertiary hover:text-hulu-onPrimary px-3 py-1.5 uppercase font-bold tracking-wide">Reset</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 text-center">
+              <span class="text-[10px] text-hulu-secondary font-mono block font-mono" id="pomoCount">Completed: 0 sessions today</span>
+            </div>
+          </div>
+
+          <!-- Sandbox 5: Composite Life Score Calculator -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between font-sans text-xs" id="sandbox-score">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4 font-serif">📊 Composite Life Score Calculator</h3>
+              <p class="text-xs text-hulu-secondary mb-4 font-sans">Hulu evaluates your daily operating momentum using a unified index. Modify values below to test the formula:</p>
+              
+              <div class="space-y-3 p-4 bg-hulu-bg border border-hulu-border">
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-[10px] uppercase text-hulu-secondary font-mono">Tasks Score (Weight: 40%)</label>
+                  <span id="tasksValDisplay" class="font-bold font-mono">75%</span>
+                </div>
+                <input type="range" id="tasksSlider" min="0" max="100" value="75" class="w-full accent-hulu-tertiary cursor-pointer">
+
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-[10px] uppercase text-hulu-secondary font-mono">Habits Streak (Weight: 30%)</label>
+                  <span id="habitsValDisplay" class="font-bold font-mono">60%</span>
+                </div>
+                <input type="range" id="habitsSlider" min="0" max="100" value="60" class="w-full accent-hulu-tertiary cursor-pointer">
+
+                <div class="flex items-center justify-between">
+                  <label class="font-bold text-[10px] uppercase text-hulu-secondary font-mono">Learning Progress (Weight: 30%)</label>
+                  <span id="learningValDisplay" class="font-bold font-mono">50%</span>
+                </div>
+                <input type="range" id="learningSlider" min="0" max="100" value="50" class="w-full accent-hulu-tertiary cursor-pointer">
+              </div>
+            </div>
+
+            <div class="mt-4 p-4 border border-hulu-border bg-hulu-surface text-center">
+              <span class="text-[10px] uppercase tracking-wider text-hulu-secondary block font-bold mb-1 font-mono">Calculated Operational Score</span>
+              <span class="text-3xl font-serif font-bold text-hulu-tertiary font-serif" id="compositeScoreDisplay">63.0%</span>
+            </div>
+          </div>
+
+          <!-- Sandbox 6: AI Usage Logs & Rate Limiter -->
+          <div class="bg-hulu-surface border border-hulu-border p-6 rounded-none flex flex-col justify-between font-sans text-xs" id="sandbox-rate">
+            <div>
+              <h3 class="serif-title text-xl font-bold mb-4 font-serif">🚀 AI Token Tracker & Limit Log</h3>
+              <p class="text-xs text-hulu-secondary mb-4">Tracks token counts and daily quotas. Click run to simulate query logs eating into your Gemini API budget.</p>
+              
+              <div class="space-y-4 p-4 bg-hulu-bg border border-hulu-border font-sans">
+                <div class="flex justify-between font-mono text-[9px] uppercase font-bold text-hulu-secondary">
+                  <span>Usage (Today)</span>
+                  <span>Daily Quota Limit</span>
+                </div>
+                <div class="flex justify-between items-baseline font-mono">
+                  <span class="text-2xl font-bold text-hulu-primary font-mono" id="tokensUsed font-mono">32,400</span>
+                  <span class="text-sm font-mono text-hulu-secondary">/ 1,000,000 tokens</span>
+                </div>
+
+                <!-- Usage Progress Bar -->
+                <div class="w-full bg-hulu-border h-2 rounded-none overflow-hidden font-sans">
+                  <div id="tokenProgressBar" class="bg-hulu-tertiary h-full w-[3.24%] transition-all duration-300"></div>
+                </div>
+
+                <div class="flex justify-between items-center text-[10px]">
+                  <span id="dailyCostText" class="font-mono text-hulu-secondary font-mono font-mono">Cost: $0.0024</span>
+                  <button id="simulateTokenQuery" class="border border-hulu-primary px-3 py-1 font-bold text-[9px] uppercase hover:bg-hulu-tertiary hover:text-hulu-onPrimary transition-all rounded-none font-mono font-mono">Simulate Course Outline Query</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-hulu-border text-center text-[10px] text-hulu-secondary font-sans font-sans">
+              <span class="italic block font-sans">Algorithms trigger rate-limiting warnings if queries breach 15 calls per minute.</span>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Technical Setup & Deployment Guide -->
+      <section id="setup" class="space-y-8 scroll-mt-6">
+        <div class="border-t border-hulu-border pt-12">
+          <h2 class="serif-title text-3xl font-bold text-hulu-primary">Technical Setup & Deployment Guide</h2>
+          <p class="text-hulu-secondary mt-2">Get the Hulu OS platform running on your local runtime and deploy it to hosting environments.</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div class="space-y-6 font-sans">
+            <h3 class="serif-title text-2xl font-semibold font-serif">Environment Variables</h3>
+            <p class="text-sm text-hulu-secondary leading-relaxed">
+              Copy the variables template from `.env.example` into a root file named `.env.local` to boot connectivity options:
+            </p>
+            <pre class="bg-hulu-surface border border-hulu-border p-4 rounded-none text-xs font-mono text-hulu-secondary overflow-x-auto font-mono">
+# Core Database Settings (Supabase Connection)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-string
+
+# AI Engines (Gemini & Exa API Credentials)
+GEMINI_API_KEY=your-gemini-api-key
+EXA_API_KEY=your-exa-api-key
+
+# Notification Subscriptions (Pushover Integrations)
+PUSHOVER_USER_KEY=your-pushover-user-key
+PUSHOVER_API_TOKEN=your-pushover-api-token
+DASHBOARD_URL=http://localhost:3001</pre>
+          </div>
+
+          <div class="space-y-6 font-sans">
+            <h3 class="serif-title text-2xl font-semibold font-serif">Local Launch Procedures</h3>
+            <p class="text-sm text-hulu-secondary leading-relaxed">
+              Verify your development environment supports Node.js 20 or higher.
+            </p>
+            <div class="space-y-4">
+              <div class="p-4 border-l-4 border-hulu-tertiary bg-hulu-surface text-xs space-y-2">
+                <span class="mono-label font-bold text-hulu-primary block">RUNNING THE DASHBOARD</span>
+                <div class="space-y-1 font-mono text-hulu-secondary font-mono">
+                  <p>1. Copy settings template: <code class="bg-hulu-bg px-1">cp .env.example .env.local</code></p>
+                  <p>2. Ingest dependencies: <code class="bg-hulu-bg px-1">npm install</code></p>
+                  <p>3. Fire up development server: <code class="bg-hulu-bg px-1">npm run dev</code></p>
+                  <p>4. Build optimization bundle: <code class="bg-hulu-bg px-1">npm run build</code></p>
+                </div>
+              </div>
+
+              <div id="deploy" class="p-4 border-l-4 border-hulu-secondary bg-hulu-surface text-xs space-y-2 scroll-mt-6 font-sans">
+                <span class="mono-label font-bold text-hulu-primary block">STAGING & PRODUCTION DEPLOYS</span>
+                <p class="text-hulu-secondary leading-relaxed">
+                  Hulu is pre-configured for automated Vercel deployments:
+                </p>
+                <ol class="list-decimal pl-4 space-y-1 text-hulu-secondary">
+                  <li>Push your fork/clone of the dashboard codebase to GitHub.</li>
+                  <li>Import the repository into your Vercel workspace dashboard.</li>
+                  <li>Bind the required Environment variables under project settings.</li>
+                  <li>Builds deploy updates automatically on pushes to the `main` branch.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-hulu-surface border-t border-hulu-border py-6 px-6 text-center text-xs text-hulu-secondary">
+    <p>© 2026 Hulu OS (ሁሉ) • Licensed under MIT. Powered by Next.js, Tailwind CSS, Supabase, and Gemini.</p>
+  </footer>
+
+  <script>
+    // Global Theme State Handler
+    const doc = document.documentElement;
+    const globalBtn = document.getElementById('globalThemeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+
+    function applyTheme(isDark) {
+      if (isDark) {
+        doc.classList.add('dark');
+        themeIcon.className = 'fa-solid fa-sun text-yellow-500';
+      } else {
+        doc.classList.remove('dark');
+        themeIcon.className = 'fa-solid fa-moon text-hulu-secondary';
+      }
+    }
+
+    // Read stored or system setting
+    let isDark = localStorage.getItem('theme') === 'dark' || 
+                 (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    applyTheme(isDark);
+
+    globalBtn.addEventListener('click', () => {
+      isDark = !doc.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      applyTheme(isDark);
+    });
+
+    // ----------------------------------------------------
+    // INBOX SIMULATOR CODE
+    // ----------------------------------------------------
+    const inboxForm = document.getElementById('sandboxInboxForm');
+    const inboxTitleInput = document.getElementById('sandboxInboxTitle');
+    const inboxTypeSelect = document.getElementById('sandboxInboxType');
+    const inboxStatusSelect = document.getElementById('sandboxInboxStatus');
+    const inboxList = document.getElementById('sandboxInboxList');
+
+    inboxForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const title = inboxTitleInput.value.trim();
+      const type = inboxTypeSelect.value;
+      const status = inboxStatusSelect.value;
+
+      if (!title) return;
+
+      // Mock Gemini enrichment outcomes
+      const mockTags = ['#inbox', '#focus', type === 'url' ? '#reference' : '#task'];
+      const mockStep = type === 'url' ? 'File in Academy Matrix' : 'Convert to Task';
+
+      // Create list item markup
+      const div = document.createElement('div');
+      div.className = "flex flex-col p-2.5 bg-hulu-bg border border-hulu-border text-xs space-y-1 opacity-0 transition-opacity duration-300";
+      
+      let typeLabel = "Quick Slip";
+      if (type === 'url') typeLabel = "URL";
+      if (type === 'snippet') typeLabel = "Code";
+
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="font-bold">[${typeLabel}]</span> ${title}
+          <span class="text-[9px] mono-label text-hulu-tertiary uppercase font-bold">${status}</span>
+        </div>
+        <div class="text-[10px] text-hulu-secondary italic font-serif">Enriched tags: ${mockTags.join(', ')}. AI Step: ${mockStep}.</div>
+      `;
+
+      inboxList.prepend(div);
+      
+      // Trigger animation frame
+      setTimeout(() => div.classList.remove('opacity-0'), 10);
+
+      // Reset
+      inboxTitleInput.value = '';
+    });
+
+    // ----------------------------------------------------
+    // HABIT TRACKER STREAK SIMULATOR
+    // ----------------------------------------------------
+    const habitChks1 = document.querySelectorAll('.habit-chk');
+    const habitStreak = document.getElementById('habitStreakDisplay');
+    
+    const habitChks2 = document.querySelectorAll('.habit-chk-2');
+    const habitStreak2 = document.getElementById('habitStreakDisplay2');
+
+    function calculateStreak(inputs) {
+      let streak = 0;
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].checked) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function updateHabitStreaks() {
+      const streak1 = calculateStreak(Array.from(habitChks1));
+      habitStreak.innerText = `Streak: ${streak1} days`;
+      
+      const streak2 = calculateStreak(Array.from(habitChks2));
+      habitStreak2.innerText = `Streak: ${streak2} days`;
+    }
+
+    habitChks1.forEach(chk => chk.addEventListener('change', updateHabitStreaks));
+    habitChks2.forEach(chk => chk.addEventListener('change', updateHabitStreaks));
+    
+    // Initial run
+    updateHabitStreaks();
+
+    // ----------------------------------------------------
+    // SRS FLASHCARD FLIP SIMULATOR
+    // ----------------------------------------------------
+    const flashcardBox = document.getElementById('flashcardBox');
+    const innerCard = flashcardBox.querySelector('.flashcard-inner');
+    const correctBtn = document.getElementById('srsCorrect');
+    const incorrectBtn = document.getElementById('srsIncorrect');
+    const cardStatusLabel = document.getElementById('cardStatusLabel');
+    const srsFeedback = document.getElementById('srsFeedback');
+
+    flashcardBox.addEventListener('click', (e) => {
+      if (e.target.closest('#srsCorrect') || e.target.closest('#srsIncorrect')) return;
+      innerCard.classList.toggle('flashcard-flipped');
+    });
+
+    correctBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cardStatusLabel.innerText = "Learned (Interval: 4 days)";
+      cardStatusLabel.className = "text-green-600 font-mono text-[10px] block mb-1";
+      srsFeedback.innerText = "Passed recall threshold. Scheduled for review in 4 days.";
+      setTimeout(() => {
+        innerCard.classList.remove('flashcard-flipped');
+      }, 1000);
+    });
+
+    incorrectBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      cardStatusLabel.innerText = "Fail (Interval: 10 minutes)";
+      cardStatusLabel.className = "text-red-500 font-mono text-[10px] block mb-1";
+      srsFeedback.innerText = "Recall failed. Flashcard moved to immediate study queue.";
+      setTimeout(() => {
+        innerCard.classList.remove('flashcard-flipped');
+      }, 1000);
+    });
+
+    // ----------------------------------------------------
+    // POMODORO TIMER SIMULATOR WITH SYNTH BEEPER
+    // ----------------------------------------------------
+    let timerInterval = null;
+    let secondsLeft = 1500; // 25:00
+    let completedSessions = 0;
+    const pomodoroTimerDisplay = document.getElementById('pomodoroTimer');
+    const pomodoroProgress = document.getElementById('pomodoroProgress');
+    const startBtn = document.getElementById('pomoStart');
+    const pauseBtn = document.getElementById('pomoPause');
+    const resetBtn = document.getElementById('pomoReset');
+    const countDisplay = document.getElementById('pomoCount');
+
+    // Synth Alert Sound using Web Audio API
+    function playBeep() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Triple synth beep
+        [0, 150, 300].forEach((delay) => {
+          setTimeout(() => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.type = 'sine';
+            osc.frequency.value = 880; // High tone A5
+            
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.1);
+            
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.12);
+          }, delay);
+        });
+      } catch (err) {
+        console.error('AudioContext synth failure: ', err);
+      }
+    }
+
+    function updateTimerUI() {
+      const minutes = Math.floor(secondsLeft / 60);
+      const seconds = secondsLeft % 60;
+      pomodoroTimerDisplay.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      const pct = (secondsLeft / 1500) * 100;
+      pomodoroProgress.style.width = `${pct}%`;
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        if (secondsLeft > 0) {
+          secondsLeft--;
+          updateTimerUI();
+        } else {
+          // Timer finished
+          clearInterval(timerInterval);
+          timerInterval = null;
+          completedSessions++;
+          countDisplay.innerText = `Completed: ${completedSessions} sessions today`;
+          secondsLeft = 1500;
+          updateTimerUI();
+          playBeep();
+        }
+      }, 1000);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      secondsLeft = 1500;
+      updateTimerUI();
+    });
+
+    // ----------------------------------------------------
+    // COMPOSITE LIFE SCORE CALCULATOR
+    // ----------------------------------------------------
+    const tasksSlider = document.getElementById('tasksSlider');
+    const habitsSlider = document.getElementById('habitsSlider');
+    const learningSlider = document.getElementById('learningSlider');
+    
+    const tasksValDisplay = document.getElementById('tasksValDisplay');
+    const habitsValDisplay = document.getElementById('habitsValDisplay');
+    const learningValDisplay = document.getElementById('learningValDisplay');
+    const compositeScoreDisplay = document.getElementById('compositeScoreDisplay');
+
+    function calculateScore() {
+      const tasksVal = parseInt(tasksSlider.value);
+      const habitsVal = parseInt(habitsSlider.value);
+      const learningVal = parseInt(learningSlider.value);
+
+      tasksValDisplay.innerText = `${tasksVal}%`;
+      habitsValDisplay.innerText = `${habitsVal}%`;
+      learningValDisplay.innerText = `${learningVal}%`;
+
+      // Formula: 40% tasks + 30% habits + 30% learning
+      const composite = (tasksVal * 0.4) + (habitsVal * 0.3) + (learningVal * 0.3);
+      compositeScoreDisplay.innerText = `${composite.toFixed(1)}%`;
+    }
+
+    [tasksSlider, habitsSlider, learningSlider].forEach(slider => {
+      slider.addEventListener('input', calculateScore);
+    });
+
+    // Initial calculation
+    calculateScore();
+
+    // ----------------------------------------------------
+    // AI USAGE LOGS & RATE LIMIT LIMITER
+    // ----------------------------------------------------
+    const tokensUsedDisplay = document.getElementById('tokensUsed');
+    const tokenProgressBar = document.getElementById('tokenProgressBar');
+    const dailyCostText = document.getElementById('dailyCostText');
+    const simulateQueryBtn = document.getElementById('simulateTokenQuery');
+
+    let tokensUsed = 32400;
+    const dailyLimit = 1000000;
+
+    simulateQueryBtn.addEventListener('click', () => {
+      // Mock Gemini outline generation takes ~12,500 tokens
+      const additionalTokens = Math.floor(Math.random() * 8000) + 8000; 
+      tokensUsed = Math.min(tokensUsed + additionalTokens, dailyLimit);
+      
+      const pct = (tokensUsed / dailyLimit) * 100;
+      
+      // Update UI
+      tokensUsedDisplay.innerText = tokensUsed.toLocaleString();
+      tokenProgressBar.style.width = `${pct}%`;
+      
+      // cost mock ($0.075 per 1M input tokens + $0.30 per 1M output tokens average)
+      const cost = (tokensUsed / 1000000) * 0.15;
+      dailyCostText.innerText = `Cost: $${cost.toFixed(4)}`;
+
+      if (tokensUsed >= dailyLimit) {
+        alert("Daily API token quota fully consumed. Limits reset at UTC midnight.");
+        simulateQueryBtn.disabled = true;
+      }
+    });
+  </script>
+</body>
+</html>

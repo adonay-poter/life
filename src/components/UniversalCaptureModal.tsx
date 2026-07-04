@@ -285,7 +285,6 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm text-primary">
                 <ImagePlus className="h-4 w-4 text-accent" />
-                <span className="font-medium">Optional image capture</span>
               </div>
               <input
                 ref={fileInputRef}

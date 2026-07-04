@@ -645,7 +645,14 @@ export default function HabitsPage() {
 
       {/* Habit Configurator Modal */}
       {showAddHabitModal && (
-        <div className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div 
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowAddHabitModal(false);
+            }
+          }}
+          className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
           <div className="bg-surface border border-border p-6 max-w-sm w-full space-y-4 shadow-none rounded-none font-label text-xs">
             <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="font-bold uppercase text-primary text-sm tracking-wide">Configure New Habit</span>

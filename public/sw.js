@@ -1,4 +1,4 @@
-const CACHE_NAME = 'heritage-cache-v1';
+const CACHE_NAME = 'hulu-cache-v2';
 const ASSETS = [
   '/',
   '/manifest.json',
@@ -29,6 +29,36 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   if (!e.request.url.startsWith('http')) return;
 
+  const url = new URL(e.request.url);
+  const isNavigation = e.request.mode === 'navigate' || url.pathname === '/';
+
+  if (isNavigation) {
+    // Network-First Strategy for Page Navigations to ensure fresh content
+    e.respondWith(
+      fetch(e.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(e.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          return caches.match(e.request).then((cachedResponse) => {
+            if (cachedResponse) {
+              return cachedResponse;
+            }
+            // Fallback to cached root '/' if the specific route is not cached
+            return caches.match('/');
+          });
+        })
+    );
+    return;
+  }
+
+  // Cache-First Strategy for Static Assets
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -38,7 +68,6 @@ self.addEventListener('fetch', (e) => {
         if (!networkResponse || networkResponse.status !== 200) {
           return networkResponse;
         }
-        const url = new URL(e.request.url);
         if (
           url.origin === self.location.origin &&
           (url.pathname.startsWith('/_next/static/') ||
@@ -51,13 +80,7 @@ self.addEventListener('fetch', (e) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        if (e.request.mode === 'navigate') {
-          return caches.match('/');
-        }
       });
     })
   );
 });
-
-
