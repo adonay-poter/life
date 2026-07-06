@@ -1,23 +1,25 @@
 'use client';
 
-import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { MessageSquare, Send, Plus, Trash2, Menu, Terminal, Loader2 } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { ArrowDown, Loader2, MessageSquare, PanelLeft, Plus, Send, Sparkles } from 'lucide-react';
+import OracleConversationRail from '@/components/oracle/OracleConversationRail';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/utils/supabaseClient';
 import { useToast } from '@/context/ToastContext';
-
-interface Conversation {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-}
+import { supabase } from '@/utils/supabaseClient';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
   created_at: string;
+}
+
+function formatMessageTime(value: string) {
+  return new Intl.DateTimeFormat('en-CA', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value));
 }
 
 function parseInline(text: string) {
@@ -33,7 +35,7 @@ function parseInline(text: string) {
       const idx = boldMatch.index!;
       if (idx > 0) parts.push(remaining.substring(0, idx));
       parts.push(
-        <strong key={`b-${keyIdx++}`} className="font-semibold text-primary">
+        <strong key={`b-${keyIdx++}`} className="font-semibold">
           {boldMatch[1]}
         </strong>
       );
@@ -52,180 +54,169 @@ function parseInline(text: string) {
       break;
     }
   }
+
   return parts.length > 0 ? parts : text;
 }
 
-function FormattedMessage({ text }: { text: string }) {
+function FormattedMessage({ text, invert = false }: { text: string; invert?: boolean }) {
   if (!text) return null;
 
-  const lines = text.split('\n');
   return (
-    <div className="space-y-1.5 text-xs text-primary leading-relaxed">
-      {lines.map((line, index) => {
-        const cleanLine = line;
-
-        // Headers
-        if (cleanLine.startsWith('### ')) {
+    <div className={`space-y-2 text-sm leading-7 ${invert ? 'text-on-primary' : 'text-primary'}`}>
+      {text.split('\n').map((line, index) => {
+        if (line.startsWith('### ')) {
           return (
-            <h4 key={index} className="font-serif font-bold text-sm mt-3 mb-1 text-primary">
-              {cleanLine.slice(4)}
+            <h4 key={index} className={`font-display text-base font-bold ${invert ? 'text-on-primary' : 'text-primary'}`}>
+              {line.slice(4)}
             </h4>
           );
         }
-        if (cleanLine.startsWith('## ')) {
+
+        if (line.startsWith('## ')) {
           return (
-            <h3 key={index} className="font-serif font-bold text-base mt-4 mb-2 text-primary">
-              {cleanLine.slice(3)}
+            <h3 key={index} className={`font-display text-lg font-bold ${invert ? 'text-on-primary' : 'text-primary'}`}>
+              {line.slice(3)}
             </h3>
           );
         }
-        if (cleanLine.startsWith('# ')) {
+
+        if (line.startsWith('# ')) {
           return (
-            <h2 key={index} className="font-serif font-bold text-lg mt-4 mb-2 text-primary">
-              {cleanLine.slice(2)}
+            <h2 key={index} className={`font-display text-xl font-bold ${invert ? 'text-on-primary' : 'text-primary'}`}>
+              {line.slice(2)}
             </h2>
           );
         }
 
-        // Bullet points
-        if (cleanLine.startsWith('- ') || cleanLine.startsWith('* ')) {
+        if (line.startsWith('- ') || line.startsWith('* ')) {
           return (
-            <ul key={index} className="list-disc pl-4 my-0.5">
-              <li>{parseInline(cleanLine.slice(2))}</li>
+            <ul key={index} className="list-disc pl-5">
+              <li>{parseInline(line.slice(2))}</li>
             </ul>
           );
         }
 
-        // Blank lines
-        if (cleanLine.trim() === '') {
-          return <div key={index} className="h-1.5" />;
+        if (line.trim() === '') {
+          return <div key={index} className="h-2" />;
         }
 
-        // Standard line
-        return <p key={index}>{parseInline(cleanLine)}</p>;
+        return <p key={index}>{parseInline(line)}</p>;
       })}
     </div>
   );
 }
 
 export default function OracleChat() {
-  const { session, user } = useAuth();
+  const { session } = useAuth();
   const { showToast } = useToast();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryConversationId = searchParams?.get('conversation') ?? null;
+  const [activeConvId, setActiveConvId] = useState<string | null>(queryConversationId);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [threadTitle, setThreadTitle] = useState('New Oracle Conversation');
+  const [railOpen, setRailOpen] = useState(false);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageScrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load conversations list
-  const loadConversations = useCallback(async () => {
-    if (!user) return;
-    try {
-      const { data, error } = await supabase
-        .from('oracle_conversations')
-        .select('*')
-        .order('updated_at', { ascending: false });
+  const hasThread = useMemo(() => Boolean(activeConvId), [activeConvId]);
 
-      if (error) throw error;
-      setConversations(data || []);
-    } catch (err) {
-      console.error('Error loading conversations:', err);
-    }
-  }, [user]);
-
-  // Load messages for the active conversation
-  const loadMessages = useCallback(async (convId: string) => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('oracle_messages')
-        .select('*')
-        .eq('conversation_id', convId)
-        .order('created_at', { ascending: true });
-
-      if (error) throw error;
-      setMessages(data || []);
-    } catch (err) {
-      console.error('Error loading messages:', err);
-      showToast('Failed to load chat history.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast]);
-
-  // Scroll to bottom
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, []);
+
+  const loadMessages = useCallback(
+    async (conversationId: string) => {
+      setLoadingMessages(true);
+      try {
+        const { data, error } = await supabase
+          .from('oracle_messages')
+          .select('*')
+          .eq('conversation_id', conversationId)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        const rows = data || [];
+        setMessages(rows);
+
+        const firstUserMessage = rows.find((message) => message.role === 'user');
+        setThreadTitle(firstUserMessage?.content.slice(0, 72) || 'Oracle Conversation');
+      } catch (error) {
+        console.error('Error loading messages:', error);
+        showToast('Failed to load chat history.', 'error');
+      } finally {
+        setLoadingMessages(false);
+      }
+    },
+    [showToast]
+  );
 
   useEffect(() => {
-    void loadConversations();
-  }, [user, loadConversations]);
-
-  useEffect(() => {
-    if (activeConvId) {
-      void loadMessages(activeConvId);
-    } else {
+    setActiveConvId(queryConversationId);
+    if (!queryConversationId) {
       setMessages([]);
+      setThreadTitle('New Oracle Conversation');
     }
+  }, [queryConversationId]);
+
+  useEffect(() => {
+    if (!activeConvId) return;
+    void loadMessages(activeConvId);
   }, [activeConvId, loadMessages]);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, scrollToBottom]);
 
-  // Handle Select Conversation
-  const handleSelectConversation = (id: string) => {
-    setActiveConvId(id);
-    setSidebarOpen(false);
-  };
+  useEffect(() => {
+    const node = inputRef.current;
+    if (!node) return;
+    node.style.height = '0px';
+    node.style.height = `${Math.min(node.scrollHeight, 240)}px`;
+  }, [input]);
 
-  // Handle New Chat
-  const handleNewChat = () => {
+  const handleNewChat = useCallback(() => {
     setActiveConvId(null);
     setMessages([]);
-    setSidebarOpen(false);
-  };
-
-  // Handle Delete Conversation
-  const handleDeleteConversation = async (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this conversation?')) return;
-
-    try {
-      const { error } = await supabase.from('oracle_conversations').delete().eq('id', id);
-      if (error) throw error;
-
-      showToast('Conversation deleted.', 'info');
-      if (activeConvId === id) {
-        setActiveConvId(null);
-        setMessages([]);
-      }
-      void loadConversations();
-    } catch {
-      showToast('Failed to delete conversation.', 'error');
-    }
-  };
-
-  // Send message
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || loading || !session?.access_token) return;
-
-    const userMessageContent = input.trim();
     setInput('');
-    setLoading(true);
+    setThreadTitle('New Oracle Conversation');
+    setRailOpen(false);
+    router.push('/oracle');
+    inputRef.current?.focus();
+  }, [router]);
 
-    // Optimistic UI update
-    const tempUserMsg: Message = {
-      id: Math.random().toString(),
+  const handleSelectConversation = useCallback(
+    (conversationId: string) => {
+      setActiveConvId(conversationId);
+      setRailOpen(false);
+      router.push(`/oracle?conversation=${conversationId}`);
+    },
+    [router]
+  );
+
+  const sendMessage = useCallback(async () => {
+    if (!input.trim() || sending || loadingMessages || !session?.access_token) return;
+
+    const messageContent = input.trim();
+    const tempId = `temp-${Date.now()}`;
+    const optimisticUserMessage: Message = {
+      id: tempId,
       role: 'user',
-      content: userMessageContent,
+      content: messageContent,
       created_at: new Date().toISOString(),
     };
-    setMessages((prev) => [...prev, tempUserMsg]);
+
+    setInput('');
+    setSending(true);
+    setMessages((current) => [...current, optimisticUserMessage]);
+    if (!hasThread) {
+      setThreadTitle(messageContent.slice(0, 72));
+    }
 
     try {
       const response = await fetch('/api/oracle/chat', {
@@ -235,205 +226,226 @@ export default function OracleChat() {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          message: userMessageContent,
+          message: messageContent,
           conversationId: activeConvId,
         }),
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.error || 'Failed to get response');
       }
 
-      // If it was a new conversation, set the new active ID
       if (!activeConvId && data.conversationId) {
         setActiveConvId(data.conversationId);
+        router.replace(`/oracle?conversation=${data.conversationId}`);
       }
 
-      // Add assistant response to messages
-      const assistantMsg: Message = {
-        id: data.messageId || Math.random().toString(),
+      const assistantMessage: Message = {
+        id: data.messageId || `assistant-${Date.now()}`,
         role: 'assistant',
         content: data.content,
         created_at: new Date().toISOString(),
       };
 
-      setMessages((prev) => {
-        // Filter out the optimistic message and append both user + assistant to ensure proper IDs/dates
-        const filtered = prev.filter((m) => m.id !== tempUserMsg.id);
-        return [
-          ...filtered,
-          { ...tempUserMsg, id: tempUserMsg.id },
-          assistantMsg,
-        ];
-      });
-
-      // Refresh conversations list to update titles/ordering
-      void loadConversations();
-    } catch (err: any) {
-      console.error(err);
-      showToast(err.message || 'Failed to send message.', 'error');
-      // Remove optimistic message on error
-      setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
+      setMessages((current) => [
+        ...current.filter((message) => message.id !== tempId),
+        optimisticUserMessage,
+        assistantMessage,
+      ]);
+    } catch (error) {
+      console.error(error);
+      showToast(error instanceof Error ? error.message : 'Failed to send message.', 'error');
+      setMessages((current) => current.filter((message) => message.id !== tempId));
     } finally {
-      setLoading(false);
+      setSending(false);
     }
-  };
+  }, [activeConvId, hasThread, input, loadingMessages, router, sending, session, showToast]);
+
+  const handleSend = useCallback(
+    async (event: React.FormEvent) => {
+      event.preventDefault();
+      await sendMessage();
+    },
+    [sendMessage]
+  );
+
+  const handleComposerKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        void sendMessage();
+      }
+    },
+    [sendMessage]
+  );
 
   return (
-    <div className="border border-border bg-surface flex h-full min-h-[500px] relative overflow-hidden">
-      {/* Sidebar - Conversation List */}
-      <aside
-        className={`bg-surface border-r border-border w-64 flex flex-col absolute md:relative inset-y-0 left-0 z-30 transition-transform duration-200 ease-in-out shrink-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
-      >
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <span className="font-label text-xs uppercase tracking-widest text-primary">Conversations</span>
-          <button
-            onClick={handleNewChat}
-            className="p-1.5 border border-border hover:border-primary text-primary cursor-pointer transition-colors"
-            title="New Chat"
-          >
-            <Plus className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {conversations.length === 0 ? (
-            <div className="p-4 text-center">
-              <span className="font-serif italic text-xs text-secondary">No conversations yet</span>
-            </div>
-          ) : (
-            conversations.map((conv) => {
-              const isActive = activeConvId === conv.id;
-              return (
-                <div
-                  key={conv.id}
-                  onClick={() => handleSelectConversation(conv.id)}
-                  className={`flex items-center justify-between p-2.5 text-xs transition-colors cursor-pointer group border ${
-                    isActive
-                      ? 'bg-neutral-bg border-primary text-primary'
-                      : 'border-transparent text-secondary hover:text-primary hover:bg-neutral-bg/50'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 truncate">
-                    <MessageSquare className="h-3.5 w-3.5 shrink-0" />
-                    <span className="truncate font-sans">{conv.title || 'Untitled Conversation'}</span>
-                  </div>
-                  <button
-                    onClick={(e) => handleDeleteConversation(e, conv.id)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:text-accent cursor-pointer transition-opacity"
-                    title="Delete Chat"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </aside>
-
-      {/* Main Chat Panel */}
-      <div className="flex-1 flex flex-col relative overflow-hidden bg-neutral-bg/10">
-        {/* Chat Header */}
-        <header className="border-b border-border p-3 flex items-center justify-between bg-surface shrink-0">
-          <div className="flex items-center gap-2">
+    <section className="relative flex min-h-[780px] flex-col overflow-hidden border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(247,245,242,0.82))]">
+      <header className="border-b border-border bg-surface/90 px-4 py-4 backdrop-blur sm:px-6 shrink-0">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
             <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-1 border border-border text-primary cursor-pointer"
+              type="button"
+              onClick={() => setRailOpen((open) => !open)}
+              className="mt-1 flex h-10 w-10 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary"
+              aria-label="Toggle conversations"
             >
-              <Menu className="h-3.5 w-3.5" />
+              <PanelLeft className="h-4 w-4" />
             </button>
-            <span className="font-serif text-sm font-bold text-primary">
-              {activeConvId
-                ? conversations.find((c) => c.id === activeConvId)?.title || 'Oracle Chat'
-                : 'New Oracle Conversation'}
-            </span>
-          </div>
-
-          {!activeConvId && messages.length > 0 && (
-            <span className="font-mono text-[9px] text-accent uppercase tracking-wider">Unsaved draft</span>
-          )}
-        </header>
-
-        {/* Message scroll container */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {messages.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-center max-w-sm mx-auto p-6">
-              <span className="p-3 border border-border rounded-none text-secondary mb-3 bg-surface">
-                <Terminal className="h-5 w-5" />
-              </span>
-              <h4 className="font-serif text-sm font-bold text-primary mb-1">Consult the Oracle</h4>
-              <p className="text-xs text-secondary leading-relaxed font-sans">
-                Ask questions about your active projects, tasks, learnings, and journal patterns inside LifeOS. Oracle uses your latest Soul Blueprint snapshot for context.
-              </p>
-            </div>
-          ) : (
-            messages.map((msg) => {
-              const isAssistant = msg.role === 'assistant';
-              return (
-                <div
-                  key={msg.id}
-                  className={`flex flex-col max-w-[85%] ${isAssistant ? 'mr-auto items-start' : 'ml-auto items-end'}`}
-                >
-                  <span className="font-mono text-[9px] text-secondary uppercase tracking-wider mb-1">
-                    {isAssistant ? 'Oracle' : 'User'}
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="font-display text-2xl font-bold text-primary">{threadTitle}</h3>
+                {!hasThread && (
+                  <span className="border border-border bg-neutral-bg px-2 py-1 font-label text-[10px] uppercase tracking-[0.24em] text-secondary">
+                    Draft
                   </span>
-                  <div
-                    className={`border p-3.5 leading-relaxed font-sans ${
-                      isAssistant
-                        ? 'bg-surface border-border text-primary'
-                        : 'bg-primary text-on-primary border-primary'
-                    }`}
-                  >
-                    <FormattedMessage text={msg.content} />
-                  </div>
-                </div>
-              );
-            })
-          )}
-          {loading && messages[messages.length - 1]?.role === 'user' && (
-            <div className="flex flex-col items-start max-w-[85%] mr-auto">
-              <span className="font-mono text-[9px] text-secondary uppercase tracking-wider mb-1">Oracle</span>
-              <div className="border border-border bg-surface p-3.5 flex items-center gap-2">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
-                <span className="font-serif italic text-xs text-secondary">Oracle is thinking...</span>
+                )}
               </div>
             </div>
-          )}
-          <div ref={messagesEndRef} />
-        </div>
+          </div>
 
-        {/* Input box */}
-        <form onSubmit={handleSend} className="border-t border-border p-3 bg-surface flex gap-2 shrink-0">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask oracle about your context..."
-            disabled={loading}
-            className="flex-1 border border-border px-3.5 py-2.5 text-xs font-sans rounded-none focus:outline-none focus:border-primary disabled:opacity-60 bg-neutral-bg/20 text-primary"
-          />
           <button
-            type="submit"
-            disabled={!input.trim() || loading}
-            className="px-4 py-2.5 bg-accent text-on-accent border border-accent hover:opacity-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            type="button"
+            onClick={handleNewChat}
+            className="hidden h-10 items-center gap-2 border border-border bg-surface px-4 text-xs font-label uppercase tracking-[0.24em] text-primary transition-colors hover:border-primary sm:flex"
           >
-            <Send className="h-3.5 w-3.5" />
+            <Plus className="h-4 w-4" />
+            New
           </button>
-        </form>
+        </div>
+      </header>
+
+      <div ref={messageScrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-6">
+        {loadingMessages ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="flex items-center gap-3 border border-border bg-surface px-5 py-4 text-secondary shadow-[0_12px_30px_rgba(26,28,30,0.05)]">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="font-serif italic text-sm">Loading…</span>
+            </div>
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="mx-auto flex h-full w-full max-w-4xl items-end">
+            <div className="h-[42vh] w-full border border-border bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(247,245,242,0.92))] shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]" />
+          </div>
+        ) : (
+          <div className="mx-auto flex max-w-4xl flex-col gap-6 pb-8">
+            {messages.map((message) => {
+              const isAssistant = message.role === 'assistant';
+
+              return (
+                <article
+                  key={message.id}
+                  className={`flex ${isAssistant ? 'justify-start' : 'justify-end'}`}
+                >
+                  <div className="max-w-[92%] sm:max-w-[80%]">
+                    <div className={`mb-2 flex items-center gap-2 ${isAssistant ? '' : 'justify-end'}`}>
+                      {isAssistant ? (
+                        <Sparkles className="h-3.5 w-3.5 text-accent" />
+                      ) : (
+                        <MessageSquare className="h-3.5 w-3.5 text-secondary" />
+                      )}
+                      <span className="font-label text-[10px] uppercase tracking-[0.24em] text-secondary">
+                        {isAssistant ? 'Oracle' : 'You'}
+                      </span>
+                      <span className="font-label text-[10px] uppercase tracking-[0.2em] text-secondary/80">
+                        {formatMessageTime(message.created_at)}
+                      </span>
+                    </div>
+                    <div
+                      className={`border p-4 shadow-[0_10px_24px_rgba(26,28,30,0.04)] sm:p-5 ${
+                        isAssistant
+                          ? 'border-border bg-surface'
+                          : 'border-primary bg-primary text-on-primary'
+                      }`}
+                    >
+                      <FormattedMessage text={message.content} invert={!isAssistant} />
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+
+            {sending && messages[messages.length - 1]?.role === 'user' && (
+              <div className="flex justify-start">
+                <div className="max-w-[92%] sm:max-w-[80%]">
+                  <div className="mb-2 flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-accent" />
+                    <span className="font-label text-[10px] uppercase tracking-[0.24em] text-secondary">Oracle</span>
+                  </div>
+                  <div className="flex items-center gap-3 border border-border bg-surface p-4 shadow-[0_10px_24px_rgba(26,28,30,0.04)]">
+                    <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                    <span className="font-serif text-sm italic text-secondary">Oracle is thinking...</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
       </div>
 
-      {/* Mobile Sidebar Overlay */}
-      {sidebarOpen && (
-        <div
-          onClick={() => setSidebarOpen(false)}
-          className="fixed inset-0 bg-black/30 z-20 md:hidden"
-        />
+      <form onSubmit={handleSend} className="border-t border-border bg-surface/95 p-4 backdrop-blur sm:p-5 shrink-0">
+        <div className="mx-auto flex max-w-4xl flex-col gap-3">
+          <div className="border border-border bg-surface p-3 shadow-[0_12px_30px_rgba(26,28,30,0.06)]">
+            <div className="flex items-end gap-3">
+              <textarea
+                ref={inputRef}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={handleComposerKeyDown}
+                placeholder="Ask Oracle"
+                disabled={sending || loadingMessages}
+                rows={1}
+                className="max-h-[240px] min-h-[44px] w-full resize-none bg-transparent text-base leading-7 text-primary outline-none placeholder:text-secondary disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || sending || loadingMessages}
+                className="flex h-12 w-12 shrink-0 items-center justify-center border border-accent bg-accent text-on-accent transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Send"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleNewChat}
+                className="flex h-10 items-center gap-2 border border-border bg-surface px-3 text-[10px] font-label uppercase tracking-[0.24em] text-primary transition-colors hover:border-primary sm:hidden"
+              >
+                <Plus className="h-4 w-4" />
+                New
+              </button>
+              <p className="text-xs leading-6 text-secondary">Enter to send. Shift+Enter for a new line.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => messageScrollRef.current?.scrollTo({ top: messageScrollRef.current.scrollHeight, behavior: 'smooth' })}
+              className="flex h-10 w-10 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary"
+              aria-label="Jump to latest"
+            >
+              <ArrowDown className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </form>
+
+      {railOpen && (
+        <>
+          <div className="fixed inset-0 z-20 bg-black/30 backdrop-blur-[1px]" onClick={() => setRailOpen(false)} />
+          <div className="absolute inset-y-0 left-0 z-30 w-full max-w-[360px] shadow-[20px_0_50px_rgba(26,28,30,0.12)]">
+            <OracleConversationRail
+              activeConversationId={activeConvId}
+              onNewChat={handleNewChat}
+              onSelectConversation={handleSelectConversation}
+            />
+          </div>
+        </>
       )}
-    </div>
+    </section>
   );
 }
