@@ -24,7 +24,8 @@ import {
   LogOut,
   Plus,
   Sparkles,
-  History as ReviewIcon
+  History as ReviewIcon,
+  ScrollText
 } from 'lucide-react';
 
 export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => void }) {
@@ -144,7 +145,8 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
       items: [
         { name: 'Dashboard', href: '/', icon: LayoutDashboard },
         { name: 'Intelligence Feed', href: '/intelligence', icon: Sparkles },
-        { name: 'Review Room', href: '/review', icon: ReviewIcon }
+        { name: 'Review Room', href: '/review', icon: ReviewIcon },
+        { name: 'Oracle', href: '/oracle', icon: ScrollText }
       ]
     },
     {

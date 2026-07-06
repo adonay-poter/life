@@ -23,7 +23,8 @@ import {
   LogOut,
   Plus,
   Sparkles,
-  History as ReviewIcon
+  History as ReviewIcon,
+  ScrollText
 } from 'lucide-react';
 
 function useModalActive() {
@@ -134,6 +135,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
     { name: 'Projects', href: '/projects', icon: FolderKanban, desc: 'Active work' },
     { name: 'Academy', href: '/academy', icon: GraduationCap, desc: 'Learning' },
     { name: 'Journal', href: '/journal', icon: BookOpen, desc: 'Daily notes' },
+    { name: 'Oracle', href: '/oracle', icon: ScrollText, desc: 'AI context' },
     { name: 'Intelligence', href: '/intelligence', icon: Sparkles, desc: 'Signal feed' },
     { name: 'Review', href: '/review', icon: ReviewIcon, desc: 'Check-ins' }
   ];

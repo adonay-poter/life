@@ -4,6 +4,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useSystem } from './SystemContext';
+import { useAuth } from './AuthContext';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface InboxItem {
   id: string;
@@ -64,6 +66,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [inboxItems, setInboxItems] = useState<InboxItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchInbox = async () => {
@@ -153,7 +156,16 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').insert(newItem);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'inbox_item_created',
+          entityType: 'inbox_item',
+          entityId: newItem.id,
+          metadata: { type: newItem.type, status: newItem.status, project_id: newItem.project_id },
+        });
+      }
     }
   };
 
@@ -183,7 +195,18 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       dbUpdates.snoozed_until = targetSnoozedUntil || null;
       if (processedAt) dbUpdates.processed_at = processedAt;
       const { error } = await supabase.from('inbox_items').update(dbUpdates).eq('id', id);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: status === 'processed' || status === 'task' || status === 'academy' || status === 'knowledge'
+            ? 'inbox_item_processed'
+            : 'inbox_item_updated',
+          entityType: 'inbox_item',
+          entityId: id,
+          metadata: dbUpdates as Record<string, unknown>,
+        });
+      }
     }
   };
 
@@ -204,6 +227,15 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').update(updates).eq('id', id);
       if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'inbox_item_updated',
+          entityType: 'inbox_item',
+          entityId: id,
+          metadata: updates as Record<string, unknown>,
+        });
+      }
     }
   };
 

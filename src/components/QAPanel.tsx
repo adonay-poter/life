@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { HelpCircle, MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
+import { useSoulBlueprint } from '@/context/SoulBlueprintContext';
+import { buildSoulBlueprintChatContext } from '@/utils/soulBlueprint';
 
 interface QAPanelProps {
   courseTitle: string;
@@ -9,6 +11,7 @@ interface QAPanelProps {
 }
 
 export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }: QAPanelProps) {
+  const { snapshot } = useSoulBlueprint();
   const [isOpen, setIsOpen] = useState(false);
   const [question, setQuestion] = useState('');
   const [conversation, setConversation] = useState<{ role: 'user' | 'agent', text: string }[]>([]);
@@ -30,6 +33,7 @@ export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }
     setIsLoading(true);
 
     try {
+      const blueprintContext = buildSoulBlueprintChatContext(snapshot, q);
       const res = await fetch('/api/research/qa', {
         method: 'POST',
         body: JSON.stringify({
@@ -43,7 +47,8 @@ export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }
             moduleNotes
           ].join('\n'),
           courseTitle,
-          moduleTitle
+          moduleTitle,
+          soulBlueprint: blueprintContext
         }),
         headers: { 'Content-Type': 'application/json' }
       });

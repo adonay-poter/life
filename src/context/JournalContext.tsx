@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useAuth } from './AuthContext';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface JournalEntry {
   date: string; // YYYY-MM-DD
@@ -57,6 +59,7 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -118,7 +121,21 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (isOnline) {
       const { error } = await supabase.from('journal_entries').upsert(newEntry);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'journal_entry_created',
+          entityType: 'journal_entry',
+          metadata: {
+            date,
+            morning_count: morningIntentions.length,
+            learned_count: eveningReflectionsLearned.length,
+            better_count: eveningReflectionsBetter.length,
+            has_free_text: Boolean(freeText?.trim()),
+          },
+        });
+      }
     }
   };
 

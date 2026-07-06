@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yes — I’d use this • Hulu</title>
+  
+  <!-- Font setup matching index.html -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Inter:wght@300..900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Inlining the Zemach OTF font file */
+    @font-face {
+      font-family: 'Zemach';
+      src: url('./Zemach_Regular_eafc59f80a.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    /* Core Design System Tokens matching index.html */
+    :root {
+      --bg: #F7F5F2; /* Warm Limestone */
+      --surface: #FFFFFF;
+      --surface-hover: #F2EFEA;
+      --ink: #1A1C1E; /* Charcoal Ink */
+      --muted: #6C7278; /* Muted Slate */
+      --border: #E5E2DC;
+      --accent: #B8422E; /* Crimson Accent */
+      --accent-hover: #982D1C;
+      --glow-color: rgba(184, 66, 46, 0.08);
+      --gradient-aura: linear-gradient(135deg, rgba(184, 66, 46, 0.2) 0%, rgba(108, 114, 120, 0.1) 50%, rgba(255, 255, 255, 0) 100%);
+      --glow-aura: rgba(184, 66, 46, 0.15);
+      --grid-line: rgba(26, 28, 30, 0.05); /* Subtle grid line */
+      
+      --font-display: 'Space Grotesk', sans-serif;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'Space Grotesk', monospace;
+      --font-amharic: 'Zemach', 'Space Grotesk', sans-serif;
+    }
+
+    html.dark {
+      --bg: #101112; /* Slate Black */
+      --surface: #1A1C1E; /* Charcoal Ink */
+      --surface-hover: #222528;
+      --ink: #F7F5F2; /* Warm Limestone */
+      --muted: #9BA1A6; /* Light Slate */
+      --border: #2D3033;
+      --accent: #E2583E; /* Coral Accent */
+      --accent-hover: #F47A62;
+      --glow-color: rgba(226, 88, 62, 0.12);
+      --gradient-aura: linear-gradient(135deg, rgba(226, 88, 62, 0.25) 0%, rgba(45, 48, 51, 0.15) 50%, rgba(16, 17, 18, 0) 100%);
+      --glow-aura: rgba(226, 88, 62, 0.25);
+      --grid-line: rgba(247, 245, 242, 0.035); /* Subtle grid line */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+      transition: background 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    /* Subtle grid pattern background matching index.html */
+    .bg-grid-pattern {
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--grid-line) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+      background-size: 44px 44px;
+      background-position: center;
+      mask-image: radial-gradient(circle at center, black, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at center, black, transparent 80%);
+      opacity: 0.75;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Radial gradient glow behind the card matching index.html colors */
+    .glow-effect {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--glow-aura) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Container */
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+    }
+
+    /* Card matching cta-modal styles in index.html */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 48px 40px;
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.12);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      width: 100%;
+    }
+
+    .brand-logo {
+      font-family: 'Zemach', var(--font-display), sans-serif !important;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    .title {
+      font-family: var(--font-display);
+      font-size: 1.85rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 12px;
+      letter-spacing: -0.03em;
+      color: var(--ink);
+    }
+
+    .desc {
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 36px;
+      max-width: 320px;
+    }
+
+    /* Form styling matching index.html inputs */
+    .form-group {
+      width: 100%;
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .input-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 8px;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--ink);
+      font-family: var(--font-sans);
+      font-size: 0.95rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      outline: none;
+      text-align: center;
+    }
+
+    .form-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--glow-color);
+    }
+
+    .form-input::placeholder {
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    /* Button styling matching .btn and .btn-primary in index.html */
+    .btn-submit {
+      width: 100%;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 16px;
+      border-radius: 9999px;
+      background: var(--accent);
+      color: #FFFFFF !important;
+      border: 1px solid var(--accent);
+      box-shadow: 0 4px 14px var(--glow-color);
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px var(--glow-color);
+    }
+
+    .btn-submit:active {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      background: var(--border);
+      border-color: var(--border);
+      color: var(--muted) !important;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Back Link matching .btn-secondary transitions */
+    .btn-back {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-decoration: none;
+      transition: color 0.2s ease;
+      margin-top: 20px;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .btn-back:hover {
+      color: var(--accent);
+    }
+
+    /* Error alert banner */
+    .alert-error {
+      background: rgba(184, 66, 46, 0.08);
+      border: 1px solid rgba(184, 66, 46, 0.15);
+      color: var(--accent);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+      width: 100%;
+      display: none;
+      text-align: center;
+      font-family: var(--font-sans);
+    }
+
+    /* Success state checkmark */
+    .success-container {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .checkmark-svg {
+      width: 80px;
+      height: 80px;
+      margin-bottom: 30px;
+    }
+
+    .checkmark-circle {
+      stroke-dasharray: 166;
+      stroke-dashoffset: 166;
+      stroke-width: 2;
+      stroke-miterlimit: 10;
+      stroke: var(--accent);
+      fill: none;
+      animation: strokeCircle 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+    }
+
+    .checkmark-check {
+      transform-origin: 50% 50%;
+      stroke-dasharray: 48;
+      stroke-dashoffset: 48;
+      stroke-width: 3;
+      stroke: var(--accent);
+      fill: none;
+      animation: strokeCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
+    }
+
+    .success-title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+    }
+
+    .success-desc {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 300px;
+      margin-bottom: 32px;
+    }
+
+    /* Confetti/Particle styling */
+    .confetti-holder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      background: var(--accent);
+      opacity: 0;
+    }
+
+    /* Keyframe Animations */
+    @keyframes strokeCircle {
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes strokeCheck {
+      100% {
+        stroke-dashoffset: 0;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-top: 2px solid #FFFFFF;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="bg-grid-pattern"></div>
+  <div class="glow-effect"></div>
+  
+  <div class="container">
+    <div class="card" id="interestCard">
+      
+      <!-- Primary Input State -->
+      <div id="inputState" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div class="brand-logo font-amharic">ሁሉ</div>
+        <h1 class="title">Yes — I’d use this</h1>
+        <p class="desc">Be part of the personal validation test. Enter your email to show your support.</p>
+        
+        <div class="alert-error" id="errorAlert">Something went wrong. Please try again.</div>
+        
+        <form style="width: 100%;" id="interestForm">
+          <div class="form-group">
+            <div class="input-wrapper">
+              <input type="email" id="emailInput" class="form-input" placeholder="Enter your email address" required autofocus>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit" id="submitBtn">
+            <span class="spinner" id="btnSpinner"></span>
+            <span id="btnText">Yes — I’d use this</span>
+          </button>
+        </form>
+        
+        <a href="./index.html" class="btn-back">&larr; BACK TO CONCEPT</a>
+      </div>
+
+      <!-- Success / Thank You State -->
+      <div class="success-container" id="successState">
+        <svg class="checkmark-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+          <circle class="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+          <path class="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+        </svg>
+        
+        <h2 class="success-title">Thank You</h2>
+        <p class="success-desc">Your support has been recorded. Your feedback helps determine if we build Hulu into a complete product.</p>
+        
+        <a href="./index.html" class="btn-submit" style="width: auto; padding: 14px 28px; text-decoration: none;">Return to Home</a>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="confetti-holder" id="confettiHolder"></div>
+
+  <script>
+    // Theme Handler (Syncing with index.html)
+    const htmlDoc = document.documentElement;
+    const darkTheme = localStorage.getItem('theme') === 'dark';
+    if (darkTheme) {
+      htmlDoc.classList.add('dark');
+    } else {
+      htmlDoc.classList.remove('dark');
+    }
+
+    // Supabase Configuration
+    const SUPABASE_URL = "https://olkecrtlffoqrttobosg.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sa2VjcnRsZmZvcXJ0dG9ib3NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIzODQ3MjQsImV4cCI6MjA5Nzk2MDcyNH0.tZvhblO6VF33uY1jHVICrWR_NvrNsSH8BpKdocWiGs4";
+
+    const form = document.getElementById('interestForm');
+    const emailInput = document.getElementById('emailInput');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+    const errorAlert = document.getElementById('errorAlert');
+    const inputState = document.getElementById('inputState');
+    const successState = document.getElementById('successState');
+    const confettiHolder = document.getElementById('confettiHolder');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const email = emailInput.value.trim();
+      if (!email) return;
+
+      // Reset error state
+      errorAlert.style.display = 'none';
+
+      // Set loading state
+      submitBtn.disabled = true;
+      btnSpinner.style.display = 'inline-block';
+      btnText.style.display = 'none';
+
+      try {
+        const response = await fetch(`${SUPABASE_URL}/rest/v1/interest_registrations`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ email: email })
+        });
+
+        if (!response.ok) {
+          throw new Error('Supabase insertion failed');
+        }
+
+        // Trigger transition to success
+        inputState.style.display = 'none';
+        successState.style.display = 'flex';
+        
+        // Trigger subtle confetti burst
+        createConfetti();
+        
+      } catch (error) {
+        console.error('Error submitting waitlist:', error);
+        errorAlert.textContent = "Unable to register. Please check your connection and try again.";
+        errorAlert.style.display = 'block';
+        
+        // Reset loading state
+        submitBtn.disabled = false;
+        btnSpinner.style.display = 'none';
+        btnText.style.display = 'inline-block';
+      }
+    });
+
+    // Premium micro-confetti particles on success using standard accent colors
+    function createConfetti() {
+      // Pull computed accent color dynamically if possible, or fallback to CSS variables
+      const computedStyles = getComputedStyle(document.documentElement);
+      const accentColor = computedStyles.getPropertyValue('--accent').trim();
+      const accentHover = computedStyles.getPropertyValue('--accent-hover').trim();
+      const mutedColor = computedStyles.getPropertyValue('--muted').trim();
+      
+      const colors = [accentColor, accentHover, '#FFFFFF', mutedColor];
+      
+      for (let i = 0; i < 40; i++) {
+        const confetti = document.createElement('div');
+        confetti.classList.add('confetti-piece');
+        confettiHolder.appendChild(confetti);
+        
+        const size = Math.random() * 6 + 4;
+        const color = colors[Math.floor(Math.random() * colors.length)];
+        
+        confetti.style.width = `${size}px`;
+        confetti.style.height = `${size}px`;
+        confetti.style.backgroundColor = color;
+        confetti.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        
+        // Initial positioning in the center of the viewport
+        confetti.style.left = '50%';
+        confetti.style.top = '50%';
+        
+        // Random velocity vectors
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = Math.random() * 200 + 100;
+        const targetX = Math.cos(angle) * velocity;
+        const targetY = Math.sin(angle) * velocity - 50; // gravity bias
+        
+        // Animate using Web Animations API
+        confetti.animate([
+          { 
+            transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', 
+            opacity: 1 
+          },
+          { 
+            transform: `translate(calc(-50% + ${targetX}px), calc(-50% + ${targetY}px)) scale(0.5) rotate(${Math.random() * 360}deg)`, 
+            opacity: 0 
+          }
+        ], {
+          duration: Math.random() * 1200 + 800,
+          easing: 'cubic-bezier(0.1, 0.8, 0.3, 1)',
+          fill: 'forwards'
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useAuth } from './AuthContext';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface Course {
   id: string;
@@ -100,6 +102,7 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -300,7 +303,16 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     if (isOnline) {
       const { error } = await supabase.from('flashcards').insert(newCard);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'flashcard_created',
+          entityType: 'flashcard',
+          entityId: newCard.id,
+          metadata: { course_id: courseId, module_id: moduleId },
+        });
+      }
     }
   };
 
@@ -343,6 +355,19 @@ export const AcademyProvider: React.FC<{ children: React.ReactNode }> = ({ child
           })
           .eq('id', flashcardId);
         if (error) throw error;
+        if (user) {
+          await recordActivityEvent(supabase, {
+            userId: user.id,
+            eventType: 'flashcard_reviewed',
+            entityType: 'flashcard',
+            entityId: flashcardId,
+            metadata: {
+              correct,
+              box: card.box,
+              next_review_date: card.next_review_date,
+            },
+          });
+        }
       }
     }
   };

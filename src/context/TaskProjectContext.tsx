@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useAuth } from './AuthContext';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface Project {
   id: string;
@@ -107,6 +109,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -186,7 +189,16 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (isOnline) {
       const { error } = await supabase.from('projects').insert(newProject);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'project_created',
+          entityType: 'project',
+          entityId: newProject.id,
+          metadata: { name: newProject.name, status: newProject.status },
+        });
+      }
     }
   };
 
@@ -203,7 +215,16 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (isOnline) {
       const { error } = await supabase.from('projects').update(updates).eq('id', projectId);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'project_updated',
+          entityType: 'project',
+          entityId: projectId,
+          metadata: updates as Record<string, unknown>,
+        });
+      }
     }
   };
 
@@ -235,7 +256,16 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (isOnline) {
       const { error } = await supabase.from('projects').update({ is_archived: isArchived }).eq('id', id);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'project_updated',
+          entityType: 'project',
+          entityId: id,
+          metadata: { is_archived: isArchived },
+        });
+      }
     }
   };
 
@@ -275,7 +305,21 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (isOnline) {
       const { error } = await supabase.from('tasks').insert(newTask);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'task_created',
+          entityType: 'task',
+          entityId: newTask.id,
+          metadata: {
+            project_id: newTask.project_id,
+            priority: newTask.priority,
+            status: newTask.status,
+            category: newTask.category,
+          },
+        });
+      }
     }
   };
 
@@ -292,7 +336,16 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
 
     if (isOnline) {
       const { error } = await supabase.from('tasks').update(updates).eq('id', taskId);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'task_updated',
+          entityType: 'task',
+          entityId: taskId,
+          metadata: updates as Record<string, unknown>,
+        });
+      }
     }
   };
 
@@ -346,6 +399,19 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
           })
           .eq('id', taskId);
         if (error) throw error;
+        if (user) {
+          await recordActivityEvent(supabase, {
+            userId: user.id,
+            eventType: status === 'done' ? 'task_completed' : 'task_updated',
+            entityType: 'task',
+            entityId: taskId,
+            metadata: {
+              status: updatedItem.status,
+              due_date: updatedItem.due_date,
+              completed_at: updatedItem.completed_at || null,
+            },
+          });
+        }
       }
     }
   };

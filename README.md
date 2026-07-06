@@ -10,6 +10,7 @@ A personal dashboard designed with architectural minimalism and journalistic gra
 - 📝 **Journal**: A clean, distraction-free space for daily reflection and logs.
 - 🎓 **Academy**: Personal learning resource tracking and skill development library.
 - 🔗 **Supabase Integration**: Fully backed by a Supabase database for persistent data storage.
+- 🧭 **Soul Blueprint**: Compact AI context snapshots generated from recent activity. These snapshots orient assistants without replacing the underlying Supabase records.
 
 ## Design System
 
@@ -49,6 +50,7 @@ Designed around the **Heritage** style guide:
    - `GEMINI_API_KEY` (for optional AI research/tagging utilities)
    - `EXA_API_KEY` (optional, improves research search quality)
    - `PUSHOVER_USER_KEY`, `PUSHOVER_API_TOKEN`, and `DASHBOARD_URL` (if deploying the Pushover cron function)
+   - `SOUL_BLUEPRINT_CRON_SECRET` (if deploying the Soul Blueprint scheduled function)
 
 3. **Install Dependencies:**
    ```bash
@@ -81,3 +83,9 @@ The easiest way to deploy this dashboard is through the **[Vercel Platform](http
 ### GitHub Actions (CI)
 
 A CI workflow is configured under `.github/workflows/ci.yml` that automatically runs build and lint checks on every push or pull request to the `main` branch to guarantee codebase stability.
+
+## Soul Blueprint Notes
+
+`Soul Blueprint` is a generated AI context layer, not the source of truth. Recent activity is tracked in `activity_events`, compact snapshots are stored in `soul_blueprint_snapshots`, and assistants should treat those snapshots as orientation before doing targeted retrieval from the main Supabase tables.
+
+If you want scheduled regeneration in Supabase Cron, set Vault secrets named `project_url` and `soul_blueprint_cron_secret`, set the Edge Function env var `SOUL_BLUEPRINT_CRON_SECRET`, and deploy `supabase/functions/generate-soul-blueprint`.

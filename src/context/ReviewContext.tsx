@@ -8,6 +8,7 @@ import { useInbox } from './InboxContext';
 import { useTaskProject } from './TaskProjectContext';
 import { useKnowledge } from './KnowledgeContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface ReviewEntry {
   id: string;
@@ -366,6 +367,13 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (isOnline) {
       const { error } = await supabase.from('review_entries').upsert(targetEntry);
       if (error) throw error;
+      await recordActivityEvent(supabase, {
+        userId: user.id,
+        eventType: 'review_completed',
+        entityType: 'review_entry',
+        entityId: targetEntry.id,
+        metadata: { review_type: type, review_date: date },
+      });
     }
   };
 

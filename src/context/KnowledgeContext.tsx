@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
 import { useAuth } from './AuthContext';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface KnowledgeItem {
   id: string;
@@ -186,6 +187,13 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isOnline) {
       const { error } = await supabase.from('knowledge_items').insert(newItem);
       if (error) throw error;
+      await recordActivityEvent(supabase, {
+        userId: user.id,
+        eventType: 'knowledge_note_created',
+        entityType: 'knowledge_item',
+        entityId: newItem.id,
+        metadata: { topic: newItem.topic, type: newItem.type, source_url: newItem.source_url },
+      });
     }
 
     return newItem.id;
@@ -212,6 +220,15 @@ export const KnowledgeProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         updated_at: new Date().toISOString(),
       }).eq('id', id);
       if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'knowledge_note_updated',
+          entityType: 'knowledge_item',
+          entityId: id,
+          metadata: updates as Record<string, unknown>,
+        });
+      }
     }
   };
 

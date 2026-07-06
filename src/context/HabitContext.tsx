@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
+import { useAuth } from './AuthContext';
+import { recordActivityEvent } from '@/utils/activityEvents';
 
 export interface Habit {
   id: string;
@@ -93,6 +95,7 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -226,7 +229,16 @@ export const HabitProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isOnline) {
       const { error } = await supabase.from('habit_records').upsert(newRecord);
-        if (error) throw error;
+      if (error) throw error;
+      if (user) {
+        await recordActivityEvent(supabase, {
+          userId: user.id,
+          eventType: 'habit_checked',
+          entityType: 'habit_record',
+          entityId: newRecord.id,
+          metadata: { habit_id: habitId, date, value },
+        });
+      }
     }
   };
 

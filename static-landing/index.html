@@ -2413,7 +2413,7 @@
             <path d="M12.3 22c5.07 0 9.2-3.8 9.2-8.5 0-2.45-1.09-4.66-2.82-6.17-.4-.35-1-.2-1.16.32-.82 2.68-3.32 4.65-6.27 4.65-2.95 0-5.45-1.97-6.27-4.65-.17-.52-.77-.67-1.16-.32C2.09 8.84 1 11.05 1 13.5 1 18.2 5.13 22 10.2 22h2.1z"/>
           </svg>
         </button>
-        <a href="#cta" class="btn btn-primary">I’d use this</a>
+        <a href="./interest.html" class="btn btn-primary">I’d use this</a>
       </div>
     </div>
   </header>
@@ -2429,7 +2429,7 @@
         </p>
         
         <div class="hero-actions animate-load-actions">
-          <a href="#cta" class="btn btn-primary">Yes — I’d use this</a>
+          <a href="./interest.html" class="btn btn-primary">Yes — I’d use this</a>
           <a href="#features" class="btn btn-secondary">See what it does</a>
         </div>
         
@@ -2952,7 +2952,7 @@
         <p class="cta-banner-desc">
           Hulu is built as a unified personal life operating system. Share your email and thoughts to let us know if you want it to become a complete public product.
         </p>
-        <button id="openCtaModal" class="btn-started">Yes — I’d use this</button>
+        <a href="./interest.html" class="btn-started" style="display: inline-block; text-decoration: none; text-align: center;">Yes — I’d use this</a>
       </div>
 
       <!-- Grid of Steps/Value Props below the banner -->
@@ -2973,39 +2973,7 @@
     </div>
   </section>
 
-  <!-- Validation Dialog Modal -->
-  <dialog id="ctaModal" class="cta-modal">
-    <button class="modal-close-btn" id="closeCtaModal" aria-label="Close dialog">&times;</button>
-    
-    <!-- Modal Success Overlay -->
-    <div class="modal-success-overlay" id="modalSuccess">
-      <div class="success-icon">
-        <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"></path></svg>
-      </div>
-      <h3 class="success-title">Feedback Received</h3>
-      <p class="success-desc">Thank you for sharing your thoughts. Your feedback helps determine if we scale Hulu into a complete product.</p>
-    </div>
-
-    <div class="modal-header">
-      <h2 class="modal-title font-serif">Yes — I’d use this</h2>
-      <p class="modal-desc">Tell us if you want Hulu to become an actual product, and what features appeal to you most.</p>
-    </div>
-
-    <!-- Waitlist / Feedback Form -->
-    <form class="waitlist-form" id="waitlistForm">
-      <div class="form-group">
-        <label class="form-label" for="userEmail">Email Address</label>
-        <input type="email" id="userEmail" placeholder="your@email.com" class="form-input" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="userFeedback">Your Thoughts & Feedback</label>
-        <textarea id="userFeedback" placeholder="What features appeal to you? Would you buy this?" class="form-textarea" required></textarea>
-      </div>
-      <div class="form-actions">
-        <button type="submit" class="btn btn-primary">Yes — I’d use this &rarr;</button>
-      </div>
-    </form>
-  </dialog>
+  <!-- Legacy validation dialog modal removed in favor of standalone interest.html -->
 
   <!-- Footer -->
   <footer class="footer">
@@ -3117,85 +3085,7 @@
       });
     });
 
-    // ----------------------------------------------------
-    // Modal Popup Triggers and Form Logic
-    // ----------------------------------------------------
-    const ctaModal = document.getElementById('ctaModal');
-    const openCtaModal = document.getElementById('openCtaModal');
-    const closeCtaModal = document.getElementById('closeCtaModal');
-    const waitlistForm = document.getElementById('waitlistForm');
-    const userEmail = document.getElementById('userEmail');
-    const userFeedback = document.getElementById('userFeedback');
-
-    // Function to open the modal
-    const openModalHandler = () => {
-      if (ctaModal) {
-        ctaModal.classList.remove('success'); // Reset success state
-        waitlistForm.reset(); // Reset form fields
-        ctaModal.showModal();
-      }
-    };
-
-    if (openCtaModal) {
-      openCtaModal.addEventListener('click', openModalHandler);
-    }
-
-    // Connect nav link and hero primary CTA buttons to open modal
-    document.querySelectorAll('a[href="#cta"]').forEach(btn => {
-      if (btn.classList.contains('btn-primary')) {
-        btn.addEventListener('click', (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          openModalHandler();
-        });
-      }
-    });
-
-    if (closeCtaModal) {
-      closeCtaModal.addEventListener('click', () => {
-        ctaModal.close();
-      });
-    }
-
-    // Close modal when clicking backdrop
-    if (ctaModal) {
-      ctaModal.addEventListener('click', (e) => {
-        const dialogDimensions = ctaModal.getBoundingClientRect();
-        if (
-          e.clientX < dialogDimensions.left ||
-          e.clientX > dialogDimensions.right ||
-          e.clientY < dialogDimensions.top ||
-          e.clientY > dialogDimensions.bottom
-        ) {
-          ctaModal.close();
-        }
-      });
-    }
-
-    if (waitlistForm) {
-      waitlistForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const email = userEmail.value.trim();
-        const feedback = userFeedback.value.trim();
-        if (!email || !feedback) return;
-
-        // Save waitlist locally
-        const submission = { email, feedback, timestamp: new Date().toISOString() };
-        const list = JSON.parse(localStorage.getItem('hulu_waitlist') || '[]');
-        list.push(submission);
-        localStorage.setItem('hulu_waitlist', JSON.stringify(list));
-
-        // Show success state on modal
-        ctaModal.classList.add('success');
-
-        // Automatically close modal after 3 seconds on success
-        setTimeout(() => {
-          if (ctaModal && ctaModal.open) {
-            ctaModal.close();
-          }
-        }, 3000);
-      });
-    }
+    // Modal Popup Triggers and Form Logic removed in favor of standalone interest.html
 
     // ----------------------------------------------------
     // IntersectionObserver scroll animations fallback handler

@@ -2,7 +2,15 @@ import { NextResponse } from 'next/server';
 
 export async function POST(request: Request) {
   try {
-    const { question, rawResearch, moduleNotes, courseTitle, moduleTitle, model = 'gemini-2.5-flash' } = await request.json();
+    const {
+      question,
+      rawResearch,
+      moduleNotes,
+      courseTitle,
+      moduleTitle,
+      soulBlueprint,
+      model = 'gemini-2.5-flash'
+    } = await request.json();
 
     if (!question || !rawResearch) {
       return NextResponse.json({ error: 'Missing question or research context' }, { status: 400 });
@@ -15,7 +23,8 @@ export async function POST(request: Request) {
     }
 
     const prompt = `You are a helpful AI tutor for a learning academy.
-Answer the user's question using ONLY the provided academy context. Prefer the current module notes over the course context.
+Answer the user's question using the provided academy context first. Prefer the current module notes over the course context.
+Use Soul Blueprint context only for orientation, never as a substitute for specific source material.
 If the answer is not supported by the context, say that you do not have enough information instead of guessing.
 Keep the response concise, direct, and formatted in clean Markdown.
 
@@ -26,6 +35,7 @@ Academy Context:
 ${rawResearch.substring(0, 20000)}
 
 ${moduleNotes ? `Current Module Notes:\n${moduleNotes.substring(0, 5000)}\n` : ''}
+${soulBlueprint?.markdown ? `Soul Blueprint Context (${(soulBlueprint.sections || []).join(', ')}):\n${String(soulBlueprint.markdown).substring(0, 12000)}\n` : ''}
 User Question: ${question}
 
 Answer:`;
