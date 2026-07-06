@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 
 const URL_PATTERN = /^https?:\/\/\S+$/i;
 const LOOSE_URL_PATTERN = /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$/i;
+const URL_SCRAPE_TIMEOUT_MS = 2500;
+const AI_SUGGESTION_TIMEOUT_MS = 1200;
+const HTML_PREVIEW_BYTES = 64 * 1024;
 const AI_TYPE_OPTIONS = [
   'thought',
   'idea',
@@ -74,6 +77,48 @@ function sanitizeFileTitle(fileName?: string) {
   return base || 'Image capture';
 }
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error);
+}
+
+function createTimeoutSignal(timeoutMs: number) {
+  return AbortSignal.timeout(timeoutMs);
+}
+
+async function readHtmlPreview(response: Response, maxBytes: number) {
+  if (!response.body) {
+    const text = await response.text();
+    return text.slice(0, maxBytes);
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytesRead = 0;
+  let html = '';
+
+  try {
+    while (bytesRead < maxBytes) {
+      const { done, value } = await reader.read();
+      if (done || !value) break;
+
+      const remainingBytes = maxBytes - bytesRead;
+      const chunk = value.byteLength > remainingBytes ? value.subarray(0, remainingBytes) : value;
+      bytesRead += chunk.byteLength;
+      html += decoder.decode(chunk, { stream: true });
+
+      if (value.byteLength > remainingBytes) {
+        break;
+      }
+    }
+
+    html += decoder.decode();
+    return html;
+  } finally {
+    reader.cancel().catch(() => undefined);
+  }
+}
+
 async function scrapeUrlMetadata(targetUrl: string) {
   const normalized = normalizeUrl(targetUrl);
   const parsedUrl = new URL(normalized);
@@ -81,14 +126,15 @@ async function scrapeUrlMetadata(targetUrl: string) {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     },
-    next: { revalidate: 3600 },
+    signal: createTimeoutSignal(URL_SCRAPE_TIMEOUT_MS),
+    cache: 'no-store',
   });
 
   if (!response.ok) {
     throw new Error(`Failed to fetch URL: ${response.statusText}`);
   }
 
-  const html = await response.text();
+  const html = await readHtmlPreview(response, HTML_PREVIEW_BYTES);
   const titleMatch = html.match(/<title>(.*?)<\/title>/i);
   const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["'](.*?)["']/i);
   const descriptionMatches = [
@@ -159,6 +205,7 @@ Rules:
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      signal: createTimeoutSignal(AI_SUGGESTION_TIMEOUT_MS),
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
       }),
@@ -209,6 +256,7 @@ function getFallbackSuggestions(text: string, sourceUrl?: string) {
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now();
   try {
     const { rawText, fileName, attachmentUrl } = await request.json();
 
@@ -231,6 +279,7 @@ export async function POST(request: Request) {
         aiSuggestedAction: 'Review the image and decide where it belongs.',
       };
     } else if (looksLikeUrl(trimmedText)) {
+      const urlEnrichmentStartedAt = Date.now();
       const normalized = normalizeUrl(trimmedText);
       let title = new URL(normalized).hostname.replace(/^www\./, '');
       let summary = 'Saved link waiting for review.';
@@ -240,12 +289,17 @@ export async function POST(request: Request) {
         title = metadata.title || title;
         summary = metadata.description || summary;
       } catch (error) {
-        console.warn('Capture URL scrape failed, falling back to hostname:', error);
+        console.warn('Capture URL scrape failed, falling back to hostname:', getErrorMessage(error));
       }
 
-      const aiSuggestions = await getAiSuggestions(title, summary, normalized).catch((error) => {
-        console.warn('Capture AI suggestions failed, using fallback:', error);
-        return getFallbackSuggestions(summary, normalized);
+      const aiSuggestions = getFallbackSuggestions(summary, normalized);
+
+      console.info('capture.enrich.url', {
+        durationMs: Date.now() - urlEnrichmentStartedAt,
+        totalDurationMs: Date.now() - startedAt,
+        hostname: new URL(normalized).hostname,
+        usedFallbackTitle: title === new URL(normalized).hostname.replace(/^www\./, ''),
+        usedFallbackSummary: summary === 'Saved link waiting for review.',
       });
 
       result = {
@@ -260,7 +314,7 @@ export async function POST(request: Request) {
       const title = deriveTitleFromText(trimmedText);
       const summary = deriveSummaryFromText(trimmedText);
       const aiSuggestions = await getAiSuggestions(title, trimmedText).catch((error) => {
-        console.warn('Capture AI suggestions failed, using fallback:', error);
+        console.warn('Capture AI suggestions failed, using fallback:', getErrorMessage(error));
         return getFallbackSuggestions(trimmedText);
       });
 
@@ -274,9 +328,14 @@ export async function POST(request: Request) {
       };
     }
 
+    console.info('capture.enrich.complete', {
+      storageType: result.storageType,
+      durationMs: Date.now() - startedAt,
+    });
+
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Capture enrichment failed:', error);
+    console.error('Capture enrichment failed:', getErrorMessage(error));
     return NextResponse.json({ error: 'Failed to enrich capture' }, { status: 500 });
   }
 }

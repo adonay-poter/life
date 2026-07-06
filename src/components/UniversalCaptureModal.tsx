@@ -15,11 +15,40 @@ interface UniversalCaptureModalProps {
 }
 
 const MAX_IMAGE_SIZE_BYTES = 2 * 1024 * 1024;
+const DEFAULT_LINK_SUMMARY = 'Saved link waiting for review.';
+const DEFAULT_IMAGE_SUMMARY = 'Image capture waiting for review.';
 
 function isProbablyUrl(value: string) {
   const trimmed = value.trim();
   if (!trimmed || /\s/.test(trimmed)) return false;
   return /^(https?:\/\/)?([\w-]+\.)+[\w-]{2,}(\/\S*)?$/i.test(trimmed);
+}
+
+function normalizeUrl(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return '';
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+}
+
+function deriveTitleFromText(value: string) {
+  const cleaned = value.trim().replace(/\s+/g, ' ');
+  if (!cleaned) return 'Quick capture';
+  if (cleaned.length <= 72) return cleaned;
+  return `${cleaned.slice(0, 69).trimEnd()}...`;
+}
+
+function deriveSummaryFromText(value: string) {
+  const cleaned = value.trim().replace(/\s+/g, ' ');
+  if (!cleaned) return undefined;
+  return cleaned.length <= 180 ? cleaned : `${cleaned.slice(0, 177).trimEnd()}...`;
+}
+
+function getHostnameTitle(rawUrl: string) {
+  try {
+    return new URL(normalizeUrl(rawUrl)).hostname.replace(/^www\./, '');
+  } catch {
+    return 'Saved link';
+  }
 }
 
 function readFileAsDataUrl(file: File) {
@@ -36,7 +65,7 @@ function sanitizeFileName(fileName: string) {
 }
 
 export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCaptureModalProps) {
-  const { addInboxItem } = useInbox();
+  const { addInboxItem, updateInboxItem } = useInbox();
   const { user } = useAuth();
   const { showToast } = useToast();
 
@@ -122,6 +151,21 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
     return { attachmentPath: data.path, fileName: file.name };
   };
 
+  const enrichCapture = async (payload: { rawText?: string; attachmentUrl?: string; fileName?: string }) => {
+    const response = await fetch('/api/capture/enrich', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to prepare capture.');
+    }
+
+    return data;
+  };
+
   const enrichAndSaveCapture = async (payload?: { rawText?: string; attachmentFile?: File | null; fileName?: string }) => {
     const nextRawText = payload?.rawText ?? rawInput;
     const nextAttachmentFile = payload?.attachmentFile ?? attachmentFile;
@@ -135,42 +179,70 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
     setLoading(true);
     try {
       const uploadedAttachment = await uploadAttachmentIfNeeded(nextAttachmentFile);
-      const response = await fetch('/api/capture/enrich', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawText: nextRawText,
-          attachmentUrl: uploadedAttachment.attachmentPath,
-          fileName: nextFileName || uploadedAttachment.fileName,
-        }),
-      });
+      const trimmedText = nextRawText.trim();
+      const hasAttachment = Boolean(uploadedAttachment.attachmentPath);
+      const isUrlCapture = !hasAttachment && isProbablyUrl(trimmedText);
+      const storageType = hasAttachment ? 'photo' : isUrlCapture ? 'url' : 'text';
+      const normalizedUrl = isUrlCapture ? normalizeUrl(trimmedText) : undefined;
+      const provisionalTitle = hasAttachment
+        ? (nextFileName || uploadedAttachment.fileName || 'Image capture')
+        : isUrlCapture
+          ? getHostnameTitle(trimmedText)
+          : deriveTitleFromText(trimmedText);
+      const provisionalSummary = hasAttachment
+        ? DEFAULT_IMAGE_SUMMARY
+        : isUrlCapture
+          ? DEFAULT_LINK_SUMMARY
+          : deriveSummaryFromText(trimmedText);
+      const provisionalContent = hasAttachment || isUrlCapture ? undefined : trimmedText;
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to prepare capture.');
-      }
-
-      await addInboxItem(
-        data.storageType,
-        data.title,
-        data.sourceUrl || undefined,
-        data.content || undefined,
+      const inboxItemId = await addInboxItem(
+        storageType,
+        provisionalTitle,
+        normalizedUrl,
+        provisionalContent,
         [],
         'unprocessed',
         undefined,
         {
-          source_url: data.sourceUrl || undefined,
-          attachment_url: data.attachmentUrl || undefined,
-          summary: data.summary || undefined,
-          ai_suggested_type: data.aiSuggestedType || undefined,
-          ai_suggested_action: data.aiSuggestedAction || undefined,
+          source_url: normalizedUrl,
+          attachment_url: uploadedAttachment.attachmentPath || undefined,
+          summary: provisionalSummary,
+          ai_suggested_type: isUrlCapture || hasAttachment ? 'resource' : undefined,
+          ai_suggested_action: isUrlCapture
+            ? 'Review and sort this link later.'
+            : hasAttachment
+              ? 'Review the image and decide where it belongs.'
+              : undefined,
         }
       );
 
-      showToast(data.storageType === 'url' ? 'Link captured into Intake Inbox.' : 'Capture saved into Intake Inbox.', 'success');
+      showToast(storageType === 'url' ? 'Link captured into Intake Inbox.' : 'Capture saved into Intake Inbox.', 'success');
       setRawInput('');
       clearAttachment();
       onClose();
+
+      void enrichCapture({
+        rawText: trimmedText,
+        attachmentUrl: uploadedAttachment.attachmentPath,
+        fileName: nextFileName || uploadedAttachment.fileName,
+      })
+        .then(async (data) => {
+          await updateInboxItem(inboxItemId, {
+            type: data.storageType,
+            title: data.title,
+            url: data.sourceUrl || undefined,
+            source_url: data.sourceUrl || undefined,
+            content: data.content || undefined,
+            attachment_url: data.attachmentUrl || uploadedAttachment.attachmentPath || undefined,
+            summary: data.summary || undefined,
+            ai_suggested_type: data.aiSuggestedType || undefined,
+            ai_suggested_action: data.aiSuggestedAction || undefined,
+          });
+        })
+        .catch((err: any) => {
+          console.warn('Background capture enrichment failed:', err);
+        });
     } catch (err: any) {
       console.error('Failed to capture:', err);
       showToast(err.message || 'Failed to capture item.', 'error');

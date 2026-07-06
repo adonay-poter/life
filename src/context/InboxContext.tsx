@@ -39,7 +39,7 @@ interface InboxContextProps {
     status?: InboxItem['status'],
     projectId?: string,
     extraFields?: Partial<Pick<InboxItem, 'source_url' | 'attachment_url' | 'summary' | 'ai_suggested_type' | 'ai_suggested_destination' | 'ai_suggested_action' | 'snoozed_until' | 'processed_at'>>
-  ) => Promise<void>;
+  ) => Promise<string>;
   updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
   updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
   deleteInboxItem: (id: string) => Promise<void>;
@@ -167,6 +167,8 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
     }
+
+    return newItem.id;
   };
 
   const updateInboxItemStatus = async (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => {

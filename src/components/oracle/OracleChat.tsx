@@ -225,7 +225,30 @@ export default function OracleChat() {
 
   const composer = (
     <div className="mx-auto w-full max-w-4xl">
-      <div className="border border-border bg-surface shadow-[0_12px_32px_rgba(26,28,30,0.05)] flex flex-col focus-within:border-primary transition-colors">
+      {/* Mobile Composer layout (hidden on desktop) */}
+      <div className="flex items-end gap-2 p-1.5 bg-surface border border-border md:hidden">
+        <textarea
+          ref={inputRef}
+          value={input}
+          onChange={(event) => setInput(event.target.value)}
+          onKeyDown={handleComposerKeyDown}
+          placeholder="Ask Oracle..."
+          disabled={sending || loadingMessages}
+          rows={1}
+          className="max-h-[120px] min-h-[38px] flex-1 resize-none bg-transparent py-1.5 px-2 text-sm leading-6 text-primary outline-none placeholder:text-secondary/70 disabled:opacity-60 font-sans"
+        />
+        <button
+          type="submit"
+          disabled={!input.trim() || sending || loadingMessages}
+          className="flex h-9 w-9 shrink-0 items-center justify-center border border-accent bg-accent text-on-accent transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          aria-label="Send"
+        >
+          <Send className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {/* Desktop Composer layout (hidden on mobile) */}
+      <div className="hidden md:flex border border-border bg-surface shadow-[0_12px_32px_rgba(26,28,30,0.05)] flex-col focus-within:border-primary transition-colors">
         <div className="flex items-start gap-3 p-3.5">
           <textarea
             ref={inputRef}
@@ -240,7 +263,7 @@ export default function OracleChat() {
         </div>
 
         {/* Bottom Actions & Dynamic Context Indicators */}
-        <div className="flex items-center justify-between border-t border-border/40 px-3.5 py-2 bg-neutral-bg/15 shrink-0 flex-wrap gap-2">
+        <div className="flex items-center justify-between border-t border-border/40 px-3.5 py-2 bg-neutral-bg/15 shrink-0">
           <div className="flex flex-wrap gap-2 items-center">
             <span className="font-mono text-[9px] text-secondary/60 uppercase tracking-wider">Context:</span>
             <span className="inline-flex items-center gap-1 font-mono text-[9px] uppercase tracking-wider text-accent font-bold">
@@ -261,7 +284,7 @@ export default function OracleChat() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline font-mono text-[9px] text-secondary/50 uppercase tracking-wider">↵ to send</span>
+            <span className="font-mono text-[9px] text-secondary/50 uppercase tracking-wider">↵ to send</span>
             <button
               type="submit"
               disabled={!input.trim() || sending || loadingMessages}
@@ -323,14 +346,14 @@ export default function OracleChat() {
           </div>
         ) : !hasMessages ? (
           <div className="mx-auto flex min-h-[62vh] w-full max-w-4xl items-center justify-center">
-            <div className="w-full max-w-3xl">
+            <div className="w-full max-w-3xl animate-fade-in px-4">
               <form onSubmit={handleSend}>
                 {composer}
               </form>
             </div>
           </div>
         ) : (
-          <div className="mx-auto flex max-w-4xl flex-col gap-6 pb-40">
+          <div className="mx-auto flex max-w-4xl flex-col gap-6 pb-24 md:pb-40">
             {messages.map((message) => {
               const isAssistant = message.role === 'assistant';
 
@@ -387,12 +410,12 @@ export default function OracleChat() {
       </div>
 
       {showStickyComposer && (
-        <div className="sticky bottom-0 z-10 mt-auto border-t border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.1),rgba(247,245,242,0.92)_18%,rgba(247,245,242,0.98)_100%)] px-4 pb-4 pt-6 backdrop-blur-md sm:px-6 sm:pb-5 sm:pt-7">
-          <form onSubmit={handleSend}>
+        <div className="sticky bottom-0 z-10 mt-auto border-t border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.1),rgba(247,245,242,0.92)_18%,rgba(247,245,242,0.98)_100%)] px-2 pb-2 pt-3 backdrop-blur-md sm:px-6 sm:pb-5 sm:pt-7">
+          <form onSubmit={handleSend} className="px-2 md:px-0">
             {composer}
           </form>
 
-          <div className="mx-auto mt-2 flex max-w-4xl justify-end">
+          <div className="mx-auto mt-1 flex max-w-4xl justify-end px-2 md:px-0">
             <button
               type="button"
               onClick={() => messageScrollRef.current?.scrollTo({ top: messageScrollRef.current.scrollHeight, behavior: 'smooth' })}
