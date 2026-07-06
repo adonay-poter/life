@@ -209,26 +209,28 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
         </div>
 
         {/* Quick Capture Button */}
-        <div className="px-1">
-          {!isCollapsed ? (
-            <button
-              onClick={onCaptureTrigger}
-              className="w-full bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-widest font-bold py-3 px-4 rounded-none cursor-pointer flex items-center justify-center gap-2 btn-press"
-            >
-              <Plus className="h-4 w-4" />
-              <span>Quick Capture</span>
-              <span className="text-[9px] opacity-60 ml-auto font-sans">⌥C</span>
-            </button>
-          ) : (
-            <button
-              onClick={onCaptureTrigger}
-              className="w-10 h-10 mx-auto bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs font-bold rounded-none cursor-pointer flex items-center justify-center btn-press"
-              title="Quick Capture (⌥C)"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-          )}
-        </div>
+        {!pathname.startsWith('/oracle') && (
+          <div className="px-1 mb-4">
+            {!isCollapsed ? (
+              <button
+                onClick={onCaptureTrigger}
+                className="w-full bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-widest font-bold py-3 px-4 rounded-none cursor-pointer flex items-center justify-center gap-2 btn-press"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Quick Capture</span>
+                <span className="text-[9px] opacity-60 ml-auto font-sans">⌥C</span>
+              </button>
+            ) : (
+              <button
+                onClick={onCaptureTrigger}
+                className="w-10 h-10 mx-auto bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs font-bold rounded-none cursor-pointer flex items-center justify-center btn-press"
+                title="Quick Capture (⌥C)"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Navigation Menu */}
         <nav className="space-y-4">

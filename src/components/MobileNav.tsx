@@ -217,7 +217,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
       </nav>
 
       {/* Mobile Floating Action Button (FAB) for Quick Capture or Create Task */}
-      {!isModalActive && pathname !== '/academy' && (
+      {!isModalActive && pathname !== '/academy' && !pathname.startsWith('/oracle') && (
         <button
           onClick={handleFabClick}
           className="fixed bottom-20 right-6 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-40 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 active:rotate-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"

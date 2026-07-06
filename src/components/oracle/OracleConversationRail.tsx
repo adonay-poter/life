@@ -18,7 +18,6 @@ interface OracleConversationRailProps {
   activeConversationId?: string | null;
   onNewChat?: () => void;
   onSelectConversation?: (conversationId: string) => void;
-  standalone?: boolean;
 }
 
 function formatConversationTime(value: string) {
@@ -32,7 +31,6 @@ export default function OracleConversationRail({
   activeConversationId = null,
   onNewChat,
   onSelectConversation,
-  standalone = false,
 }: OracleConversationRailProps) {
   const { user } = useAuth();
   const { showToast } = useToast();

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { DashboardProvider } from '@/context/DashboardContext';
 import { ToastProvider } from '@/context/ToastContext';
 import { AuthProvider } from '@/context/AuthContext';
@@ -15,6 +16,7 @@ import PageTransition from '@/components/PageTransition';
 import UniversalCaptureModal from '@/components/UniversalCaptureModal';
 
 export default function ClientWrapper({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [isCaptureOpen, setIsCaptureOpen] = useState(false);
 
@@ -33,6 +35,9 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
     if (!mounted) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Disable shortcut on Oracle page
+      if (pathname.startsWith('/oracle')) return;
+
       const activeEl = document.activeElement;
       const isTyping = activeEl && (
         activeEl.tagName === 'INPUT' || 
@@ -54,7 +59,7 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mounted]);
+  }, [mounted, pathname]);
 
   if (!mounted) {
     return <SkeletonLoader />;
