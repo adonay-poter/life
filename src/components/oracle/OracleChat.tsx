@@ -339,7 +339,7 @@ export default function OracleChat() {
       {/* Main Chat Panel */}
       <div className="flex-1 flex flex-col relative overflow-hidden bg-neutral-bg/10">
         {/* Chat Header */}
-        <header className="border-b border-border p-3 flex items-center justify-between bg-surface">
+        <header className="border-b border-border p-3 flex items-center justify-between bg-surface shrink-0">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -408,7 +408,7 @@ export default function OracleChat() {
         </div>
 
         {/* Input box */}
-        <form onSubmit={handleSend} className="border-t border-border p-3 bg-surface flex gap-2">
+        <form onSubmit={handleSend} className="border-t border-border p-3 bg-surface flex gap-2 shrink-0">
           <input
             type="text"
             value={input}

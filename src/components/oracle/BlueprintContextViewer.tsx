@@ -2,7 +2,6 @@
 
 import React, { useMemo, useState } from 'react';
 import { Copy, RefreshCw } from 'lucide-react';
-import EditorialCard from '@/components/ui/EditorialCard';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import { useSoulBlueprint } from '@/context/SoulBlueprintContext';
 import { useToast } from '@/context/ToastContext';
@@ -62,10 +61,17 @@ export default function BlueprintContextViewer() {
   };
 
   return (
-    <EditorialCard
-      title="Operating Context"
-      subtitle="Latest Soul Blueprint context snapshot"
-      action={
+    <article className="bg-surface border border-border p-6 rounded-none relative flex flex-col h-full min-h-0 overflow-hidden">
+      {/* Header */}
+      <div className="flex justify-between items-baseline mb-4 pb-2 border-b border-border w-full shrink-0">
+        <div>
+          <h3 className="font-display text-lg font-bold text-primary">
+            Operating Context
+          </h3>
+          <span className="font-label text-xs text-secondary uppercase tracking-wider block mt-0.5">
+            Latest Soul Blueprint context snapshot
+          </span>
+        </div>
         <div className="flex gap-2">
           <SecondaryButton onClick={handleCopy} disabled={!snapshot || !activeMarkdown} className="!py-1.5 !px-2.5 text-[10px]">
             <Copy className="h-3 w-3" />
@@ -76,10 +82,10 @@ export default function BlueprintContextViewer() {
             Regenerate
           </PrimaryButton>
         </div>
-      }
-      className="h-full flex flex-col"
-    >
-      <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-neutral-bg border border-border">
+      </div>
+
+      {/* Metadata */}
+      <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-neutral-bg border border-border shrink-0">
         <div>
           <span className="font-mono text-[9px] text-secondary uppercase block">Generated</span>
           <span className="font-sans text-xs text-primary">{snapshot ? formatTimestamp(snapshot.generated_at) : 'N/A'}</span>
@@ -90,7 +96,8 @@ export default function BlueprintContextViewer() {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1 border-b border-border pb-3">
+      {/* Tabs */}
+      <div className="flex flex-wrap gap-1 border-b border-border pb-3 shrink-0">
         {sectionKeys.map((section) => {
           const isActive = activeSection === section;
           return (
@@ -110,7 +117,8 @@ export default function BlueprintContextViewer() {
         })}
       </div>
 
-      <div className="pt-4 flex-1 min-h-0 flex flex-col">
+      {/* Content */}
+      <div className="pt-4 flex-1 min-h-0 flex flex-col overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center p-8 flex-1 border border-border bg-neutral-bg">
             <span className="font-serif italic text-secondary text-sm">Loading snapshot...</span>
@@ -127,6 +135,6 @@ export default function BlueprintContextViewer() {
           </pre>
         )}
       </div>
-    </EditorialCard>
+    </article>
   );
 }
