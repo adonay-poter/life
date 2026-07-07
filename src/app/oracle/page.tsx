@@ -34,7 +34,7 @@ export default function OraclePage() {
   );
 
   return (
-    <div className="animate-page-enter max-w-7xl mx-auto w-full h-[calc(100vh-148px-env(safe-area-inset-bottom))] md:h-full min-h-0 flex flex-col pb-0 md:pb-12 px-0 sm:px-4">
+    <div className="animate-page-enter max-w-7xl mx-auto w-full h-[calc(100vh-148px-env(safe-area-inset-bottom))] md:h-[calc(100vh-120px)] min-h-0 flex flex-col pb-0 md:pb-12 px-0 sm:px-4">
       {/* Desktop Header - Switches to the right side of the title on desktop */}
       <div className="hidden md:block mb-8 shrink-0">
         <SectionHeader
@@ -49,8 +49,8 @@ export default function OraclePage() {
         {tabSwitcher}
       </div>
 
-      {/* Main Content Area - Full-width single panel viewport with fixed height on desktop */}
-      <div className="flex-1 md:h-[calc(100vh-240px)] md:max-h-[calc(100vh-240px)] md:min-h-[550px] min-h-0 relative">
+      {/* Main Content Area - Full-width single panel viewport */}
+      <div className="flex-1 min-h-0 relative">
         {/* Context Viewer Panel */}
         <div className={`h-full min-h-0 w-full ${
           activeTab === 'context' ? 'block' : 'hidden'
