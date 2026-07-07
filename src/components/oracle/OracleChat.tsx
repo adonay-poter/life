@@ -409,23 +409,26 @@ export default function OracleChat() {
         )}
       </div>
 
+      {/* Floating Jump to Latest Button */}
       {showStickyComposer && (
-        <div className="sticky bottom-0 z-10 mt-auto border-t border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.1),rgba(247,245,242,0.92)_18%,rgba(247,245,242,0.98)_100%)] px-2 pb-2 pt-3 backdrop-blur-md sm:px-6 sm:pb-5 sm:pt-7">
+        <div className="absolute right-4 bottom-[72px] z-20 md:right-6 md:bottom-[96px]">
+          <button
+            type="button"
+            onClick={() => messageScrollRef.current?.scrollTo({ top: messageScrollRef.current.scrollHeight, behavior: 'smooth' })}
+            className="flex h-8 w-8 items-center justify-center border border-border bg-surface text-primary transition-all hover:border-primary shadow-md hover:shadow-lg cursor-pointer rounded-full"
+            title="Jump to latest"
+            aria-label="Jump to latest"
+          >
+            <ArrowDown className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {showStickyComposer && (
+        <div className="sticky bottom-0 z-10 mt-auto border-t border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.1),rgba(247,245,242,0.92)_18%,rgba(247,245,242,0.98)_100%)] px-2 pb-2 pt-2 backdrop-blur-md sm:px-6 sm:pb-4 sm:pt-4">
           <form onSubmit={handleSend} className="px-2 md:px-0">
             {composer}
           </form>
-
-          <div className="mx-auto mt-1 flex max-w-4xl justify-end px-2 md:px-0">
-            <button
-              type="button"
-              onClick={() => messageScrollRef.current?.scrollTo({ top: messageScrollRef.current.scrollHeight, behavior: 'smooth' })}
-              className="flex h-8 w-8 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary cursor-pointer"
-              title="Jump to latest"
-              aria-label="Jump to latest"
-            >
-              <ArrowDown className="h-3.5 w-3.5" />
-            </button>
-          </div>
         </div>
       )}
 

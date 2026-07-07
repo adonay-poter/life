@@ -34,7 +34,7 @@ export default function OraclePage() {
   );
 
   return (
-    <div className="animate-page-enter max-w-7xl mx-auto w-full h-[calc(100vh-88px)] md:h-auto min-h-0 flex flex-col pb-0 md:pb-12 px-0 sm:px-4">
+    <div className="animate-page-enter max-w-7xl mx-auto w-full h-[calc(100vh-136px)] md:h-auto min-h-0 flex flex-col pb-0 md:pb-12 px-0 sm:px-4">
       {/* Desktop Header - Switches to the right side of the title on desktop */}
       <div className="hidden md:block mb-8 shrink-0">
         <SectionHeader
