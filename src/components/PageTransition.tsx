@@ -16,7 +16,9 @@ export default function PageTransition({ children }: { children: React.ReactNode
   return (
     <div
       key={pathname}
-      className="animate-page-enter flex-1 flex flex-col min-h-0 min-w-0"
+      className={`animate-page-enter flex-1 flex flex-col min-w-0 ${
+        pathname.startsWith('/oracle') ? 'min-h-0 md:min-h-screen' : 'min-h-screen'
+      }`}
     >
       {children}
     </div>
