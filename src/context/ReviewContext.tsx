@@ -136,7 +136,15 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Compute live signals and merge them with review_queue_items (e.g. snoozes / resolutions)
   const computedQueueItems = useMemo(() => {
     const items: ReviewQueueItem[] = [];
+    const seenKeys = new Set<string>();
     const todayStr = getLocalDateString();
+
+    const pushUniqueItem = (item: ReviewQueueItem) => {
+      const dedupeKey = `${item.item_type}:${item.item_id}:${item.reason}`;
+      if (seenKeys.has(dedupeKey)) return;
+      seenKeys.add(dedupeKey);
+      items.push(item);
+    };
     
     // Helper to check if a specific item is resolved or currently snoozed
     const getStoredStatus = (itemId: string, itemType: string) => {
@@ -163,7 +171,7 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         const { status, stored } = getStoredStatus(item.id, 'inbox_item');
         
         if (status === 'open') {
-          items.push({
+          pushUniqueItem({
             id: stored?.id || `computed-inbox-${item.id}`,
             user_id: user?.id || '',
             item_type: 'inbox_item',
@@ -194,7 +202,7 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (status === 'open') {
           // Check for no active tasks
           if (activeTasks.length === 0) {
-            items.push({
+            pushUniqueItem({
               id: stored?.id || `computed-project-no-action-${project.id}`,
               user_id: user?.id || '',
               item_type: 'project',
@@ -217,7 +225,7 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
               projectTasks.every(t => new Date(t.created_at || '') < fourteenDaysAgo && (t.status !== 'done' || !t.due_date || new Date(t.due_date) < fourteenDaysAgo));
             
             if (isStale) {
-              items.push({
+              pushUniqueItem({
                 id: stored?.id || `computed-project-stale-${project.id}`,
                 user_id: user?.id || '',
                 item_type: 'project',
@@ -250,7 +258,7 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
           const { status, stored } = getStoredStatus(qId, 'question');
           
           if (status === 'open') {
-            items.push({
+            pushUniqueItem({
               id: stored?.id || `computed-question-${qId}`,
               user_id: user?.id || '',
               item_type: 'question',
@@ -275,7 +283,7 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (task.status !== 'done' && task.priority === 'high' && !task.due_date) {
         const { status, stored } = getStoredStatus(task.id, 'task');
         if (status === 'open') {
-          items.push({
+          pushUniqueItem({
             id: stored?.id || `computed-task-${task.id}`,
             user_id: user?.id || '',
             item_type: 'task',
@@ -302,7 +310,7 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (createdDate < sevenDaysAgo) {
         const { status, stored } = getStoredStatus(note.id, 'knowledge');
         if (status === 'open') {
-          items.push({
+          pushUniqueItem({
             id: stored?.id || `computed-knowledge-${note.id}`,
             user_id: user?.id || '',
             item_type: 'knowledge',
