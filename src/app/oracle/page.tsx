@@ -8,25 +8,24 @@ import BlueprintContextViewer from '@/components/oracle/BlueprintContextViewer';
 export default function OraclePage() {
   const [activeTab, setActiveTab] = useState<'chat' | 'context'>('chat');
 
-  // Shared Tab Switcher Markup
   const tabSwitcher = (
-    <div className="flex border border-border bg-surface p-0.5 w-full max-w-[240px] shrink-0 shadow-[0_2px_8px_rgba(26,28,30,0.04)]">
+    <div className="flex border border-border bg-neutral-bg/60 p-0.5 w-full max-w-[200px] shrink-0 rounded-none select-none">
       <button
         onClick={() => setActiveTab('chat')}
-        className={`flex-1 py-1.5 text-xs font-label uppercase tracking-widest text-center transition-colors cursor-pointer rounded-none ${
+        className={`flex-1 py-1 px-3 text-[10px] font-label uppercase tracking-[0.2em] text-center transition-all cursor-pointer rounded-none ${
           activeTab === 'chat'
-            ? 'bg-primary text-on-primary'
-            : 'text-primary hover:bg-neutral-bg'
+            ? 'bg-surface border border-border text-primary font-bold shadow-[0_1px_3px_rgba(0,0,0,0.05)]'
+            : 'text-secondary/80 hover:text-primary border border-transparent bg-transparent'
         }`}
       >
         Chat
       </button>
       <button
         onClick={() => setActiveTab('context')}
-        className={`flex-1 py-1.5 text-xs font-label uppercase tracking-widest text-center transition-colors cursor-pointer rounded-none ${
+        className={`flex-1 py-1 px-3 text-[10px] font-label uppercase tracking-[0.2em] text-center transition-all cursor-pointer rounded-none ${
           activeTab === 'context'
-            ? 'bg-primary text-on-primary'
-            : 'text-primary hover:bg-neutral-bg'
+            ? 'bg-surface border border-border text-primary font-bold shadow-[0_1px_3px_rgba(0,0,0,0.05)]'
+            : 'text-secondary/80 hover:text-primary border border-transparent bg-transparent'
         }`}
       >
         Context
