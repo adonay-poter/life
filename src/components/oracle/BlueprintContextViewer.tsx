@@ -84,8 +84,9 @@ export default function BlueprintContextViewer() {
   };
 
   return (
-    <article className="flex h-full min-h-[620px] flex-col overflow-hidden border border-border bg-surface">
-      <div className="border-b border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.92),rgba(247,245,242,0.72))] p-6 shrink-0">
+    <article className="flex h-full sm:min-h-[620px] min-h-0 flex-col overflow-hidden border border-border bg-surface">
+      {/* Desktop Header (Hidden on Mobile) */}
+      <div className="hidden sm:block border-b border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.92),rgba(247,245,242,0.72))] p-6 shrink-0">
         <div className="flex flex-col items-start justify-between gap-4 lg:flex-row">
           <div className="max-w-lg">
             <h3 className="font-display text-2xl font-bold text-primary">
@@ -125,9 +126,34 @@ export default function BlueprintContextViewer() {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-hidden p-4 sm:p-5">
+      {/* Mobile Compact Header (Hidden on Desktop) */}
+      <div className="flex sm:hidden items-center justify-between border-b border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.92),rgba(247,245,242,0.72))] px-4 py-2.5 shrink-0">
+        <h3 className="font-serif italic text-xs text-primary font-bold">
+          Soul Blueprint
+        </h3>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleCopy}
+            disabled={!snapshot || !activeMarkdown}
+            className="flex h-7 w-7 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary disabled:opacity-50 cursor-pointer"
+            title="Copy"
+          >
+            <Copy className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            className="flex h-7 w-7 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary disabled:opacity-50 cursor-pointer"
+            title="Refresh"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${regenerating ? 'animate-spin' : ''}`} />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 min-h-0 overflow-hidden p-2 sm:p-5">
         <div className="flex h-full min-h-0 flex-col border border-border bg-neutral-bg/40">
-          <div className="border-b border-border bg-surface/80 px-4 py-3 shrink-0">
+          <div className="border-b border-border bg-surface/80 px-2 py-2 sm:px-4 sm:py-3 shrink-0">
             <div className="flex gap-2 overflow-x-auto pb-1">
               {sectionKeys.map((section) => {
                 const isActive = activeSection === section;
@@ -136,9 +162,9 @@ export default function BlueprintContextViewer() {
                     key={section}
                     type="button"
                     onClick={() => setActiveSection(section)}
-                    className={`shrink-0 border px-3 py-2 text-[10px] font-label uppercase tracking-[0.24em] transition-colors ${
+                    className={`shrink-0 border px-2.5 py-1.5 text-[9px] sm:px-3 sm:py-2 sm:text-[10px] font-label uppercase tracking-[0.24em] transition-colors ${
                       isActive
-                        ? 'border-primary bg-primary text-on-primary'
+                        ? 'border-primary bg-primary text-on-primary font-bold'
                         : 'border-border bg-surface text-primary hover:border-primary'
                     }`}
                   >
@@ -149,20 +175,20 @@ export default function BlueprintContextViewer() {
             </div>
           </div>
 
-          <div className="border-b border-border bg-surface/80 px-4 py-3 shrink-0">
-            <div className="flex items-center gap-2 border border-border bg-neutral-bg/40 px-3 py-2 text-secondary">
-              <Search className="h-4 w-4" />
+          <div className="border-b border-border bg-surface/80 px-2 py-2 sm:px-4 sm:py-3 shrink-0">
+            <div className="flex items-center gap-2 border border-border bg-neutral-bg/40 px-3 py-1.5 sm:py-2 text-secondary">
+              <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               <input
                 type="text"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Find in context"
-                className="w-full bg-transparent text-sm text-primary outline-none placeholder:text-secondary"
+                className="w-full bg-transparent text-xs sm:text-sm text-primary outline-none placeholder:text-secondary"
               />
             </div>
           </div>
 
-          <div className="flex-1 min-h-0 p-4">
+          <div className="flex-1 min-h-0 p-2 sm:p-4">
             {loading ? (
               <div className="flex h-full items-center justify-center border border-border bg-surface p-8">
                 <span className="font-serif italic text-secondary text-sm">Loading snapshot...</span>
@@ -174,7 +200,7 @@ export default function BlueprintContextViewer() {
                 </p>
               </div>
             ) : (
-              <div className="h-full min-h-0 overflow-y-auto border border-border bg-surface p-4 font-sans text-xs leading-6 text-primary whitespace-pre-wrap break-words">
+              <div className="h-full min-h-0 overflow-y-auto border border-border bg-surface p-3 sm:p-4 font-sans text-xs leading-6 text-primary whitespace-pre-wrap break-words">
                 {renderContent()}
               </div>
             )}
