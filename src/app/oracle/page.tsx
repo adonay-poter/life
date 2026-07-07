@@ -42,17 +42,17 @@ export default function OraclePage() {
         </button>
       </div>
 
-      {/* Main Responsive Grid Layout */}
-      <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-5 items-stretch flex-1 min-h-0">
+      {/* Main Responsive Grid Layout - Enforces fixed height on desktop */}
+      <div className="grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-5 items-stretch flex-1 md:h-[calc(100vh-240px)] md:min-h-[550px] min-h-0">
         {/* Left Column / Mobile Context Tab */}
-        <div className={`md:col-span-2 h-full min-h-0 ${
+        <div className={`md:col-span-2 h-[550px] md:h-full min-h-0 ${
           activeTab === 'context' ? 'block' : 'hidden md:block'
         }`}>
           <BlueprintContextViewer />
         </div>
 
         {/* Right Column / Mobile Chat Tab */}
-        <div className={`md:col-span-3 h-full min-h-0 ${
+        <div className={`md:col-span-3 h-[600px] md:h-full min-h-0 ${
           activeTab === 'chat' ? 'block' : 'hidden md:block'
         }`}>
           <OracleChat />

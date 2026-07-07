@@ -1,11 +1,12 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useSystem } from './SystemContext';
 import { useAuth } from './AuthContext';
 import { recordActivityEvent } from '@/utils/activityEvents';
+import { CLIENT_STORE_SYNC_EVENT, emitClientStoreSync, readStoredJson } from '@/utils/clientStoreSync';
 
 export interface InboxItem {
   id: string;
@@ -67,6 +68,25 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
   const { user } = useAuth();
+  const inboxItemsRef = useRef<InboxItem[]>([]);
+
+  useEffect(() => {
+    inboxItemsRef.current = inboxItems;
+  }, [inboxItems]);
+
+  const commitInboxItems = (updater: InboxItem[] | ((current: InboxItem[]) => InboxItem[])) => {
+    let nextItems: InboxItem[] = [];
+
+    setInboxItems((current) => {
+      nextItems = typeof updater === 'function' ? updater(current) : updater;
+      inboxItemsRef.current = nextItems;
+      localStorage.setItem('heritage_inbox', JSON.stringify(nextItems));
+      emitClientStoreSync('heritage_inbox');
+      return nextItems;
+    });
+
+    return nextItems;
+  };
 
   useEffect(() => {
     const fetchInbox = async () => {
@@ -127,6 +147,38 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     fetchInbox();
   }, [isOnline, refreshKey]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncFromStorage = () => {
+      const stored = readStoredJson<InboxItem[]>('heritage_inbox');
+      if (stored) {
+        inboxItemsRef.current = stored;
+        setInboxItems(stored);
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'heritage_inbox') {
+        syncFromStorage();
+      }
+    };
+
+    const handleStoreSync = (event: Event) => {
+      const detail = (event as CustomEvent<{ key?: string }>).detail;
+      if (detail?.key === 'heritage_inbox') {
+        syncFromStorage();
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener(CLIENT_STORE_SYNC_EVENT, handleStoreSync);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(CLIENT_STORE_SYNC_EVENT, handleStoreSync);
+    };
+  }, []);
+
   const addInboxItem = async (
     type: InboxItem['type'],
     title: string,
@@ -150,9 +202,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       ...extraFields
     };
 
-    const updated = [...inboxItems, newItem];
-    setInboxItems(updated);
-    localStorage.setItem('heritage_inbox', JSON.stringify(updated));
+    commitInboxItems((current) => [...current, newItem]);
 
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').insert(newItem);
@@ -175,7 +225,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const tomorrow = getLocalDateString(new Date(Date.now() + 86400000));
     const targetSnoozedUntil = status === 'snoozed' ? (snoozedUntil || tomorrow) : undefined;
     const processedAt = (status === 'processed' || status === 'task' || status === 'academy' || status === 'knowledge') ? new Date().toISOString() : undefined;
-    const updated = inboxItems.map((item) => {
+    commitInboxItems((current) => current.map((item) => {
       if (item.id === id) {
         return {
           ...item,
@@ -186,10 +236,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } as InboxItem;
       }
       return item;
-    });
-
-    setInboxItems(updated);
-    localStorage.setItem('heritage_inbox', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const dbUpdates: Record<string, unknown> = { status };
@@ -213,7 +260,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const updateInboxItem = async (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => {
-    const updated = inboxItems.map((item) => {
+    commitInboxItems((current) => current.map((item) => {
       if (item.id === id) {
         return {
           ...item,
@@ -221,10 +268,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         } as InboxItem;
       }
       return item;
-    });
-
-    setInboxItems(updated);
-    localStorage.setItem('heritage_inbox', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').update(updates).eq('id', id);
@@ -242,9 +286,7 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const deleteInboxItem = async (id: string) => {
-    const updated = inboxItems.filter((item) => item.id !== id);
-    setInboxItems(updated);
-    localStorage.setItem('heritage_inbox', JSON.stringify(updated));
+    commitInboxItems((current) => current.filter((item) => item.id !== id));
 
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').delete().eq('id', id);

@@ -1,10 +1,11 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { supabase } from '@/utils/supabaseClient';
 import { useSystem } from './SystemContext';
 import { useAuth } from './AuthContext';
 import { recordActivityEvent } from '@/utils/activityEvents';
+import { CLIENT_STORE_SYNC_EVENT, emitClientStoreSync, readStoredJson } from '@/utils/clientStoreSync';
 
 export interface Project {
   id: string;
@@ -110,6 +111,44 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [loading, setLoading] = useState(true);
   const { isOnline, refreshKey } = useSystem();
   const { user } = useAuth();
+  const projectsRef = useRef<Project[]>([]);
+  const tasksRef = useRef<Task[]>([]);
+
+  useEffect(() => {
+    projectsRef.current = projects;
+  }, [projects]);
+
+  useEffect(() => {
+    tasksRef.current = tasks;
+  }, [tasks]);
+
+  const commitProjects = (updater: Project[] | ((current: Project[]) => Project[])) => {
+    let nextProjects: Project[] = [];
+
+    setProjects((current) => {
+      nextProjects = typeof updater === 'function' ? updater(current) : updater;
+      projectsRef.current = nextProjects;
+      localStorage.setItem('heritage_projects', JSON.stringify(nextProjects));
+      emitClientStoreSync('heritage_projects');
+      return nextProjects;
+    });
+
+    return nextProjects;
+  };
+
+  const commitTasks = (updater: Task[] | ((current: Task[]) => Task[])) => {
+    let nextTasks: Task[] = [];
+
+    setTasks((current) => {
+      nextTasks = typeof updater === 'function' ? updater(current) : updater;
+      tasksRef.current = nextTasks;
+      localStorage.setItem('heritage_tasks', JSON.stringify(nextTasks));
+      emitClientStoreSync('heritage_tasks');
+      return nextTasks;
+    });
+
+    return nextTasks;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -157,6 +196,44 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     fetchData();
   }, [isOnline, refreshKey]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const syncProjects = () => {
+      const stored = readStoredJson<Project[]>('heritage_projects');
+      if (stored) {
+        projectsRef.current = stored;
+        setProjects(stored);
+      }
+    };
+
+    const syncTasks = () => {
+      const stored = readStoredJson<Task[]>('heritage_tasks');
+      if (stored) {
+        tasksRef.current = stored;
+        setTasks(stored);
+      }
+    };
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'heritage_projects') syncProjects();
+      if (event.key === 'heritage_tasks') syncTasks();
+    };
+
+    const handleStoreSync = (event: Event) => {
+      const detail = (event as CustomEvent<{ key?: string }>).detail;
+      if (detail?.key === 'heritage_projects') syncProjects();
+      if (detail?.key === 'heritage_tasks') syncTasks();
+    };
+
+    window.addEventListener('storage', handleStorage);
+    window.addEventListener(CLIENT_STORE_SYNC_EVENT, handleStoreSync);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(CLIENT_STORE_SYNC_EVENT, handleStoreSync);
+    };
+  }, []);
+
   const addProject = async (
     area: Project['area'],
     name: string,
@@ -183,9 +260,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
       created_at: new Date().toISOString()
     };
 
-    const updated = [...projects, newProject];
-    setProjects(updated);
-    localStorage.setItem('heritage_projects', JSON.stringify(updated));
+    commitProjects((current) => [...current, newProject]);
 
     if (isOnline) {
       const { error } = await supabase.from('projects').insert(newProject);
@@ -203,15 +278,12 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateProject = async (projectId: string, updates: Partial<Omit<Project, 'id' | 'created_at'>>) => {
-    const updated = projects.map((p) => {
+    commitProjects((current) => current.map((p) => {
       if (p.id === projectId) {
         return { ...p, ...updates };
       }
       return p;
-    });
-
-    setProjects(updated);
-    localStorage.setItem('heritage_projects', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const { error } = await supabase.from('projects').update(updates).eq('id', projectId);
@@ -229,13 +301,8 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const deleteProject = async (id: string) => {
-    const updatedProj = projects.filter((p) => p.id !== id);
-    const updatedTasks = tasks.filter((t) => t.project_id !== id);
-
-    setProjects(updatedProj);
-    setTasks(updatedTasks);
-    localStorage.setItem('heritage_projects', JSON.stringify(updatedProj));
-    localStorage.setItem('heritage_tasks', JSON.stringify(updatedTasks));
+    commitProjects((current) => current.filter((p) => p.id !== id));
+    commitTasks((current) => current.filter((t) => t.project_id !== id));
 
     if (isOnline) {
       const { error } = await supabase.from('projects').delete().eq('id', id);
@@ -244,15 +311,12 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const archiveProject = async (id: string, isArchived: boolean) => {
-    const updated = projects.map((p) => {
+    commitProjects((current) => current.map((p) => {
       if (p.id === id) {
         return { ...p, is_archived: isArchived };
       }
       return p;
-    });
-
-    setProjects(updated);
-    localStorage.setItem('heritage_projects', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const { error } = await supabase.from('projects').update({ is_archived: isArchived }).eq('id', id);
@@ -299,9 +363,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
       created_at: new Date().toISOString()
     };
 
-    const updated = [...tasks, newTask];
-    setTasks(updated);
-    localStorage.setItem('heritage_tasks', JSON.stringify(updated));
+    commitTasks((current) => [...current, newTask]);
 
     if (isOnline) {
       const { error } = await supabase.from('tasks').insert(newTask);
@@ -324,15 +386,12 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateTask = async (taskId: string, updates: Partial<Omit<Task, 'id' | 'created_at'>>) => {
-    const updated = tasks.map((t) => {
+    commitTasks((current) => current.map((t) => {
       if (t.id === taskId) {
         return { ...t, ...updates };
       }
       return t;
-    });
-
-    setTasks(updated);
-    localStorage.setItem('heritage_tasks', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const { error } = await supabase.from('tasks').update(updates).eq('id', taskId);
@@ -350,10 +409,10 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateTaskStatus = async (taskId: string, status: Task['status']) => {
-    const originalTask = tasks.find((t) => t.id === taskId);
+    const originalTask = tasksRef.current.find((t) => t.id === taskId);
     if (!originalTask) return;
 
-    let updatedTasks = [...tasks];
+    let updatedTasks = [...tasksRef.current];
 
     if (status === 'done' && originalTask.recurring !== 'none') {
       const baseDate = new Date(originalTask.due_date || Date.now());
@@ -364,7 +423,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
       else if (originalTask.recurring === 'weekly') nextDueDate.setDate(nextDueDate.getDate() + 7);
       else if (originalTask.recurring === 'monthly') nextDueDate.setMonth(nextDueDate.getMonth() + 1);
 
-      updatedTasks = tasks.map((t) => {
+      updatedTasks = tasksRef.current.map((t) => {
         if (t.id === taskId) {
           return {
             ...t,
@@ -375,7 +434,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
         return t;
       });
     } else {
-      updatedTasks = tasks.map((t) => {
+      updatedTasks = tasksRef.current.map((t) => {
         if (t.id === taskId) {
           const completed_at = status === 'done' ? new Date().toISOString() : undefined;
           return { ...t, status, completed_at };
@@ -384,8 +443,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
       });
     }
 
-    setTasks(updatedTasks);
-    localStorage.setItem('heritage_tasks', JSON.stringify(updatedTasks));
+    commitTasks(updatedTasks);
 
     if (isOnline) {
       const updatedItem = updatedTasks.find((t) => t.id === taskId);
@@ -417,15 +475,12 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateTaskPomodoro = async (taskId: string, count: number) => {
-    const updated = tasks.map((t) => {
+    commitTasks((current) => current.map((t) => {
       if (t.id === taskId) {
         return { ...t, pomodoro_sessions: count };
       }
       return t;
-    });
-
-    setTasks(updated);
-    localStorage.setItem('heritage_tasks', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const { error } = await supabase.from('tasks').update({ pomodoro_sessions: count }).eq('id', taskId);
@@ -434,15 +489,12 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const togglePinTask = async (taskId: string) => {
-    const updated = tasks.map((t) => {
+    const updated = commitTasks((current) => current.map((t) => {
       if (t.id === taskId) {
         return { ...t, is_pinned: !t.is_pinned };
       }
       return t;
-    });
-
-    setTasks(updated);
-    localStorage.setItem('heritage_tasks', JSON.stringify(updated));
+    }));
 
     if (isOnline) {
       const target = updated.find((t) => t.id === taskId);
@@ -454,9 +506,7 @@ export const TaskProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const deleteTask = async (taskId: string) => {
-    const updated = tasks.filter((t) => t.id !== taskId);
-    setTasks(updated);
-    localStorage.setItem('heritage_tasks', JSON.stringify(updated));
+    commitTasks((current) => current.filter((t) => t.id !== taskId));
 
     if (isOnline) {
       const { error } = await supabase.from('tasks').delete().eq('id', taskId);
