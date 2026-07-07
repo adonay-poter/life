@@ -43,6 +43,8 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
   // Collapsed Sidebar States
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
+  const [isForcedCollapsed, setIsForcedCollapsed] = useState(false);
 
   // Load collapse state from localStorage on mount
   useEffect(() => {
@@ -59,20 +61,20 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
     localStorage.setItem('sidebar_collapsed', isCollapsed.toString());
   }, [isCollapsed, isLoaded]);
 
-  // Window Resize Listener to auto-collapse on tablet viewports
+  // Keep the desktop nav usable on tighter laptop widths and heights.
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && window.innerWidth < 1024) {
-        setIsCollapsed(true);
-      } else if (window.innerWidth >= 1200) {
-        setIsCollapsed(false);
-      }
+      setIsCompactLayout(window.innerWidth < 1440 || window.innerHeight < 900);
+      setIsForcedCollapsed(window.innerWidth < 1280 || window.innerHeight < 820);
     };
 
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const isSidebarCollapsed = isCollapsed || isForcedCollapsed;
+  const isDenseMode = isCompactLayout && !isSidebarCollapsed;
 
   // ==========================================
   // METRIC CALCULATIONS
@@ -176,13 +178,25 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
   let itemCounter = 0;
 
   return (
-    <aside className={`app-sidebar-shell ${isCollapsed ? 'w-20 px-3' : 'w-64 px-6'} bg-surface border-r border-border h-screen sticky top-0 flex flex-col justify-between py-6 sidebar-transition hidden md:flex shrink-0 self-start z-40`}>
+    <aside
+      className={`app-sidebar-shell ${
+        isSidebarCollapsed
+          ? 'w-20 px-3 py-4'
+          : isDenseMode
+            ? 'w-56 px-4 py-4'
+            : 'w-64 px-6 py-6'
+      } bg-surface border-r border-border h-[100dvh] sticky top-0 hidden md:flex md:flex-col shrink-0 self-start z-40 overflow-hidden sidebar-transition`}
+    >
       {/* Upper Logo & Nav Section */}
-      <div className="space-y-6 overflow-y-auto max-h-[80vh] no-scrollbar">
-        <div className={`flex ${isCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'} border-b border-border pb-3`}>
-          {!isCollapsed ? (
+      <div className={`flex min-h-0 flex-1 flex-col ${isDenseMode ? 'gap-4' : 'gap-6'}`}>
+        <div
+          className={`flex ${
+            isSidebarCollapsed ? 'flex-col items-center space-y-2' : 'items-center justify-between'
+          } border-b border-border ${isDenseMode ? 'pb-2.5' : 'pb-3'}`}
+        >
+          {!isSidebarCollapsed ? (
             <div>
-              <h1 className="font-amharic text-2xl font-bold tracking-tight text-primary">
+              <h1 className={`font-amharic font-bold tracking-tight text-primary ${isDenseMode ? 'text-xl' : 'text-2xl'}`}>
                 ሁሉ
               </h1>
               <p className="font-label text-xs text-secondary mt-0.5 uppercase tracking-[0.15em]">
@@ -196,25 +210,29 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
           )}
 
           <div className="flex items-center space-x-1">
-            {!isCollapsed && <NotificationCenter />}
+            {!isSidebarCollapsed && <NotificationCenter />}
             <ThemeToggle />
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="text-secondary hover:text-primary p-1 rounded-none hover:bg-neutral-bg cursor-pointer btn-press"
-              title={isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-            >
-              {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
+            {!isForcedCollapsed && (
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                className="text-secondary hover:text-primary p-1 rounded-none hover:bg-neutral-bg cursor-pointer btn-press"
+                title={isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+              >
+                {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Quick Capture Button */}
         {!pathname.startsWith('/oracle') && (
-          <div className="px-1 mb-4">
-            {!isCollapsed ? (
+          <div className="px-1">
+            {!isSidebarCollapsed ? (
               <button
                 onClick={onCaptureTrigger}
-                className="w-full bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-widest font-bold py-3 px-4 rounded-none cursor-pointer flex items-center justify-center gap-2 btn-press"
+                className={`w-full bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-widest font-bold rounded-none cursor-pointer flex items-center justify-center gap-2 btn-press ${
+                  isDenseMode ? 'py-2.5 px-3' : 'py-3 px-4'
+                }`}
               >
                 <Plus className="h-4 w-4" />
                 <span>Quick Capture</span>
@@ -233,11 +251,13 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
         )}
 
         {/* Navigation Menu */}
-        <nav className="space-y-4">
+        <nav className={`flex-1 min-h-0 overflow-y-auto no-scrollbar ${isDenseMode ? 'space-y-3' : 'space-y-4'}`}>
           {navigationGroups.map((group) => (
             <div key={group.groupName} className="space-y-1">
-              {!isCollapsed && (
-                <span className="font-label text-[10px] text-secondary uppercase tracking-[0.2em] font-semibold px-4 block">
+              {!isSidebarCollapsed && (
+                <span className={`font-label text-[10px] text-secondary uppercase tracking-[0.2em] font-semibold block ${
+                  isDenseMode ? 'px-3' : 'px-4'
+                }`}>
                   {group.groupName}
                 </span>
               )}
@@ -250,20 +270,24 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
                     key={item.name}
                     href={item.href}
                     className={`nav-link stagger-item flex items-center ${
-                      isCollapsed ? 'justify-center px-2 py-3' : 'space-x-3 px-4 py-2.5'
+                      isSidebarCollapsed
+                        ? 'justify-center px-2 py-3'
+                        : isDenseMode
+                          ? 'space-x-3 px-3 py-2'
+                          : 'space-x-3 px-4 py-2.5'
                     } text-sm font-label tracking-wide rounded-none relative group ${
                       isActive
                         ? 'bg-primary text-on-primary font-bold border-l-2 border-accent'
                         : 'text-primary hover:bg-neutral-bg border-l-2 border-transparent hover:border-border'
                     }`}
                     style={{ '--stagger-i': index } as React.CSSProperties}
-                    title={isCollapsed ? item.name : undefined}
+                    title={isSidebarCollapsed ? item.name : undefined}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    {!isCollapsed && <span>{item.name}</span>}
+                    {!isSidebarCollapsed && <span className={isDenseMode ? 'text-[13px]' : ''}>{item.name}</span>}
 
                     {/* Collapsed Tooltip Overlay */}
-                    {isCollapsed && (
+                    {isSidebarCollapsed && (
                       <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-none opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap border border-border shadow-none">
                         {item.name}
                       </div>
@@ -277,15 +301,15 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
       </div>
 
       {/* Footer Section: Life Score & Status */}
-      <div className="space-y-4 pt-4 border-t border-border flex flex-col items-center">
+      <div className={`w-full border-t border-border ${isDenseMode ? 'pt-3' : 'pt-4'} flex flex-col items-center ${isDenseMode ? 'gap-3' : 'gap-4'}`}>
         {/* Dynamic Life Score */}
-        {!isCollapsed ? (
-          <div className="bg-neutral-bg border border-border p-4 rounded-none w-full">
+        {!isSidebarCollapsed ? (
+          <div className={`bg-neutral-bg border border-border rounded-none w-full ${isDenseMode ? 'p-3' : 'p-4'}`}>
             <div className="flex justify-between items-center mb-1">
               <span className="font-label text-xs text-secondary uppercase tracking-[0.1em]">
                 Life Score
               </span>
-              <span className="font-display text-lg font-bold text-accent">{lifeScore}%</span>
+              <span className={`font-display font-bold text-accent ${isDenseMode ? 'text-base' : 'text-lg'}`}>{lifeScore}%</span>
             </div>
             <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
               <div
@@ -314,13 +338,17 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
         <button
           onClick={signOut}
           className={`flex items-center ${
-            isCollapsed ? 'justify-center p-2.5 w-10 h-10' : 'space-x-3 px-4 py-2.5 w-full'
+            isSidebarCollapsed
+              ? 'justify-center p-2.5 w-10 h-10'
+              : isDenseMode
+                ? 'space-x-3 px-3 py-2 w-full'
+                : 'space-x-3 px-4 py-2.5 w-full'
           } text-sm font-label tracking-wide rounded-none text-secondary hover:text-accent hover:bg-neutral-bg border border-transparent hover:border-border cursor-pointer relative group btn-press`}
-          title={isCollapsed ? 'Log Out' : undefined}
+          title={isSidebarCollapsed ? 'Log Out' : undefined}
         >
           <LogOut className="h-4 w-4 shrink-0" />
-          {!isCollapsed && <span>Log Out</span>}
-          {isCollapsed && (
+          {!isSidebarCollapsed && <span>Log Out</span>}
+          {isSidebarCollapsed && (
             <div className="absolute left-full ml-2 px-2.5 py-1.5 bg-primary text-on-primary text-xs uppercase font-label tracking-wider rounded-none opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-50 whitespace-nowrap border border-border shadow-none">
               Log Out
             </div>
@@ -328,7 +356,7 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
         </button>
 
         {/* Connection & Sync Status Indicators */}
-        {!isCollapsed ? (
+        {!isSidebarCollapsed ? (
           <div className="flex items-center justify-between font-label text-xs text-secondary w-full">
             <div className="flex items-center space-x-1.5">
               {isOnline ? (

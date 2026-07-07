@@ -72,13 +72,13 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
           <DashboardProvider>
             <SoulBlueprintProvider>
               <PWARegister />
-              <div className="min-h-screen bg-neutral-bg flex flex-col md:flex-row text-primary">
+              <div className="min-h-screen bg-neutral-bg flex flex-col md:flex-row md:items-start text-primary">
                 {/* Navigation */}
                 <Sidebar onCaptureTrigger={() => setIsCaptureOpen(true)} />
                 <MobileNav onCaptureTrigger={() => setIsCaptureOpen(true)} />
 
                 {/* Main Content Area — PageTransition re-mounts on every route change */}
-                <main className="flex-1 flex flex-col min-h-screen overflow-x-hidden px-4 py-6 md:p-12 pb-24 md:pb-12 max-w-7xl mx-auto w-full">
+                <main className="flex-1 min-w-0 flex flex-col min-h-screen px-4 py-6 md:px-6 md:py-8 lg:px-8 lg:py-10 xl:px-12 xl:py-12 pb-24 md:pb-12 max-w-7xl mx-auto w-full">
                   <PageTransition>{children}</PageTransition>
                 </main>
 

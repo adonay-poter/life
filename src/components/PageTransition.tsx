@@ -16,7 +16,7 @@ export default function PageTransition({ children }: { children: React.ReactNode
   return (
     <div
       key={pathname}
-      className="animate-page-enter flex-1 flex flex-col min-h-screen overflow-x-hidden"
+      className="animate-page-enter flex-1 flex flex-col min-h-screen min-w-0"
     >
       {children}
     </div>
