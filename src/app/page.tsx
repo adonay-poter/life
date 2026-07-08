@@ -27,8 +27,9 @@ import { useToast } from '@/context/ToastContext';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
+import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
-import { Input } from '@/components/ui/Inputs';
+import { Input, Textarea, Select } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 export default function DashboardHome() {
@@ -67,7 +68,6 @@ export default function DashboardHome() {
     focusEngine: true,
     sectorsSkills: true,
     dailyReflections: true,
-    reviewQueuePreview: true,
   });
   const [showConfig, setShowConfig] = useState(false);
 
@@ -350,24 +350,25 @@ export default function DashboardHome() {
         subtitle="Today’s operating picture"
         meta={formattedDate}
         action={
-          <div className="flex items-center space-x-2">
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <button
               onClick={handleManualRefresh}
               disabled={syncPending}
-              className="text-secondary hover:text-primary p-2 border border-border hover:border-primary transition-all rounded-none bg-surface cursor-pointer btn-press"
+              className="btn-press inline-flex min-h-11 items-center justify-center rounded-2xl border border-border bg-surface px-4 py-2.5 font-label text-xs font-semibold uppercase tracking-[0.18em] text-secondary transition-all hover:border-primary hover:text-primary"
               title="Refresh Stats"
             >
               <RefreshCw className={`h-4 w-4 ${syncPending ? 'animate-spin text-accent' : ''}`} />
+              <span>Refresh</span>
             </button>
             <button
               onClick={() => setShowConfig(!showConfig)}
-              className={`p-2 border transition-all rounded-none bg-surface cursor-pointer flex items-center space-x-1.5 btn-press ${
-                showConfig ? 'border-primary text-primary font-bold' : 'text-secondary border-border hover:border-primary'
+              className={`btn-press inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl border bg-surface px-4 py-2.5 font-label text-xs font-semibold uppercase tracking-[0.18em] transition-all ${
+                showConfig ? 'border-primary text-primary' : 'text-secondary border-border hover:border-primary hover:text-primary'
               }`}
               title="Customize Layout"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              <span className="font-label text-xs uppercase tracking-wider hidden sm:inline">Customize</span>
+              <span>Layout</span>
             </button>
           </div>
         }
@@ -375,27 +376,32 @@ export default function DashboardHome() {
 
       {/* Widget Visibility Config Box */}
       {showConfig && (
-        <div className="bg-surface border border-primary p-5 font-label text-xs space-y-3 shadow-none animate-fade-in">
-          <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
-            Customize Dashboard Layout
-          </span>
-          <div className="flex flex-wrap gap-3 pt-1">
+        <div className="app-panel px-5 py-5 sm:px-6 sm:py-6 animate-fade-in">
+          <div className="flex flex-col gap-2 border-b border-border pb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="app-kicker">Layout</p>
+              <h2 className="mt-2 font-display text-2xl text-primary">Show only what helps you move</h2>
+            </div>
+            <p className="max-w-md text-sm leading-relaxed text-secondary">
+              Keep the dashboard lean. Hide blocks you do not need for your daily operating view.
+            </p>
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3">
             {[
               { key: 'macroMetrics', label: 'Composite Stats & Chart' },
               { key: 'focusEngine', label: 'Today Focus & Quick Capture' },
               { key: 'sectorsSkills', label: 'Projects & Academy Progress' },
-              { key: 'dailyReflections', label: 'Daily Reflections (Journal)' },
-              { key: 'reviewQueuePreview', label: 'Decision Queue (Review)' }
+              { key: 'dailyReflections', label: 'Daily Reflections (Journal)' }
             ].map((widget) => {
               const visible = widgetsVisibility[widget.key as keyof typeof widgetsVisibility];
               return (
                 <button
                   key={widget.key}
                   onClick={() => toggleWidget(widget.key as keyof typeof widgetsVisibility)}
-                  className={`px-3 py-1.5 border flex items-center space-x-2 transition-all uppercase font-bold rounded-none cursor-pointer btn-press ${
+                  className={`btn-press inline-flex min-h-11 items-center gap-2 rounded-2xl border px-4 py-2.5 text-left font-label text-[11px] font-semibold uppercase tracking-[0.16em] transition-all ${
                     visible
                       ? 'bg-primary text-on-primary border-primary'
-                      : 'bg-surface text-secondary border-border hover:border-primary'
+                      : 'bg-surface text-secondary border-border hover:border-primary hover:text-primary'
                   }`}
                 >
                   {visible ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
@@ -407,11 +413,11 @@ export default function DashboardHome() {
         </div>
       )}
 
-      <section className="bg-surface border border-primary">
+      <section className="app-panel overflow-hidden">
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.95fr)]">
           <div className="p-5 md:p-7 border-b xl:border-b-0 xl:border-r border-border">
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="font-label text-[10px] bg-accent text-on-accent px-2 py-1 uppercase tracking-wider font-bold">
+              <span className="rounded-full bg-accent px-2.5 py-1 font-label text-[10px] font-bold uppercase tracking-[0.18em] text-on-accent">
                 Command Brief
               </span>
               <span className="font-label text-[10px] text-secondary uppercase tracking-[0.16em]">
@@ -423,7 +429,7 @@ export default function DashboardHome() {
                 </span>
               )}
             </div>
-            <h2 className="font-display text-2xl md:text-4xl font-bold text-primary leading-tight max-w-3xl">
+            <h2 className="font-display text-[2rem] md:text-[3.25rem] font-bold text-primary leading-[0.95] max-w-3xl tracking-[-0.04em]">
               {todayFocus ? todayFocus : "Pick the most important outcome, then keep the system moving."}
             </h2>
             <p className="font-sans text-sm text-secondary max-w-2xl leading-relaxed mt-4">
@@ -436,13 +442,13 @@ export default function DashboardHome() {
             <div className="flex flex-col sm:flex-row gap-3 mt-6 font-label text-xs uppercase tracking-wider font-bold">
               <Link
                 href={!todayFocus ? "/review/midday" : "/review/evening"}
-                className="bg-accent text-on-accent hover:opacity-95 transition-all py-3 px-5 text-center btn-press"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-accent px-5 py-3 text-center font-label text-xs font-bold uppercase tracking-[0.18em] text-on-accent shadow-[0_14px_28px_rgba(184,66,46,0.2)] transition-all btn-press"
               >
                 {!todayFocus ? "Start Checkpoint" : "Close the Day"}
               </Link>
               <Link
                 href="/tasks?tab=today"
-                className="border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 px-5 text-center btn-press"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-primary px-5 py-3 text-center font-label text-xs font-bold uppercase tracking-[0.18em] text-primary transition-all hover:bg-primary hover:text-on-primary btn-press"
               >
                 Work Today’s Tasks
               </Link>
@@ -455,7 +461,7 @@ export default function DashboardHome() {
                 <Link
                   key={signal.label}
                   href={signal.href}
-                  className="min-h-32 border-b border-r border-border even:border-r-0 xl:[&:nth-child(n+3)]:border-b-0 p-4 flex flex-col justify-between hover:bg-neutral-bg/55 transition-colors btn-press"
+                  className="min-h-32 border-b border-r border-border even:border-r-0 xl:[&:nth-child(n+3)]:border-b-0 p-4 flex flex-col justify-between hover:bg-surface-muted/70 transition-colors btn-press"
                 >
                   <div className="flex items-center justify-between">
                     <Icon className={`h-4 w-4 ${signal.urgent ? 'text-accent' : 'text-secondary'}`} />
@@ -541,9 +547,12 @@ export default function DashboardHome() {
             </div>
           </EditorialCard>
         ) : (
-          <div className="lg:col-span-4 bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[300px]">
-            <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Metrics Widget Hidden</span>
-            <button onClick={() => toggleWidget('macroMetrics')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
+          <div className="lg:col-span-4">
+            <EmptyState
+              title="Metrics widget hidden"
+              description="Restore this dashboard panel when you want your macro metrics back in view."
+              action={<SecondaryButton onClick={() => toggleWidget('macroMetrics')}>Restore Widget</SecondaryButton>}
+            />
           </div>
         )}
 
@@ -564,7 +573,7 @@ export default function DashboardHome() {
                     return (
                       <div
                         key={task.id}
-                        className="flex items-start space-x-3 p-3 bg-background border border-border rounded-none group transition-all hover:border-primary"
+                        className="app-panel-subtle flex items-start space-x-3 p-4 group transition-all hover:border-primary"
                       >
                         <button
                           onClick={() => {
@@ -627,12 +636,11 @@ export default function DashboardHome() {
                     );
                   })
                 ) : (
-                  <div className="text-center py-12 border border-dashed border-border bg-background/40 rounded-none">
-                    <p className="font-sans text-xs text-secondary italic">All focus items completed.</p>
-                    <Link href="/tasks?tab=today" className="font-label text-xs text-accent uppercase tracking-wider underline mt-2 block">
-                      View Tasks Workspace →
-                    </Link>
-                  </div>
+                  <EmptyState
+                    title="All focus items completed"
+                    description="Your current focus queue is clear. Open the task workspace if you want to pull in another item."
+                    action={<SecondaryButton onClick={() => { window.location.href = '/tasks?tab=today'; }}>View Tasks Workspace</SecondaryButton>}
+                  />
                 )}
               </div>
 
@@ -647,12 +655,12 @@ export default function DashboardHome() {
                   </span>
                 </div>
                 <form onSubmit={handleQuickActionSubmit} className="space-y-3 font-label text-xs">
-                  <div className="flex border border-border text-xs rounded-none overflow-hidden bg-background">
+                  <div className="flex rounded-2xl border border-border bg-surface p-1 text-xs">
                     <button
                       type="button"
                       onClick={() => setQaType('task')}
-                      className={`flex-1 py-1.5 flex items-center justify-center transition-all ${
-                        qaType === 'task' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-background/50'
+                      className={`flex-1 rounded-xl py-2 flex items-center justify-center transition-all ${
+                        qaType === 'task' ? 'bg-primary text-on-primary font-bold shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
                       }`}
                     >
                       TASK
@@ -660,8 +668,8 @@ export default function DashboardHome() {
                     <button
                       type="button"
                       onClick={() => setQaType('inbox')}
-                      className={`flex-1 py-1.5 flex items-center justify-center transition-all border-l border-border ${
-                        qaType === 'inbox' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-background/50'
+                      className={`flex-1 rounded-xl py-2 flex items-center justify-center transition-all ${
+                        qaType === 'inbox' ? 'bg-primary text-on-primary font-bold shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
                       }`}
                     >
                       INBOX ITEM
@@ -679,37 +687,37 @@ export default function DashboardHome() {
                     
                     {qaType === 'task' && (
                       <div className="grid grid-cols-2 gap-2">
-                        <select
+                        <Select
                           value={qaProjId}
                           onChange={(e) => setQaProjId(e.target.value)}
-                          className="bg-surface border border-border px-1.5 py-1 focus:outline-none w-full text-xs font-sans rounded-none"
-                        >
-                          <option value="">Standalone (None)</option>
-                          {projects.map((p) => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
-                        <select
+                          className="text-xs"
+                          options={[
+                            { value: '', label: 'Standalone (None)' },
+                            ...projects.map((p) => ({ value: p.id, label: p.name }))
+                          ]}
+                        />
+                        <Select
                           value={qaCategory}
                           onChange={(e) => setQaCategory(e.target.value as Task['category'])}
-                          className="bg-surface border border-border px-1.5 py-1 focus:outline-none w-full text-xs font-sans rounded-none"
-                        >
-                          <option value="Work">Work</option>
-                          <option value="Personal">Personal</option>
-                          <option value="Urgent">Urgent</option>
-                          <option value="Learning">Learning</option>
-                          <option value="Other">Other</option>
-                        </select>
+                          className="text-xs"
+                          options={[
+                            { value: 'Work', label: 'Work' },
+                            { value: 'Personal', label: 'Personal' },
+                            { value: 'Urgent', label: 'Urgent' },
+                            { value: 'Learning', label: 'Learning' },
+                            { value: 'Other', label: 'Other' }
+                          ]}
+                        />
                       </div>
                     )}
 
                     <div className="flex gap-2 items-center">
-                      <input
+                      <Input
                         type="text"
                         value={qaNotes}
                         onChange={(e) => setQaNotes(e.target.value)}
                         placeholder={qaType === 'task' ? "Description (optional)..." : "Notes / URL detail..."}
-                        className="flex-1 bg-neutral-bg border border-border px-2 py-2 text-xs focus:outline-none focus:border-accent font-sans rounded-none transition-colors"
+                        className="flex-1 text-xs"
                       />
                       {/* One accent action per screen: Add Button is Accent Crimson/Coral */}
                       <PrimaryButton type="submit" className="shrink-0">
@@ -722,9 +730,12 @@ export default function DashboardHome() {
             </div>
           </EditorialCard>
         ) : (
-          <div className="lg:col-span-5 bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[300px]">
-            <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Focus Widget Hidden</span>
-            <button onClick={() => toggleWidget('focusEngine')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
+          <div className="lg:col-span-5">
+            <EmptyState
+              title="Focus widget hidden"
+              description="Restore this panel when you want your current task queue and quick capture tools back on the home screen."
+              action={<SecondaryButton onClick={() => toggleWidget('focusEngine')}>Restore Widget</SecondaryButton>}
+            />
           </div>
         )}
 
@@ -732,55 +743,7 @@ export default function DashboardHome() {
             COLUMN 3: SECTORS & REFLECTIONS
            ========================================== */}
         <div className="lg:col-span-3 space-y-6 flex flex-col justify-start">
-          {/* Decision Queue Widget */}
-          {widgetsVisibility.reviewQueuePreview ? (
-            <EditorialCard
-              title={`Decision Queue (${computedQueueItems.length})`}
-              subtitle="Triage & Staleness Signals"
-            >
-              <div className="space-y-4">
-                {computedQueueItems.length > 0 ? (
-                  <div className="space-y-3">
-                    {computedQueueItems.slice(0, 3).map((item) => (
-                      <div key={item.id} className="p-3 bg-background border border-border text-xs space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="font-label text-[9px] uppercase font-bold text-accent">{item.item_type}</span>
-                          <button
-                            onClick={() => {
-                              resolveQueueItem(item.item_id, item.item_type);
-                              showToast('Resolved decision item.', 'success');
-                            }}
-                            className="font-label text-[8px] uppercase font-bold text-secondary hover:text-accent cursor-pointer"
-                          >
-                            Resolve
-                          </button>
-                        </div>
-                        <p className="font-sans font-bold text-primary truncate">{item.title}</p>
-                        <p className="font-sans text-[10px] text-danger italic">{item.reason}</p>
-                      </div>
-                    ))}
-                    <div className="pt-2 border-t border-border/40">
-                      <Link
-                        href="/review"
-                        className="w-full text-center border border-primary hover:bg-primary hover:text-on-primary transition-all py-2 px-3 font-label text-xs uppercase tracking-wider font-bold block"
-                      >
-                        Open Review Room
-                      </Link>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-6">
-                    <p className="font-sans text-xs text-secondary italic">Nothing needs a decision right now.</p>
-                  </div>
-                )}
-              </div>
-            </EditorialCard>
-          ) : (
-            <div className="bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[120px]">
-              <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Decision Queue Hidden</span>
-              <button onClick={() => toggleWidget('reviewQueuePreview')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
-            </div>
-          )}
+
           {/* Projects & Academy Progress Widget */}
           {widgetsVisibility.sectorsSkills ? (
             <EditorialCard
@@ -806,7 +769,7 @@ export default function DashboardHome() {
                             </span>
                             <span className="font-label text-xs font-bold text-accent shrink-0">{progress}%</span>
                           </div>
-                          <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
+                          <div className="w-full bg-secondary/10 h-2 rounded-full overflow-hidden">
                             <div
                               className="bg-primary h-full transition-all duration-300"
                               style={{ width: `${progress}%` }}
@@ -816,9 +779,10 @@ export default function DashboardHome() {
                       );
                     })
                   ) : (
-                    <p className="font-sans text-xs text-secondary italic border border-dashed border-border p-3">
-                      No active projects are currently open.
-                    </p>
+                    <EmptyState
+                      title="No active projects"
+                      description="Active projects will appear here once you have open work in motion."
+                    />
                   )}
                 </div>
 
@@ -847,7 +811,7 @@ export default function DashboardHome() {
                             </span>
                             <span className="font-label text-xs font-bold text-accent shrink-0">{progress}%</span>
                           </div>
-                          <div className="w-full bg-secondary/10 h-1 rounded-none overflow-hidden">
+                          <div className="w-full bg-secondary/10 h-2 rounded-full overflow-hidden">
                             <div
                               className="bg-primary h-full transition-all duration-300"
                               style={{ width: `${progress}%` }}
@@ -857,16 +821,17 @@ export default function DashboardHome() {
                       );
                     })
                   ) : (
-                    <p className="font-sans text-xs text-secondary italic border border-dashed border-border p-3">
-                      No courses have been added yet.
-                    </p>
+                    <EmptyState
+                      title="No courses yet"
+                      description="Your active learning tracks will appear here once courses are added."
+                    />
                   )}
                 </div>
 
                 <div className="pt-2">
                   <Link
                     href="/habits"
-                    className="w-full flex items-center justify-between border border-primary hover:bg-primary hover:text-on-primary transition-all py-2.5 px-4 font-label text-xs tracking-wider uppercase rounded-none"
+                    className="w-full flex items-center justify-between rounded-2xl border border-primary hover:bg-primary hover:text-on-primary transition-all py-3 px-4 font-label text-xs tracking-wider uppercase"
                   >
                     <span>Track Habits & Health</span>
                     <ChevronRight className="h-4 w-4" />
@@ -875,10 +840,11 @@ export default function DashboardHome() {
               </div>
             </EditorialCard>
           ) : (
-            <div className="bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[200px] flex-1">
-              <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Sectors Widget Hidden</span>
-              <button onClick={() => toggleWidget('sectorsSkills')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
-            </div>
+            <EmptyState
+              title="Projects and learning hidden"
+              description="Restore this panel when you want your project and course progress back on the dashboard."
+              action={<SecondaryButton onClick={() => toggleWidget('sectorsSkills')}>Restore Widget</SecondaryButton>}
+            />
           )}
 
           {/* Daily Reflections / Journal Prompt Widget */}
@@ -889,7 +855,7 @@ export default function DashboardHome() {
             >
               <div className="space-y-4">
                 {todayJournal ? (
-                  <div className="space-y-3 bg-background border border-border p-4 rounded-none">
+                  <div className="app-panel-subtle space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="font-label text-xs text-success font-bold uppercase tracking-wide">✓ Completed Today</span>
                       <Link href="/journal" className="font-label text-xs text-accent hover:underline uppercase font-bold tracking-wider">Full Log</Link>
@@ -904,13 +870,13 @@ export default function DashboardHome() {
                       <span className="font-sans text-xs text-secondary italic">No reflections logged today.</span>
                       <Link href="/journal" className="font-label text-xs text-accent hover:underline uppercase font-bold tracking-wider">Full Editor</Link>
                     </div>
-                    <textarea
+                    <Textarea
                       value={quickReflection}
                       onChange={(e) => setQuickReflection(e.target.value)}
                       placeholder="Log a quick daily thought or reflection here..."
                       required
                       rows={3}
-                      className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs text-primary focus:outline-none focus:border-accent font-sans resize-none rounded-none transition-colors"
+                      className="text-xs resize-none"
                     />
                     <PrimaryButton
                       type="submit"
@@ -924,10 +890,11 @@ export default function DashboardHome() {
               </div>
             </EditorialCard>
           ) : (
-            <div className="bg-surface border border-dashed border-border p-6 flex flex-col justify-center items-center text-center rounded-none min-h-[150px]">
-              <span className="font-label text-xs text-secondary uppercase tracking-widest block mb-2">Reflections Widget Hidden</span>
-              <button onClick={() => toggleWidget('dailyReflections')} className="text-xs text-accent underline font-bold uppercase tracking-wider cursor-pointer font-semibold">Restore Widget</button>
-            </div>
+            <EmptyState
+              title="Reflections widget hidden"
+              description="Restore this panel when you want daily journaling prompts back on the dashboard."
+              action={<SecondaryButton onClick={() => toggleWidget('dailyReflections')}>Restore Widget</SecondaryButton>}
+            />
           )}
         </div>
 
@@ -1035,11 +1002,11 @@ function DashboardBriefing({ tasks, projects, inboxItems, dailyDigests, upsertDa
       
       {/* Metrics Strip */}
       <div className="grid grid-cols-2 gap-4 border-b border-border pb-4 font-label text-[10px] uppercase font-bold">
-        <div className="bg-background border border-border p-3 flex flex-col justify-between">
+        <div className="app-panel-subtle p-3 flex flex-col justify-between">
           <span className="text-secondary tracking-wider">Unprocessed slips</span>
           <span className={`text-xl font-bold mt-1 ${unprocessedCount > 0 ? 'text-accent' : 'text-primary'}`}>{unprocessedCount} items</span>
         </div>
-        <div className="bg-background border border-border p-3 flex flex-col justify-between">
+        <div className="app-panel-subtle p-3 flex flex-col justify-between">
           <span className="text-secondary tracking-wider">Lessons Finished</span>
           <span className="text-xl font-bold text-success mt-1">{lessonsCompletedToday} today</span>
         </div>
@@ -1081,16 +1048,16 @@ function DashboardBriefing({ tasks, projects, inboxItems, dailyDigests, upsertDa
         </div>
 
         {!isEditingSummary ? (
-          <div className="bg-neutral-bg/40 border border-border p-3 leading-relaxed text-secondary italic">
+          <div className="app-panel-subtle leading-relaxed text-secondary italic">
             {summaryText || "Log today's brief summary focus, learning highlights, or macro intentions..."}
           </div>
         ) : (
-          <textarea
+          <Textarea
             value={summaryText}
             onChange={(e) => setSummaryText(e.target.value)}
             placeholder="What is your focus and what did you learn today?"
-            className="w-full bg-surface border border-border p-2 focus:outline-none focus:border-accent text-xs font-sans rounded-none resize-none"
             rows={3}
+            className="text-xs resize-none"
           />
         )}
       </div>
@@ -1101,7 +1068,7 @@ function DashboardBriefing({ tasks, projects, inboxItems, dailyDigests, upsertDa
         {urgentProjects.length > 0 ? (
           <div className="space-y-2">
             {urgentProjects.map((p) => (
-              <div key={p.id} className="flex justify-between items-center border border-border bg-background p-2 rounded-none">
+              <div key={p.id} className="app-panel-subtle flex justify-between items-center">
                 <span className="font-sans font-semibold text-primary truncate hover:text-accent">
                   <Link href={`/projects/${p.id}`}>{p.name}</Link>
                 </span>
@@ -1122,21 +1089,21 @@ function DashboardBriefing({ tasks, projects, inboxItems, dailyDigests, upsertDa
         <div className="flex gap-2">
           <Link 
             href="/inbox" 
-            className="font-label text-[9px] uppercase font-bold text-secondary hover:opacity-85 flex items-center gap-1 border border-border px-2 py-1 bg-surface"
+            className="font-label text-[9px] uppercase font-bold text-secondary hover:opacity-85 flex items-center gap-1 rounded-xl border border-border px-3 py-2 bg-surface"
           >
             <span>Triage Desk</span>
             <ArrowRight className="h-3 w-3" />
           </Link>
           <Link 
             href="/intelligence" 
-            className="font-label text-[9px] uppercase font-bold text-accent hover:opacity-85 flex items-center gap-1 border border-accent/20 px-2 py-1 bg-accent/5"
+            className="font-label text-[9px] uppercase font-bold text-accent hover:opacity-85 flex items-center gap-1 rounded-xl border border-accent/20 px-3 py-2 bg-accent/5"
           >
             <span>Briefing Feed</span>
             <ArrowRight className="h-3 w-3" />
           </Link>
           <Link 
             href="/review" 
-            className="font-label text-[9px] uppercase font-bold text-secondary hover:opacity-85 flex items-center gap-1 border border-border px-2 py-1 bg-surface"
+            className="font-label text-[9px] uppercase font-bold text-secondary hover:opacity-85 flex items-center gap-1 rounded-xl border border-border px-3 py-2 bg-surface"
           >
             <span>Review Room</span>
             <ArrowRight className="h-3 w-3" />
@@ -1227,19 +1194,19 @@ function DashboardLedger({ inboxItems, tasks, knowledgeItems, dailyDigests, upse
       
       {/* Activity Count Summary */}
       <div className="grid grid-cols-4 gap-2 border-b border-border pb-4 font-label text-[9px] uppercase font-bold text-center">
-        <div className="bg-background border border-border p-2">
+        <div className="app-panel-subtle p-3">
           <span className="text-secondary block">Captured</span>
           <span className="text-md font-bold text-primary block mt-0.5">{capturedToday}</span>
         </div>
-        <div className="bg-background border border-border p-2">
+        <div className="app-panel-subtle p-3">
           <span className="text-secondary block">Processed</span>
           <span className="text-md font-bold text-primary block mt-0.5">{processedToday}</span>
         </div>
-        <div className="bg-background border border-border p-2">
+        <div className="app-panel-subtle p-3">
           <span className="text-secondary block">Notes</span>
           <span className="text-md font-bold text-primary block mt-0.5">{notesCreatedToday}</span>
         </div>
-        <div className="bg-background border border-border p-2">
+        <div className="app-panel-subtle p-3">
           <span className="text-secondary block">Tasks Made</span>
           <span className="text-md font-bold text-primary block mt-0.5">{tasksCreatedFromInboxToday}</span>
         </div>
@@ -1253,9 +1220,9 @@ function DashboardLedger({ inboxItems, tasks, knowledgeItems, dailyDigests, upse
         </span>
         
         {questions.length > 0 && (
-          <div className="space-y-1 bg-background border border-border p-2.5 max-h-[120px] overflow-y-auto">
+          <div className="space-y-2 app-panel-subtle max-h-[140px] overflow-y-auto">
             {questions.map((q: string, i: number) => (
-              <div key={i} className="flex justify-between items-start gap-2 border-b border-border/40 py-1 last:border-b-0">
+              <div key={i} className="flex justify-between items-start gap-2 border-b border-border/40 py-2 last:border-b-0">
                 <span className="text-primary italic leading-relaxed shrink-1 shrink-0">{q}</span>
                 <button 
                   type="button"
@@ -1270,14 +1237,14 @@ function DashboardLedger({ inboxItems, tasks, knowledgeItems, dailyDigests, upse
         )}
 
         <form onSubmit={handleAddQuestion} className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={newQuestion}
             onChange={(e) => setNewQuestion(e.target.value)}
             placeholder="Log an open question to solve..."
-            className="flex-1 bg-neutral-bg border border-border px-2 py-1.5 text-xs font-sans rounded-none focus:outline-none focus:border-accent"
+            className="flex-1 text-xs"
           />
-          <SecondaryButton type="submit" className="py-1 px-3">
+          <SecondaryButton type="submit" className="px-4">
             Add
           </SecondaryButton>
         </form>
@@ -1291,9 +1258,9 @@ function DashboardLedger({ inboxItems, tasks, knowledgeItems, dailyDigests, upse
         </span>
 
         {insights.length > 0 && (
-          <div className="space-y-1 bg-background border border-border p-2.5 max-h-[120px] overflow-y-auto">
+          <div className="space-y-2 app-panel-subtle max-h-[140px] overflow-y-auto">
             {insights.map((ins: string, i: number) => (
-              <div key={i} className="flex justify-between items-start gap-2 border-b border-border/40 py-1 last:border-b-0">
+              <div key={i} className="flex justify-between items-start gap-2 border-b border-border/40 py-2 last:border-b-0">
                 <span className="text-primary leading-relaxed shrink-1 shrink-0">{ins}</span>
                 <button 
                   type="button"
@@ -1308,14 +1275,14 @@ function DashboardLedger({ inboxItems, tasks, knowledgeItems, dailyDigests, upse
         )}
 
         <form onSubmit={handleAddInsight} className="flex gap-2">
-          <input
+          <Input
             type="text"
             value={newInsight}
             onChange={(e) => setNewInsight(e.target.value)}
             placeholder="Log a key takeaway / insight..."
-            className="flex-1 bg-neutral-bg border border-border px-2 py-1.5 text-xs font-sans rounded-none focus:outline-none focus:border-accent"
+            className="flex-1 text-xs"
           />
-          <SecondaryButton type="submit" className="py-1 px-3">
+          <SecondaryButton type="submit" className="px-4">
             Add
           </SecondaryButton>
         </form>

@@ -36,7 +36,7 @@ export default function StatusBadge({ status, type = 'default', className = '' }
   }
 
   return (
-    <span className={`inline-block font-label text-[10px] sm:text-xs tracking-wider uppercase px-2 py-0.5 rounded-none font-medium select-none ${badgeStyle} ${className}`}>
+    <span className={`inline-flex items-center rounded-full px-2.5 py-1 font-label text-[10px] sm:text-[11px] tracking-[0.18em] uppercase font-semibold select-none ${badgeStyle} ${className}`}>
       {status}
     </span>
   );

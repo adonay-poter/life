@@ -23,7 +23,7 @@ export default function StalenessSignalBadge({ severity, className = '' }: Stale
   }
 
   return (
-    <span className={`inline-block font-label text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-none select-none ${badgeStyle} ${className}`}>
+    <span className={`inline-flex items-center rounded-full px-2 py-1 font-label text-[10px] uppercase tracking-[0.16em] select-none ${badgeStyle} ${className}`}>
       {label}
     </span>
   );

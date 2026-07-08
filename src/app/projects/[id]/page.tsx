@@ -2,31 +2,31 @@
 
 import React, { useState, useEffect, Suspense, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
+import {
+  AlertCircle,
+  Archive,
+  ArrowLeft,
+  Briefcase,
+  Calendar,
+  Edit3,
+  Pin,
+  Play,
+  Plus,
+  SlidersHorizontal,
+  Trash2,
+  TrendingUp,
+  X
+} from 'lucide-react';
+
 import { useDashboard, Project, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import TaskDetailsModal from '@/components/TaskDetailsModal';
-import Link from 'next/link';
-import {
-  ArrowLeft,
-  Calendar,
-  Briefcase,
-  TrendingUp,
-  Archive,
-  Trash2,
-  Edit3,
-  Plus,
-  SlidersHorizontal,
-  X,
-  Play,
-  AlertCircle,
-  Pin
-} from 'lucide-react';
-
 import PageShell from '@/components/ui/PageShell';
-import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
-import { PrimaryButton, SecondaryButton, IconButton } from '@/components/ui/Buttons';
+import EmptyState from '@/components/ui/EmptyState';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import { Input, Textarea, Select } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
 import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
@@ -38,6 +38,36 @@ const PROJECT_COLORS = [
   { name: 'Sage', value: '#58805F' },
   { name: 'Ochre', value: '#D1A153' },
   { name: 'Bronze', value: '#8D6E63' }
+];
+
+const AREA_OPTIONS = [
+  { value: 'Business', label: 'Business' },
+  { value: 'Health', label: 'Health' },
+  { value: 'Personal', label: 'Personal' },
+  { value: 'Finance', label: 'Finance' },
+  { value: 'Other', label: 'Other' }
+];
+
+const PROJECT_STATUS_OPTIONS = [
+  { value: 'planning', label: 'Planning' },
+  { value: 'active', label: 'Active' },
+  { value: 'paused', label: 'Paused' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' }
+];
+
+const TASK_CATEGORY_OPTIONS = [
+  { value: 'Work', label: 'Work' },
+  { value: 'Personal', label: 'Personal' },
+  { value: 'Urgent', label: 'Urgent' },
+  { value: 'Learning', label: 'Learning' },
+  { value: 'Other', label: 'Other' }
+];
+
+const PRIORITY_OPTIONS = [
+  { value: 'high', label: 'High' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'low', label: 'Low' }
 ];
 
 function ProjectDetailContent() {
@@ -62,7 +92,6 @@ function ProjectDetailContent() {
 
   const project = projects.find((p) => p.id === id);
 
-  // Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState('');
   const [editDesc, setEditDesc] = useState('');
@@ -74,7 +103,6 @@ function ProjectDetailContent() {
   const [editArea, setEditArea] = useState<Project['area']>('Business');
   const [editColor, setEditColor] = useState('#B8422E');
 
-  // Quick Task State
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [quickTaskName, setQuickTaskName] = useState('');
   const [quickTaskCategory, setQuickTaskCategory] = useState<Task['category']>('Work');
@@ -83,17 +111,11 @@ function ProjectDetailContent() {
   const [quickTaskDesc, setQuickTaskDesc] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // Guard Modals
   const [showGuardModal, setShowGuardModal] = useState(false);
   const [pendingStatusChange, setPendingStatusChange] = useState<Project['status'] | null>(null);
-
-  // Delete modal
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  // Active task details modal
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
 
-  // Load project defaults once loaded
   useEffect(() => {
     if (project) {
       setEditName(project.name);
@@ -110,16 +132,20 @@ function ProjectDetailContent() {
 
   const projectId = project?.id;
 
-  // Related captures & knowledge notes
   const relatedCaptures = useMemo(() => {
     if (!projectId) return [];
-    return inboxItems.filter((i) => i.project_id === projectId);
+    return inboxItems.filter((item) => item.project_id === projectId);
   }, [inboxItems, projectId]);
 
   const relatedNoteIds = useMemo(() => {
     if (!projectId) return [];
     return objectLinks
-      .filter((link) => link.target_id === projectId && link.target_type === 'project' && link.source_type === 'knowledge_item')
+      .filter(
+        (link) =>
+          link.target_id === projectId &&
+          link.target_type === 'project' &&
+          link.source_type === 'knowledge_item'
+      )
       .map((link) => link.source_id);
   }, [objectLinks, projectId]);
 
@@ -128,20 +154,17 @@ function ProjectDetailContent() {
     return knowledgeItems.filter((note) => relatedNoteIds.includes(note.id));
   }, [knowledgeItems, relatedNoteIds]);
 
-  // Actionable next task (incomplete task with highest priority & due date)
   const nextTask = useMemo(() => {
     if (!projectId) return null;
-    const pending = tasks.filter((t) => t.project_id === projectId && t.status !== 'done');
+    const pending = tasks.filter((task) => task.project_id === projectId && task.status !== 'done');
     if (pending.length === 0) return null;
-    
-    // Sort priority (high -> medium -> low)
+
     const priorityOrder = { high: 0, medium: 1, low: 2 };
     return [...pending].sort((a, b) => {
       const pA = priorityOrder[a.priority] ?? 1;
       const pB = priorityOrder[b.priority] ?? 1;
       if (pA !== pB) return pA - pB;
-      
-      // Sort due date (earlier date first)
+
       if (a.due_date && b.due_date) {
         return new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
       }
@@ -151,40 +174,46 @@ function ProjectDetailContent() {
     })[0];
   }, [tasks, projectId]);
 
-  const projTasks = useMemo(() => tasks.filter((t) => t.project_id === projectId), [tasks, projectId]);
-  const doneTasks = useMemo(() => projTasks.filter((t) => t.status === 'done'), [projTasks]);
-  const pendingTasks = useMemo(() => projTasks.filter((t) => t.status !== 'done'), [projTasks]);
+  const projTasks = useMemo(() => tasks.filter((task) => task.project_id === projectId), [tasks, projectId]);
+  const doneTasks = useMemo(() => projTasks.filter((task) => task.status === 'done'), [projTasks]);
+  const pendingTasks = useMemo(() => projTasks.filter((task) => task.status !== 'done'), [projTasks]);
 
   const weeklyStats = useMemo(() => {
     if (!projectId) return { completedTasks: 0, addedCaptures: 0, addedNotes: 0 };
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    const completedTasks = tasks.filter(t => t.project_id === projectId && t.status === 'done' && t.due_date && new Date(t.due_date) >= sevenDaysAgo).length;
-    const addedCaptures = relatedCaptures.filter(c => new Date(c.created_at) >= sevenDaysAgo).length;
-    const addedNotes = relatedNotes.filter(n => new Date(n.created_at) >= sevenDaysAgo).length;
-    
+
+    const completedTasks = tasks.filter(
+      (task) =>
+        task.project_id === projectId &&
+        task.status === 'done' &&
+        task.due_date &&
+        new Date(task.due_date) >= sevenDaysAgo
+    ).length;
+    const addedCaptures = relatedCaptures.filter((capture) => new Date(capture.created_at) >= sevenDaysAgo).length;
+    const addedNotes = relatedNotes.filter((note) => new Date(note.created_at) >= sevenDaysAgo).length;
+
     return { completedTasks, addedCaptures, addedNotes };
   }, [tasks, relatedCaptures, relatedNotes, projectId]);
 
   const projectSignals = useMemo(() => {
-    const signals = [];
+    const signals: { severity: 'high' | 'medium' | 'low'; message: string }[] = [];
     const noAction = pendingTasks.length === 0;
-    const hasUnprocessedCaptures = relatedCaptures.some(c => c.status === 'unprocessed' || c.status === 'unsorted');
-    
-    // Check if project is in computed queue items for staleness
+    const hasUnprocessedCaptures = relatedCaptures.some(
+      (capture) => capture.status === 'unprocessed' || capture.status === 'unsorted'
+    );
     const isStale = (computedQueueItems || []).some(
-      item => item.item_id === projectId && item.item_type === 'project' && item.reason.includes('progress')
+      (item) => item.item_id === projectId && item.item_type === 'project' && item.reason.includes('progress')
     );
 
     if (noAction) {
-      signals.push({ severity: 'high' as const, message: 'No next action/tasks planned' });
+      signals.push({ severity: 'high', message: 'No next action or tasks planned' });
     }
     if (isStale) {
-      signals.push({ severity: 'medium' as const, message: 'Stale: No progress in 14 days' });
+      signals.push({ severity: 'medium', message: 'Stale: no progress in 14 days' });
     }
     if (hasUnprocessedCaptures) {
-      signals.push({ severity: 'low' as const, message: 'Has unprocessed captured slips' });
+      signals.push({ severity: 'low', message: 'Has unprocessed captured slips' });
     }
 
     return signals;
@@ -192,39 +221,40 @@ function ProjectDetailContent() {
 
   if (!project) {
     return (
-      <div className="space-y-6">
-        <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider">
+      <div className="space-y-8">
+        <Link
+          href="/projects"
+          className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider btn-press"
+        >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Projects</span>
         </Link>
-        <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
-          <p className="font-sans text-sm text-secondary italic">Project not found or Loading...</p>
-        </div>
+        <EmptyState
+          title="Project unavailable"
+          description="This project could not be found or is still loading."
+          action={<SecondaryButton onClick={() => router.push('/projects')}>Return to projects</SecondaryButton>}
+        />
       </div>
     );
   }
-  
-  // Progress calculations
-  const getProgress = () => {
+
+  const progress = (() => {
     if (projTasks.length === 0) return 0;
     const weights = { high: 3, medium: 2, low: 1 };
     let totalWeight = 0;
     let completedWeight = 0;
-    projTasks.forEach((t) => {
-      const w = weights[t.priority] || 1;
-      totalWeight += w;
-      if (t.status === 'done') completedWeight += w;
+    projTasks.forEach((task) => {
+      const weight = weights[task.priority] || 1;
+      totalWeight += weight;
+      if (task.status === 'done') completedWeight += weight;
     });
     return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
-  };
-  
-  const progress = getProgress();
+  })();
 
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
 
-    // Check status guard
     if (editStatus === 'completed' && pendingTasks.length > 0) {
       setPendingStatusChange('completed');
       setShowGuardModal(true);
@@ -309,17 +339,17 @@ function ProjectDetailContent() {
   };
 
   const handleUpdateTaskStatusWithUndo = async (taskId: string, newStatus: Task['status']) => {
-    const taskObj = tasks.find((t) => t.id === taskId);
+    const taskObj = tasks.find((task) => task.id === taskId);
     if (!taskObj) return;
 
     const oldStatus = taskObj.status;
     const oldDueDate = taskObj.due_date;
-    
+
     await updateTaskStatus(taskId, newStatus);
-    
+
     if (newStatus === 'done' && taskObj.recurring !== 'none') {
       setTimeout(() => {
-        showToast(`Recurring task advanced to next occurrence.`, 'success', {
+        showToast('Recurring task advanced to next occurrence.', 'success', {
           label: 'Undo',
           onClick: async () => {
             await updateTask(taskId, { status: oldStatus, due_date: oldDueDate });
@@ -337,17 +367,6 @@ function ProjectDetailContent() {
     }
   };
 
-  const getStatusBadgeStyle = (status: Project['status'] = 'active') => {
-    switch (status) {
-      case 'planning': return 'bg-[#ECEFF1] text-[#37474F] border-[#CFD8DC]';
-      case 'active': return 'bg-[#EAF5EC] text-[#2E7D32] border-[#C8E6C9]';
-      case 'paused': return 'bg-[#FFF9C4] text-[#F57F17] border-[#FFF59D]';
-      case 'completed': return 'bg-[#F5F5F5] text-[#616161] border-[#E0E0E0]';
-      case 'cancelled': return 'bg-[#FFEBEE] text-[#C62828] border-[#FFCDD2]';
-      default: return 'bg-neutral-bg text-secondary border-secondary/25';
-    }
-  };
-
   const kanbanColumns: { name: string; status: Task['status'] }[] = [
     { name: 'Backlog', status: 'backlog' },
     { name: 'Todo', status: 'todo' },
@@ -357,45 +376,38 @@ function ProjectDetailContent() {
 
   return (
     <PageShell>
-      {/* Back link */}
       <div>
-        <Link href="/projects" className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider btn-press">
+        <Link
+          href="/projects"
+          className="inline-flex items-center space-x-2 font-label text-xs text-secondary hover:text-primary uppercase tracking-wider btn-press"
+        >
           <ArrowLeft className="h-4 w-4" />
           <span>Back to Projects</span>
         </Link>
       </div>
 
-      {/* Hero Header Card */}
       <EditorialCard
         title={project.name}
         subtitle={`${project.area} Sector Matrix`}
-        className="border-l-8"
+        className="border-l-[10px]"
         style={{ borderLeftColor: project.color || 'var(--accent)' }}
         action={
-          <div className="flex items-center space-x-2 font-label text-xs shrink-0">
-            <button
-              onClick={() => setIsEditing(!isEditing)}
-              className="px-3.5 py-2 border border-border hover:border-primary bg-surface transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-none btn-press text-primary"
-            >
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <SecondaryButton onClick={() => setIsEditing(!isEditing)} className="min-h-10 px-4">
               <Edit3 className="h-3.5 w-3.5 text-secondary" />
               <span>{isEditing ? 'Cancel Edit' : 'Edit Matrix'}</span>
-            </button>
-            <button
+            </SecondaryButton>
+            <SecondaryButton
               onClick={handleToggleArchive}
-              className={`px-3.5 py-2 border border-border hover:border-primary bg-surface transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-none btn-press text-primary ${
-                project.is_archived ? 'bg-accent/5 text-accent border-accent/30' : ''
-              }`}
+              className={`min-h-10 px-4 ${project.is_archived ? 'border-accent/30 bg-accent/10 text-accent hover:border-accent hover:bg-accent/15' : ''}`}
             >
               <Archive className="h-3.5 w-3.5" />
               <span>{project.is_archived ? 'Unarchive' : 'Archive'}</span>
-            </button>
-            <button
-              onClick={() => setDeleteModalOpen(true)}
-              className="px-3.5 py-2 border border-danger/40 text-danger hover:bg-danger/5 bg-surface transition-colors flex items-center space-x-1.5 cursor-pointer uppercase font-bold rounded-none btn-press"
-            >
+            </SecondaryButton>
+            <PrimaryButton onClick={() => setDeleteModalOpen(true)} variant="danger" className="min-h-10 px-4 shadow-none">
               <Trash2 className="h-3.5 w-3.5" />
               <span>Delete</span>
-            </button>
+            </PrimaryButton>
           </div>
         }
       >
@@ -403,7 +415,7 @@ function ProjectDetailContent() {
           <div className="flex items-center space-x-3 flex-wrap gap-y-2">
             <StatusBadge status={project.status || 'active'} type="status" />
             {project.is_archived && (
-              <span className="font-label text-xs border border-accent/40 bg-accent/5 text-accent px-2.5 py-0.5 uppercase tracking-wider font-bold rounded-none">
+              <span className="font-label text-xs border border-accent/40 bg-accent/5 text-accent px-3 py-1 uppercase tracking-[0.18em] font-bold rounded-full">
                 Archived
               </span>
             )}
@@ -440,59 +452,56 @@ function ProjectDetailContent() {
             )}
           </div>
 
-          {/* Linear progress */}
-          <div className="space-y-2 pt-3 border-t border-border">
+          <div className="space-y-3 pt-4 border-t border-border">
             <div className="flex justify-between items-center text-xs font-label">
               <span className="text-secondary uppercase font-semibold">Project Completion Rate</span>
               <span className="text-primary font-bold">
                 {doneTasks.length}/{projTasks.length} Completed ({progress}%)
               </span>
             </div>
-            <div className="w-full bg-secondary/10 h-1.5 rounded-none overflow-hidden">
-              <div 
-                className="h-full transition-all duration-300 animate-pulse-slow" 
+            <div className="w-full bg-secondary/10 h-2.5 rounded-full overflow-hidden">
+              <div
+                className="h-full transition-all duration-300 animate-pulse-slow"
                 style={{ width: `${progress}%`, backgroundColor: project.color || 'var(--accent)' }}
-              ></div>
+              />
             </div>
           </div>
         </div>
       </EditorialCard>
 
-      {/* Project Intelligence & Next Action Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-        {/* RECOMMENDED NEXT ACTION */}
-        <div className="bg-accent/5 border border-accent/20 p-5 rounded-none flex flex-col justify-between space-y-4">
+        <EditorialCard
+          title="Recommended Next Action"
+          subtitle="Best immediate move"
+          className="bg-[linear-gradient(135deg,rgba(184,66,46,0.14),rgba(184,66,46,0.03))] border-accent/20"
+        >
           <div className="space-y-2">
-            <span className="font-label text-[9px] uppercase tracking-widest text-accent font-bold block">Recommended Next Action</span>
             {nextTask ? (
               <div className="space-y-1">
                 <h4 className="font-sans text-sm font-bold text-primary">{nextTask.name}</h4>
-                {nextTask.description && <p className="font-sans text-xs text-secondary leading-relaxed">{nextTask.description}</p>}
+                {nextTask.description && (
+                  <p className="font-sans text-xs text-secondary leading-relaxed">{nextTask.description}</p>
+                )}
                 <div className="pt-2">
                   <StatusBadge status={nextTask.priority} type="priority" />
                 </div>
               </div>
             ) : (
-              <p className="font-sans text-xs text-secondary italic">No upcoming tasks. Create a task below to establish next momentum.</p>
+              <p className="font-sans text-xs text-secondary italic">
+                No upcoming tasks. Create a task below to establish next momentum.
+              </p>
             )}
           </div>
           {nextTask && (
-            <button
-              onClick={() => handleStartFocusSession(nextTask.id)}
-              className="w-full text-center bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-wider py-2.5 font-bold cursor-pointer flex items-center justify-center gap-1.5 rounded-none"
-            >
+            <PrimaryButton onClick={() => handleStartFocusSession(nextTask.id)} className="w-full mt-5">
               <Play className="h-3.5 w-3.5 fill-current animate-pulse" />
               <span>Start Focus Session</span>
-            </button>
+            </PrimaryButton>
           )}
-        </div>
+        </EditorialCard>
 
-        {/* HEALTH SIGNALS & WEEKLY SUMMARY */}
-        <div className="bg-surface border border-border p-5 rounded-none flex flex-col justify-between space-y-4">
+        <EditorialCard title="Sector Health" subtitle="Signals and weekly activity" className="h-full">
           <div className="space-y-3">
-            <span className="font-label text-[9px] uppercase tracking-widest text-secondary font-bold block border-b border-border/40 pb-1">Sector Health & Weekly Activity</span>
-            
-            {/* Health Signals */}
             <div className="space-y-2">
               {projectSignals.length > 0 ? (
                 projectSignals.map((signal, idx) => (
@@ -503,79 +512,68 @@ function ProjectDetailContent() {
                 ))
               ) : (
                 <div className="flex items-center space-x-2">
-                  <span className="font-label text-[9px] border border-success/40 text-success bg-success/5 px-1.5 py-0.5 uppercase font-bold">Stable</span>
+                  <span className="font-label text-[9px] border border-success/40 text-success bg-success/5 px-2 py-1 uppercase font-bold rounded-full tracking-[0.16em]">
+                    Stable
+                  </span>
                   <span className="font-sans text-xs text-primary font-medium">Project integrity is sound</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Weekly Summary */}
-          <div className="grid grid-cols-3 gap-2 text-center font-label text-[8px] uppercase font-bold border-t border-border/40 pt-3">
-            <div className="bg-background border border-border/60 p-2">
+          <div className="grid grid-cols-3 gap-3 text-center font-label text-[8px] uppercase font-bold border-t border-border/40 pt-4 mt-4">
+            <div className="app-panel-subtle p-3">
               <span className="text-secondary block">Completed</span>
               <span className="text-xs font-bold text-success block mt-0.5">{weeklyStats.completedTasks}</span>
             </div>
-            <div className="bg-background border border-border/60 p-2">
+            <div className="app-panel-subtle p-3">
               <span className="text-secondary block">New Slips</span>
               <span className="text-xs font-bold text-primary block mt-0.5">{weeklyStats.addedCaptures}</span>
             </div>
-            <div className="bg-background border border-border/60 p-2">
+            <div className="app-panel-subtle p-3">
               <span className="text-secondary block">Linked Notes</span>
               <span className="text-xs font-bold text-primary block mt-0.5">{weeklyStats.addedNotes}</span>
             </div>
           </div>
-        </div>
+        </EditorialCard>
       </div>
 
-      {/* Configurator Form */}
       {isEditing && (
-        <form onSubmit={handleEditSubmit} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
-          <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
+        <form onSubmit={handleEditSubmit} className="app-panel space-y-5">
+          <span className="block font-label font-bold text-sm uppercase tracking-[0.2em] text-primary border-b border-border pb-3">
             Configure Project Metadata
           </span>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Sector / Area</label>
-              <select
-                value={editArea}
-                onChange={(e) => setEditArea(e.target.value as Project['area'])}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2.5 focus:outline-none rounded-none font-sans"
-              >
-                <option value="Business">Business</option>
-                <option value="Health">Health</option>
-                <option value="Personal">Personal</option>
-                <option value="Finance">Finance</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Status</label>
-              <select
-                value={editStatus}
-                onChange={(e) => setEditStatus(e.target.value as Project['status'])}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2.5 focus:outline-none rounded-none font-sans"
-              >
-                <option value="planning">Planning</option>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Brand Accent Color</label>
-              <div className="flex flex-wrap gap-2 py-1">
-                {PROJECT_COLORS.map((c) => (
+            <Select
+              label="Sector / Area"
+              value={editArea}
+              onChange={(e) => setEditArea(e.target.value as Project['area'])}
+              options={AREA_OPTIONS}
+            />
+            <Select
+              label="Status"
+              value={editStatus}
+              onChange={(e) => setEditStatus(e.target.value as Project['status'])}
+              options={PROJECT_STATUS_OPTIONS}
+            />
+            <div className="space-y-2">
+              <label className="block font-label text-xs uppercase tracking-wider text-secondary font-bold">
+                Brand Accent Color
+              </label>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {PROJECT_COLORS.map((color) => (
                   <button
-                    key={c.value}
+                    key={color.value}
                     type="button"
-                    onClick={() => setEditColor(c.value)}
-                    className={`h-5 w-5 rounded-none transition-all border cursor-pointer ${
-                      editColor === c.value ? 'border-primary scale-110 ring-1 ring-primary' : 'border-transparent hover:scale-105'
+                    onClick={() => setEditColor(color.value)}
+                    className={`h-10 w-10 rounded-2xl border transition-all cursor-pointer ${
+                      editColor === color.value
+                        ? 'border-primary scale-105 shadow-[0_8px_18px_rgba(26,28,30,0.12)]'
+                        : 'border-border hover:scale-[1.02] hover:border-primary/40'
                     }`}
-                    style={{ backgroundColor: c.value }}
-                    title={c.name}
+                    style={{ backgroundColor: color.value }}
+                    title={color.name}
                   />
                 ))}
               </div>
@@ -583,245 +581,177 @@ function ProjectDetailContent() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Project Name *</label>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                required
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Client / Audience</label>
-              <input
-                type="text"
-                value={editClient}
-                onChange={(e) => setEditClient(e.target.value)}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Project Payload / Gain</label>
-              <input
-                type="text"
-                value={editGain}
-                onChange={(e) => setEditGain(e.target.value)}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-              />
-            </div>
+            <Input type="text" label="Project Name *" value={editName} onChange={(e) => setEditName(e.target.value)} required />
+            <Input type="text" label="Client / Audience" value={editClient} onChange={(e) => setEditClient(e.target.value)} />
+            <Input type="text" label="Project Payload / Gain" value={editGain} onChange={(e) => setEditGain(e.target.value)} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Start Date</label>
-              <input
-                type="date"
-                value={editStartDate}
-                onChange={(e) => setEditStartDate(e.target.value)}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Target Deadline</label>
-              <input
-                type="date"
-                value={editDeadline}
-                onChange={(e) => setEditDeadline(e.target.value)}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
-              />
-            </div>
+            <Input type="date" label="Start Date" value={editStartDate} onChange={(e) => setEditStartDate(e.target.value)} />
+            <Input type="date" label="Target Deadline" value={editDeadline} onChange={(e) => setEditDeadline(e.target.value)} />
           </div>
 
-          <div className="space-y-1.5">
-            <label className="block text-[10px] uppercase text-secondary font-bold">Detailed Description</label>
-            <textarea
-              value={editDesc}
-              onChange={(e) => setEditDesc(e.target.value)}
-              rows={3}
-              className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none resize-none"
-            />
-          </div>
+          <Textarea label="Detailed Description" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} rows={4} />
 
-          <PrimaryButton type="submit" className="w-full">
+          <PrimaryButton type="submit" className="w-full sm:w-auto">
             Save Matrix Changes
           </PrimaryButton>
         </form>
       )}
 
-      {/* Task Add Trigger */}
-      <div className="flex justify-between items-center border-b-2 border-primary pb-3 mt-8">
-        <h3 className="font-display text-lg font-bold text-primary uppercase tracking-wider">
-          Task Workspace
-        </h3>
-        
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between border-b border-border pb-4 mt-10">
+        <div>
+          <p className="app-kicker mb-2">Execution</p>
+          <h3 className="font-display text-2xl font-bold text-primary">Task Workspace</h3>
+        </div>
+
         {!isAddingTask && (
-          <PrimaryButton
-            onClick={() => setIsAddingTask(true)}
-            className="flex items-center space-x-1.5"
-          >
+          <PrimaryButton onClick={() => setIsAddingTask(true)} className="sm:self-start">
             <Plus className="h-4 w-4" />
             <span>Add Inline Task</span>
           </PrimaryButton>
         )}
       </div>
 
-      {/* Task Creation Form */}
       {isAddingTask && (
-        <form onSubmit={handleQuickTaskSubmit} className="bg-surface border border-border p-5 rounded-none space-y-4 font-label text-xs shadow-none">
-          <div className="flex justify-between items-center border-b border-border pb-2">
-            <span className="font-bold uppercase text-primary">Configure Project Task</span>
-            <button type="button" onClick={() => setIsAddingTask(false)} className="text-secondary hover:text-accent cursor-pointer btn-press">
+        <form onSubmit={handleQuickTaskSubmit} className="app-panel space-y-5">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div>
+              <p className="app-kicker mb-2">Quick Add</p>
+              <span className="font-display text-xl font-bold text-primary">Configure Project Task</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsAddingTask(false)}
+              className="text-secondary hover:text-accent cursor-pointer btn-press"
+            >
               <X className="h-4 w-4" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Task Name *</label>
-              <input
-                type="text"
-                value={quickTaskName}
-                onChange={(e) => setQuickTaskName(e.target.value)}
-                placeholder="e.g. Draft technical specs"
-                required
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-[10px] uppercase text-secondary font-bold">Category</label>
-              <select
-                value={quickTaskCategory}
-                onChange={(e) => setQuickTaskCategory(e.target.value as Task['category'])}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-2.5 focus:outline-none rounded-none font-sans"
-              >
-                <option value="Work">Work</option>
-                <option value="Personal">Personal</option>
-                <option value="Urgent">Urgent</option>
-                <option value="Learning">Learning</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
+            <Input
+              type="text"
+              label="Task Name *"
+              value={quickTaskName}
+              onChange={(e) => setQuickTaskName(e.target.value)}
+              placeholder="e.g. Draft technical specs"
+              required
+            />
+            <Select
+              label="Category"
+              value={quickTaskCategory}
+              onChange={(e) => setQuickTaskCategory(e.target.value as Task['category'])}
+              options={TASK_CATEGORY_OPTIONS}
+            />
           </div>
 
           <div className="flex items-center">
-            <button
+            <SecondaryButton
               type="button"
               onClick={() => setShowAdvanced(!showAdvanced)}
-              className={`p-1.5 border rounded-none cursor-pointer transition-colors flex items-center space-x-1 font-label text-[10px] uppercase font-bold btn-press ${
-                showAdvanced ? 'bg-primary text-on-primary border-primary font-semibold' : 'border-border text-secondary'
-              }`}
+              className={showAdvanced ? 'border-primary bg-surface-muted text-primary' : ''}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               <span>Advanced Options</span>
-            </button>
+            </SecondaryButton>
           </div>
 
           {showAdvanced && (
-            <div className="bg-neutral-bg/50 p-3 border border-border space-y-3 rounded-none">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-secondary font-bold">Priority Level</label>
-                  <select
-                    value={quickTaskPriority}
-                    onChange={(e) => setQuickTaskPriority(e.target.value as Task['priority'])}
-                    className="w-full bg-surface border border-border px-2.5 py-1.5 focus:outline-none rounded-none font-sans"
-                  >
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-secondary font-bold">Due Date</label>
-                  <input
-                    type="date"
-                    value={quickTaskDueDate}
-                    onChange={(e) => setQuickTaskDueDate(e.target.value)}
-                    className="w-full bg-surface border border-border px-2.5 py-1 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="block text-[10px] uppercase text-secondary font-bold">Notes / Details</label>
-                <input
-                  type="text"
-                  value={quickTaskDesc}
-                  onChange={(e) => setQuickTaskDesc(e.target.value)}
-                  placeholder="e.g. requirements checklist..."
-                  className="w-full bg-surface border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
+            <div className="app-panel-subtle space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Select
+                  label="Priority Level"
+                  value={quickTaskPriority}
+                  onChange={(e) => setQuickTaskPriority(e.target.value as Task['priority'])}
+                  options={PRIORITY_OPTIONS}
+                />
+                <Input
+                  type="date"
+                  label="Due Date"
+                  value={quickTaskDueDate}
+                  onChange={(e) => setQuickTaskDueDate(e.target.value)}
                 />
               </div>
+
+              <Input
+                type="text"
+                label="Notes / Details"
+                value={quickTaskDesc}
+                onChange={(e) => setQuickTaskDesc(e.target.value)}
+                placeholder="e.g. requirements checklist..."
+              />
             </div>
           )}
 
-          <PrimaryButton type="submit" className="w-full">
-            Save task
+          <PrimaryButton type="submit" className="w-full sm:w-auto">
+            Save Task
           </PrimaryButton>
         </form>
       )}
 
-      {/* Task Kanban board */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {kanbanColumns.map((col) => {
-          const colTasks = projTasks.filter((t) => t.status === col.status && !t.parent_task_id);
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {kanbanColumns.map((column) => {
+          const colTasks = projTasks.filter((task) => task.status === column.status && !task.parent_task_id);
           return (
-            <div 
-              key={col.status}
-              className="bg-surface border border-border p-4 rounded-none flex flex-col min-h-[350px] shadow-none"
+            <EditorialCard
+              key={column.status}
+              title={`${column.name} (${colTasks.length})`}
+              subtitle="Workflow lane"
+              className="h-full"
             >
-              <span className="font-label text-xs text-primary uppercase tracking-wide block border-b border-border pb-2 mb-3 font-semibold">
-                {col.name} ({colTasks.length})
-              </span>
-
               <div className="space-y-3 flex-1">
                 {colTasks.length > 0 ? (
                   colTasks.map((task) => (
                     <div
                       key={task.id}
                       onClick={() => setSelectedTaskId(task.id)}
-                      className="bg-background border border-border p-3.5 rounded-none flex flex-col justify-between hover:border-primary transition-all group cursor-pointer"
+                      className="app-panel-subtle flex flex-col justify-between gap-4 hover:border-primary transition-all group cursor-pointer"
                     >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          {task.category ? (
-                            <StatusBadge status={task.category} type="category" />
-                          ) : <div />}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-2">
+                          {task.category ? <StatusBadge status={task.category} type="category" /> : <div />}
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               togglePinTask(task.id);
                             }}
-                            className={`text-xs shrink-0 ml-1.5 cursor-pointer btn-press ${task.is_pinned ? 'text-accent' : 'text-stone-300 group-hover:text-secondary opacity-0 group-hover:opacity-100'}`}
+                            className={`text-xs shrink-0 cursor-pointer btn-press transition-opacity ${
+                              task.is_pinned
+                                ? 'text-accent opacity-100'
+                                : 'text-stone-300 group-hover:text-secondary opacity-0 group-hover:opacity-100'
+                            }`}
                           >
                             <Pin className="h-3 w-3 fill-current" />
                           </button>
                         </div>
 
-                        <div className="flex items-start space-x-2">
+                        <div className="flex items-start space-x-3">
                           <input
                             type="checkbox"
                             checked={task.status === 'done'}
                             onClick={(e) => e.stopPropagation()}
                             onChange={() => handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done')}
-                            className="h-4 w-4 accent-accent shrink-0 cursor-pointer mt-0.5"
+                            className="mt-0.5 h-4 w-4 accent-accent shrink-0 cursor-pointer"
                           />
-                          <span className={`font-sans text-xs font-semibold text-primary leading-snug ${task.status === 'done' ? 'line-through text-secondary' : ''}`}>
+                          <span
+                            className={`font-sans text-sm font-semibold text-primary leading-snug ${
+                              task.status === 'done' ? 'line-through text-secondary' : ''
+                            }`}
+                          >
                             {task.name}
                           </span>
                         </div>
 
                         {task.description && (
-                          <p className="font-sans text-[11px] text-secondary mt-1.5 line-clamp-2 leading-relaxed">
+                          <p className="font-sans text-xs text-secondary line-clamp-2 leading-relaxed">
                             {task.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex items-center justify-between border-t border-border pt-2 mt-3 font-label text-[10px] uppercase font-bold text-secondary">
+                      <div className="flex items-center justify-between border-t border-border pt-3 font-label text-[10px] uppercase font-bold text-secondary">
                         <StatusBadge status={task.priority} type="priority" />
                         {task.status !== 'done' && (
                           <button
@@ -829,7 +759,7 @@ function ProjectDetailContent() {
                               e.stopPropagation();
                               handleStartFocusSession(task.id);
                             }}
-                            className="text-secondary hover:text-accent cursor-pointer flex items-center space-x-0.5 btn-press"
+                            className="text-secondary hover:text-accent cursor-pointer flex items-center space-x-1 btn-press"
                             title="Start Focus Session"
                           >
                             <Play className="h-3 w-3 fill-current" />
@@ -840,102 +770,97 @@ function ProjectDetailContent() {
                     </div>
                   ))
                 ) : (
-                  <div className="h-24 border border-dashed border-border flex items-center justify-center rounded-none bg-background/30">
-                    <span className="font-sans text-[10px] text-secondary italic">No items</span>
-                  </div>
+                  <EmptyState
+                    title={`No ${column.name.toLowerCase()} items`}
+                    description="Add or move tasks into this lane to keep the project flow visible."
+                  />
                 )}
               </div>
-            </div>
+            </EditorialCard>
           );
         })}
       </div>
 
-      {/* Lower Cockpit: Related Captures & Notes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-primary pt-8 mt-8">
-        
-        {/* RELATED CAPTURES */}
-        <div className="space-y-4">
-          <div className="border-b border-border pb-2 flex justify-between items-baseline font-label uppercase text-xs font-bold text-primary">
-            <span>Related Captures</span>
-            <span className="text-[10px] text-secondary">{relatedCaptures.length} slips</span>
-          </div>
-
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-border pt-10 mt-10">
+        <EditorialCard title="Related Captures" subtitle={`${relatedCaptures.length} slips`}>
+          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
             {relatedCaptures.length > 0 ? (
               relatedCaptures.map((item) => (
-                <div key={item.id} className="border border-border p-3.5 bg-neutral-bg/30 rounded-none space-y-1">
-                  <div className="flex justify-between items-baseline font-label text-[9px] text-secondary">
-                    <span className="uppercase font-bold">{item.type}</span>
+                <div key={item.id} className="app-panel-subtle space-y-2">
+                  <div className="flex justify-between items-baseline gap-3 font-label text-[9px] text-secondary">
+                    <span className="uppercase font-bold tracking-[0.16em]">{item.type}</span>
                     <span>{new Date(item.created_at).toLocaleDateString('en-US')}</span>
                   </div>
-                  <h4 className="font-sans text-xs font-semibold text-primary">{item.title}</h4>
-                  {item.content && <p className="font-sans text-[11px] text-secondary line-clamp-1">{item.content}</p>}
-                  <div className="flex justify-between items-baseline pt-2">
-                    <span className="font-label text-[9px] uppercase font-bold text-accent">{item.status}</span>
-                    <Link href={`/inbox?id=${item.id}`} className="font-label text-[8px] uppercase font-bold text-secondary hover:text-primary underline">
-                      Process Slip →
+                  <h4 className="font-sans text-sm font-semibold text-primary">{item.title}</h4>
+                  {item.content && (
+                    <p className="font-sans text-xs text-secondary line-clamp-2 leading-relaxed">{item.content}</p>
+                  )}
+                  <div className="flex justify-between items-baseline gap-3 pt-2">
+                    <span className="font-label text-[9px] uppercase font-bold tracking-[0.16em] text-accent">{item.status}</span>
+                    <Link
+                      href={`/inbox?id=${item.id}`}
+                      className="font-label text-[10px] uppercase font-bold tracking-[0.16em] text-secondary hover:text-primary"
+                    >
+                      Process Slip
                     </Link>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="font-sans text-xs text-secondary italic">No captures linked to this project.</p>
+              <EmptyState
+                title="No captures linked"
+                description="Inbox captures connected to this project will surface here for follow-through."
+              />
             )}
           </div>
-        </div>
+        </EditorialCard>
 
-        {/* RELATED KNOWLEDGE NOTES */}
-        <div className="space-y-4">
-          <div className="border-b border-border pb-2 flex justify-between items-baseline font-label uppercase text-xs font-bold text-primary">
-            <span>Related Knowledge Notes</span>
-            <span className="text-[10px] text-secondary">{relatedNotes.length} notes</span>
-          </div>
-
-          <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+        <EditorialCard title="Related Knowledge Notes" subtitle={`${relatedNotes.length} notes`}>
+          <div className="space-y-3 max-h-[320px] overflow-y-auto pr-1">
             {relatedNotes.length > 0 ? (
               relatedNotes.map((note) => (
-                <div key={note.id} className="border border-border p-3.5 bg-neutral-bg/30 rounded-none space-y-1.5">
-                  <div className="flex justify-between items-baseline font-label text-[9px] text-secondary">
-                    <span className="uppercase font-bold">{note.topic || 'General'}</span>
+                <div key={note.id} className="app-panel-subtle space-y-2">
+                  <div className="flex justify-between items-baseline gap-3 font-label text-[9px] text-secondary">
+                    <span className="uppercase font-bold tracking-[0.16em]">{note.topic || 'General'}</span>
                     <span>{new Date(note.created_at).toLocaleDateString('en-US')}</span>
                   </div>
-                  <h4 className="font-sans text-xs font-semibold text-primary">{note.title}</h4>
-                  {note.summary && <p className="font-sans text-[11px] text-secondary line-clamp-1">{note.summary}</p>}
+                  <h4 className="font-sans text-sm font-semibold text-primary">{note.title}</h4>
+                  {note.summary && (
+                    <p className="font-sans text-xs text-secondary line-clamp-2 leading-relaxed">{note.summary}</p>
+                  )}
                 </div>
               ))
             ) : (
-              <p className="font-sans text-xs text-secondary italic">No knowledge notes linked to this project.</p>
+              <EmptyState
+                title="No knowledge notes linked"
+                description="Linked notes and supporting research for this project will accumulate here."
+              />
             )}
           </div>
-        </div>
-
+        </EditorialCard>
       </div>
 
-      {/* Guard Warning Modal */}
       {showGuardModal && (
         <div className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4">
-          <div className="bg-surface border border-accent p-6 max-w-sm w-full space-y-4 shadow-none rounded-none font-label">
-            <div className="flex items-center space-x-2 text-accent border-b border-border pb-2">
+          <div className="app-panel max-w-md w-full space-y-5">
+            <div className="flex items-center space-x-2 text-accent border-b border-border pb-3">
               <AlertCircle className="h-5 w-5" />
-              <span className="font-bold text-sm uppercase tracking-wider">Unfinished Tasks Warning</span>
+              <span className="font-label font-bold text-sm uppercase tracking-[0.18em]">Unfinished Tasks Warning</span>
             </div>
-            <p className="font-sans text-xs text-primary leading-relaxed">
-              This project still contains <strong className="font-semibold">{pendingTasks.length}</strong> unfinished tasks. Are you sure you want to mark the project as completed?
+            <p className="font-sans text-sm text-primary leading-relaxed">
+              This project still contains <strong className="font-semibold">{pendingTasks.length}</strong> unfinished tasks.
+              Are you sure you want to mark the project as completed?
             </p>
-            <div className="flex justify-end space-x-2 text-[10px] font-bold uppercase pt-2">
-              <button
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-1">
+              <SecondaryButton
                 onClick={() => {
                   setShowGuardModal(false);
                   setPendingStatusChange(null);
                 }}
-                className="px-3 py-1.5 border border-border hover:bg-background cursor-pointer rounded-none btn-press text-secondary"
               >
                 Cancel
-              </button>
-              <PrimaryButton
-                onClick={handleConfirmGuardChange}
-                className="btn-press"
-              >
+              </SecondaryButton>
+              <PrimaryButton onClick={handleConfirmGuardChange}>
                 Proceed as Completed
               </PrimaryButton>
             </div>
@@ -943,7 +868,6 @@ function ProjectDetailContent() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       <ConfirmDeleteModal
         isOpen={deleteModalOpen}
         onClose={() => setDeleteModalOpen(false)}
@@ -956,22 +880,20 @@ function ProjectDetailContent() {
         itemType="project"
       />
 
-      {/* Task Details Dialog Popup */}
-      <TaskDetailsModal
-        taskId={selectedTaskId}
-        onClose={() => setSelectedTaskId(null)}
-      />
+      <TaskDetailsModal taskId={selectedTaskId} onClose={() => setSelectedTaskId(null)} />
     </PageShell>
   );
 }
 
 export default function ProjectDetailPage() {
   return (
-    <Suspense fallback={
-      <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
-        <p className="font-sans text-sm text-secondary italic">Loading Project Details...</p>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="app-panel-subtle text-center py-16">
+          <p className="font-sans text-sm text-secondary italic">Loading project details...</p>
+        </div>
+      }
+    >
       <ProjectDetailContent />
     </Suspense>
   );

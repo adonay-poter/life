@@ -1,65 +1,116 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import Link from 'next/link';
+import {
+  ArrowRight,
+  Calendar,
+  CheckCircle,
+  Clock,
+  Coffee,
+  FileQuestion,
+  FolderKanban,
+  GraduationCap,
+  Inbox,
+  Moon,
+  Sparkles,
+} from 'lucide-react';
+
 import { useDashboard } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import EmptyState from '@/components/ui/EmptyState';
 import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
-import {
-  Coffee,
-  Moon,
-  Calendar,
-  CheckCircle,
-  Clock,
-  Archive,
-  ArrowRight,
-  TrendingUp,
-  FileQuestion,
-  Sparkles,
-  Inbox,
-  FolderKanban,
-  GraduationCap
-} from 'lucide-react';
-import Link from 'next/link';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+
+const FILTER_OPTIONS = [
+  { type: 'all', label: 'All' },
+  { type: 'inbox_item', label: 'Inbox' },
+  { type: 'project', label: 'Projects' },
+  { type: 'task', label: 'Tasks' },
+  { type: 'question', label: 'Questions' },
+  { type: 'knowledge', label: 'Knowledge' },
+] as const;
+
+const SNOOZE_OPTIONS = [
+  { label: 'Tomorrow', days: 1 },
+  { label: '3 Days', days: 3 },
+  { label: 'Next Week', days: 7 },
+] as const;
 
 export default function ReviewRoom() {
   const {
     computedQueueItems,
     resolveQueueItem,
     snoozeQueueItem,
-    inboxItems,
-    tasks,
-    projects,
     updateInboxItemStatus,
-    updateTaskStatus
+    updateTaskStatus,
   } = useDashboard();
 
   const { showToast } = useToast();
   const [filterType, setFilterType] = useState<string>('all');
   const [snoozeTargetId, setSnoozeTargetId] = useState<string | null>(null);
 
-  // Grouped items counts
   const totalCount = computedQueueItems.length;
 
-  const filteredItems = computedQueueItems.filter(item => {
-    if (filterType === 'all') return true;
-    return item.item_type === filterType;
-  });
+  const filteredItems = useMemo(() => {
+    if (filterType === 'all') return computedQueueItems;
+    return computedQueueItems.filter((item) => item.item_type === filterType);
+  }, [computedQueueItems, filterType]);
+
+  const reviewStats = useMemo(() => {
+    const high = computedQueueItems.filter((item) => item.severity === 'high').length;
+    const inbox = computedQueueItems.filter((item) => item.item_type === 'inbox_item').length;
+    const project = computedQueueItems.filter((item) => item.item_type === 'project').length;
+    const stale = computedQueueItems.filter((item) => item.severity !== 'low').length;
+
+    return { high, inbox, project, stale };
+  }, [computedQueueItems]);
+
+  const ritualCards = [
+    {
+      title: 'Midday Review',
+      description: 'Re-center the day, process fresh captures, and declare the one thing that still matters.',
+      href: '/review/midday',
+      cta: 'Start Checkpoint',
+      icon: Coffee,
+      accent: 'Today',
+      tone: 'text-accent',
+      solid: true,
+    },
+    {
+      title: 'Evening Review',
+      description: 'Close loops, log what changed, and decide what tomorrow should inherit.',
+      href: '/review/evening',
+      cta: 'Close the Day',
+      icon: Moon,
+      accent: 'Reset',
+      tone: 'text-primary',
+      solid: false,
+    },
+    {
+      title: 'Weekly Review',
+      description: 'Inspect backlog, project health, and learning momentum before the next week begins.',
+      href: '/review/weekly',
+      cta: 'Enter Weekly Room',
+      icon: Calendar,
+      accent: 'Weekly',
+      tone: 'text-primary',
+      solid: false,
+    },
+  ] as const;
 
   const handleResolve = async (itemId: string, itemType: string) => {
     try {
-      // Perform database resolution if it was a system object
       if (itemType === 'inbox_item') {
         await updateInboxItemStatus(itemId, 'processed');
       } else if (itemType === 'task') {
         await updateTaskStatus(itemId, 'done');
       }
-      
-      // Resolve inside Review Queue
+
       await resolveQueueItem(itemId, itemType);
       showToast('Item resolved and loop closed.', 'success');
     } catch (err) {
@@ -73,7 +124,7 @@ export default function ReviewRoom() {
       const snoozeDate = new Date();
       snoozeDate.setDate(snoozeDate.getDate() + days);
       const snoozeDateStr = getLocalDateString(snoozeDate);
-      
+
       await snoozeQueueItem(itemId, itemType, snoozeDateStr);
       setSnoozeTargetId(null);
       showToast(`Item snoozed until ${snoozeDateStr}.`, 'info');
@@ -85,210 +136,234 @@ export default function ReviewRoom() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'inbox_item': return <Inbox className="h-4 w-4 text-primary" />;
-      case 'project': return <FolderKanban className="h-4 w-4 text-accent" />;
-      case 'task': return <CheckCircle className="h-4 w-4 text-success" />;
-      case 'question': return <FileQuestion className="h-4 w-4 text-danger" />;
-      case 'knowledge': return <GraduationCap className="h-4 w-4 text-warning" />;
-      default: return <Clock className="h-4 w-4 text-secondary" />;
+      case 'inbox_item':
+        return <Inbox className="h-4 w-4 text-primary" />;
+      case 'project':
+        return <FolderKanban className="h-4 w-4 text-accent" />;
+      case 'task':
+        return <CheckCircle className="h-4 w-4 text-success" />;
+      case 'question':
+        return <FileQuestion className="h-4 w-4 text-danger" />;
+      case 'knowledge':
+        return <GraduationCap className="h-4 w-4 text-warning" />;
+      default:
+        return <Clock className="h-4 w-4 text-secondary" />;
     }
+  };
+
+  const getPrimaryLink = (itemType: string, itemId: string) => {
+    if (itemType === 'inbox_item') {
+      return { href: '/inbox', label: 'Open Inbox' };
+    }
+    if (itemType === 'project') {
+      return { href: `/projects?projectId=${itemId}`, label: 'Open Project' };
+    }
+    if (itemType === 'task') {
+      return { href: '/tasks?tab=today', label: 'Open Tasks' };
+    }
+    if (itemType === 'knowledge' || itemType === 'question') {
+      return { href: '/intelligence', label: 'Review Context' };
+    }
+    return { href: '/review', label: 'Inspect' };
   };
 
   return (
     <PageShell>
       <SectionHeader
         title="Review Room"
-        subtitle="Command center for reflecting, triaging backlog, and closing open loops"
+        subtitle="Keep captures, tasks, and projects from decaying into background noise."
+        meta={`${totalCount} open loop${totalCount === 1 ? '' : 's'}`}
       />
 
-      {/* RITUAL FLOW TRIGGERS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        
-        <div className="border border-border bg-surface p-6 flex flex-col justify-between space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Coffee className="h-5 w-5 text-accent" />
-              <h3 className="font-display text-lg font-bold text-primary">Midday Review</h3>
-            </div>
-            <p className="font-sans text-xs text-secondary leading-relaxed">
-              Process morning captures and declare your focus for the rest of today. A 5-minute mid-day course correction.
-            </p>
-          </div>
-          <Link
-            href="/review/midday"
-            className="w-full text-center bg-accent text-on-accent hover:opacity-90 transition-all font-label text-xs uppercase tracking-wider py-2.5 font-bold cursor-pointer inline-block"
-          >
-            Start Midday Checkpoint
-          </Link>
+      <section className="grid gap-4 md:grid-cols-3">
+        {ritualCards.map((ritual) => {
+          const Icon = ritual.icon;
+
+          return (
+            <article
+              key={ritual.title}
+              className="app-panel flex h-full flex-col justify-between gap-5 px-5 py-5 sm:px-6"
+            >
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="app-panel-subtle flex h-12 w-12 items-center justify-center rounded-2xl">
+                    <Icon className={`h-5 w-5 ${ritual.tone}`} />
+                  </div>
+                  <span className="app-kicker">{ritual.accent}</span>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="font-display text-2xl leading-tight text-primary">{ritual.title}</h3>
+                  <p className="text-sm leading-relaxed text-secondary">{ritual.description}</p>
+                </div>
+              </div>
+
+              <Link href={ritual.href} className="w-full">
+                {ritual.solid ? (
+                  <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl bg-accent px-4 py-2.5 font-label text-xs font-bold uppercase tracking-[0.18em] text-on-accent shadow-[0_14px_28px_rgba(184,66,46,0.2)] transition-all">
+                    {ritual.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                ) : (
+                  <span className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-4 py-2.5 font-label text-xs font-bold uppercase tracking-[0.18em] text-primary transition-all hover:border-primary hover:bg-surface-muted">
+                    {ritual.cta}
+                    <ArrowRight className="h-4 w-4" />
+                  </span>
+                )}
+              </Link>
+            </article>
+          );
+        })}
+      </section>
+
+      <section className="app-panel overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4">
+          {[
+            { label: 'Need Action', value: reviewStats.high, detail: 'high urgency', icon: Sparkles, tone: reviewStats.high > 0 ? 'text-accent' : 'text-primary' },
+            { label: 'Inbox Loops', value: reviewStats.inbox, detail: 'capture backlog', icon: Inbox, tone: reviewStats.inbox > 0 ? 'text-primary' : 'text-secondary' },
+            { label: 'Project Signals', value: reviewStats.project, detail: 'watch progress', icon: FolderKanban, tone: reviewStats.project > 0 ? 'text-primary' : 'text-secondary' },
+            { label: 'Stale Items', value: reviewStats.stale, detail: 'medium or high', icon: Clock, tone: reviewStats.stale > 0 ? 'text-warning' : 'text-secondary' },
+          ].map((metric, index) => {
+            const Icon = metric.icon;
+
+            return (
+              <div
+                key={metric.label}
+                className={`flex min-h-32 flex-col justify-between p-4 sm:p-5 ${
+                  index % 2 === 0 ? 'border-r border-border md:border-r' : ''
+                } ${index < 2 ? 'border-b border-border' : 'md:border-b-0'}`}
+              >
+                <Icon className={`h-4 w-4 ${metric.tone}`} />
+                <div>
+                  <div className={`app-metric text-3xl ${metric.tone}`}>{metric.value}</div>
+                  <div className="mt-1 font-label text-[10px] uppercase tracking-[0.16em] text-secondary">
+                    {metric.label} · {metric.detail}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
+      </section>
 
-        <div className="border border-border bg-surface p-6 flex flex-col justify-between space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Moon className="h-5 w-5 text-accent" />
-              <h3 className="font-display text-lg font-bold text-primary">Evening Review</h3>
-            </div>
-            <p className="font-sans text-xs text-secondary leading-relaxed">
-              Synthesize what you learned, review completed output, log reflections, and select what tomorrow inherits.
-            </p>
-          </div>
-          <Link
-            href="/review/evening"
-            className="w-full text-center border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all font-label text-xs uppercase tracking-wider py-2.5 font-bold cursor-pointer inline-block"
-          >
-            Close the Day
-          </Link>
-        </div>
-
-        <div className="border border-border bg-surface p-6 flex flex-col justify-between space-y-4">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-accent" />
-              <h3 className="font-display text-lg font-bold text-primary">Weekly Review Room</h3>
-            </div>
-            <p className="font-sans text-xs text-secondary leading-relaxed">
-              Keep LifeOS from decaying: clear inbox backlog, inspect project status, review weekly learnings, and set next week's core focus.
-            </p>
-          </div>
-          <Link
-            href="/review/weekly"
-            className="w-full text-center border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all font-label text-xs uppercase tracking-wider py-2.5 font-bold cursor-pointer inline-block"
-          >
-            Enter Weekly Room
-          </Link>
-        </div>
-
-      </div>
-
-      {/* REVIEW TRIAGE QUEUE */}
       <EditorialCard
-        title={`Triage & Decision Queue (${totalCount})`}
-        subtitle="Muted signals requiring a structured decision"
-      >
-        <div className="space-y-6">
-          
-          {/* Filters strip */}
-          <div className="flex flex-wrap gap-2 border-b border-border pb-4 font-label text-[10px] uppercase font-bold">
-            {[
-              { type: 'all', label: 'All Items' },
-              { type: 'inbox_item', label: 'Inbox' },
-              { type: 'project', label: 'Projects' },
-              { type: 'task', label: 'Tasks' },
-              { type: 'question', label: 'Questions' },
-              { type: 'knowledge', label: 'Knowledge' }
-            ].map(filter => (
+        title="Decision Queue"
+        subtitle="Resolve what needs attention now, snooze what should wait, and move the rest to the right workspace."
+        action={
+          <div className="flex flex-wrap gap-2">
+            {FILTER_OPTIONS.map((filter) => (
               <button
                 key={filter.type}
                 onClick={() => setFilterType(filter.type)}
-                className={`px-3 py-1.5 border transition-all rounded-none cursor-pointer ${
+                className={`rounded-full border px-3 py-1.5 font-label text-[10px] font-semibold uppercase tracking-[0.18em] transition-all ${
                   filterType === filter.type
-                    ? 'bg-primary text-on-primary border-primary'
-                    : 'bg-background text-secondary border-border hover:border-primary'
+                    ? 'border-primary bg-primary text-on-primary'
+                    : 'border-border bg-surface text-secondary hover:border-primary hover:text-primary'
                 }`}
               >
                 {filter.label}
               </button>
             ))}
           </div>
+        }
+      >
+        {filteredItems.length > 0 ? (
+          <div className="space-y-4">
+            {filteredItems.map((item) => {
+              const sourceLink = getPrimaryLink(item.item_type, item.item_id);
+              const isSnoozing = snoozeTargetId === item.id;
 
-          {/* Queue Items List */}
-          {filteredItems.length > 0 ? (
-            <div className="divide-y divide-border/60">
-              {filteredItems.map(item => (
-                <div key={item.id} className="py-4 first:pt-0 last:pb-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-start space-x-3 min-w-0">
-                    <div className="mt-1 p-1 bg-background border border-border shrink-0">
-                      {getIcon(item.item_type)}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-sans font-bold text-xs text-primary truncate">{item.title}</span>
-                        <StalenessSignalBadge severity={item.severity} />
+              return (
+                <article
+                  key={item.id}
+                  className="app-panel-subtle space-y-4 px-4 py-4 sm:px-5"
+                >
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <div className="app-panel-subtle mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl border-none bg-surface">
+                        {getIcon(item.item_type)}
                       </div>
-                      <p className="font-sans text-[11px] text-danger mt-1 italic leading-relaxed">{item.reason}</p>
-                      {item.suggested_action && (
-                        <p className="font-sans text-[10px] text-secondary mt-0.5">Recommendation: {item.suggested_action}</p>
+                      <div className="min-w-0 space-y-2">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="app-kicker text-primary">{item.item_type.replace('_', ' ')}</span>
+                          <StalenessSignalBadge severity={item.severity} />
+                        </div>
+                        <h3 className="text-sm font-semibold text-primary sm:text-base">{item.title}</h3>
+                        <p className="text-sm leading-relaxed text-danger">{item.reason}</p>
+                        {item.suggested_action && (
+                          <p className="text-sm leading-relaxed text-secondary">
+                            Next move: {item.suggested_action}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="app-kicker shrink-0">
+                      Detected {new Date(item.detected_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 border-t border-border pt-4">
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <PrimaryButton
+                        type="button"
+                        className="w-full sm:w-auto"
+                        onClick={() => handleResolve(item.item_id, item.item_type)}
+                      >
+                        Resolve
+                      </PrimaryButton>
+                      <Link href={sourceLink.href} className="w-full sm:w-auto">
+                        <SecondaryButton type="button" className="w-full sm:w-auto">
+                          {sourceLink.label}
+                        </SecondaryButton>
+                      </Link>
+                      {!isSnoozing && (
+                        <SecondaryButton
+                          type="button"
+                          className="w-full sm:w-auto"
+                          onClick={() => setSnoozeTargetId(item.id)}
+                        >
+                          Snooze
+                        </SecondaryButton>
                       )}
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 shrink-0 self-end md:self-auto font-label text-[9px] font-bold">
-                    
-                    {/* Resolve button */}
-                    <button
-                      onClick={() => handleResolve(item.item_id, item.item_type)}
-                      className="bg-primary text-on-primary px-3 py-1.5 uppercase hover:opacity-90 transition-all cursor-pointer"
-                    >
-                      Resolve
-                    </button>
-
-                    {/* Snooze control */}
-                    {snoozeTargetId !== item.id ? (
-                      <button
-                        onClick={() => setSnoozeTargetId(item.id)}
-                        className="border border-border text-secondary bg-surface px-3 py-1.5 uppercase hover:bg-neutral-bg transition-all cursor-pointer"
-                      >
-                        Snooze
-                      </button>
-                    ) : (
-                      <div className="flex border border-border divide-x divide-border bg-surface">
+                    {isSnoozing && (
+                      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+                        {SNOOZE_OPTIONS.map((option) => (
+                          <SecondaryButton
+                            key={option.days}
+                            type="button"
+                            className="w-full sm:w-auto"
+                            onClick={() => handleSnooze(item.item_id, item.item_type, option.days)}
+                          >
+                            {option.label}
+                          </SecondaryButton>
+                        ))}
                         <button
-                          onClick={() => handleSnooze(item.item_id, item.item_type, 1)}
-                          className="px-2 py-1.5 text-primary hover:bg-neutral-bg cursor-pointer"
-                        >
-                          1d
-                        </button>
-                        <button
-                          onClick={() => handleSnooze(item.item_id, item.item_type, 3)}
-                          className="px-2 py-1.5 text-primary hover:bg-neutral-bg cursor-pointer"
-                        >
-                          3d
-                        </button>
-                        <button
-                          onClick={() => handleSnooze(item.item_id, item.item_type, 7)}
-                          className="px-2 py-1.5 text-primary hover:bg-neutral-bg cursor-pointer"
-                        >
-                          1w
-                        </button>
-                        <button
+                          type="button"
                           onClick={() => setSnoozeTargetId(null)}
-                          className="px-2 py-1.5 text-danger hover:bg-neutral-bg cursor-pointer"
+                          className="min-h-11 rounded-2xl border border-danger/30 px-4 py-2.5 font-label text-xs font-semibold uppercase tracking-[0.18em] text-danger transition-all hover:bg-danger/5"
                         >
-                          X
+                          Cancel
                         </button>
                       </div>
                     )}
-                    
-                    {/* Source navigation link */}
-                    {item.item_type === 'inbox_item' && (
-                      <Link
-                        href="/inbox"
-                        className="border border-border text-primary bg-surface px-3 py-1.5 uppercase hover:bg-neutral-bg transition-all flex items-center gap-0.5"
-                      >
-                        <span>Triage</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
-                    )}
-                    {item.item_type === 'project' && (
-                      <Link
-                        href={`/projects?projectId=${item.item_id}`}
-                        className="border border-border text-primary bg-surface px-3 py-1.5 uppercase hover:bg-neutral-bg transition-all flex items-center gap-0.5"
-                      >
-                        <span>Inspect</span>
-                        <ArrowRight className="h-3 w-3" />
-                      </Link>
-                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 border border-dashed border-border bg-background/30">
-              <p className="font-sans text-xs text-secondary italic">Nothing needs a decision right now.</p>
-            </div>
-          )}
-
-        </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <EmptyState
+            title="Queue is clear"
+            description="Nothing needs a structured decision right now. Use the ritual reviews to stay ahead of drift."
+            action={
+              <Link href="/review/weekly">
+                <SecondaryButton type="button">Open Weekly Review</SecondaryButton>
+              </Link>
+            }
+          />
+        )}
       </EditorialCard>
     </PageShell>
   );

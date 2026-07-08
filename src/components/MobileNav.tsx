@@ -147,7 +147,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
   return (
     <div className="app-mobile-nav md:hidden flex flex-col shrink-0">
       {/* Top Mobile Header */}
-      <header className="sticky top-0 bg-surface/95 backdrop-blur border-b border-border px-4 py-3 flex items-center justify-between z-40">
+      <header className="sticky top-0 bg-surface/88 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between z-40">
         <div className="min-w-0">
           <div className="flex items-baseline gap-2">
             <span className="font-amharic font-bold text-xl text-primary tracking-tight">ሁሉ</span>
@@ -160,14 +160,12 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
         
         <div className="flex items-center gap-3">
           {/* Mobile Cloud Indicator */}
-          {isOnline ? (
-            <Cloud className="h-4 w-4 text-success" />
-          ) : (
+          {!isOnline && (
             <CloudOff className="h-4 w-4 text-accent" />
           )}
 
           {/* Micro Life Score Badge */}
-          <div className="bg-primary text-on-primary px-2 py-0.5 rounded-none font-label text-xs font-semibold tracking-wider">
+          <div className="rounded-full bg-primary text-on-primary px-2.5 py-1 font-label text-[11px] font-semibold tracking-[0.16em]">
             {lifeScore}%
           </div>
 
@@ -177,7 +175,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
       </header>
 
       {/* Bottom Sticky Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface/95 backdrop-blur border-t border-border grid grid-cols-5 items-center px-1 pt-2 pb-[calc(0.5rem+env(safe-area-inset-bottom))] z-40 shadow-[0_-8px_24px_rgba(0,0,0,0.05)]">
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface/88 backdrop-blur-xl border-t border-border grid grid-cols-5 items-center px-2 pt-2 pb-[calc(0.6rem+env(safe-area-inset-bottom))] z-40 shadow-[0_-8px_24px_rgba(0,0,0,0.05)]">
         {coreMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = isActiveRoute(item.href);
@@ -185,9 +183,9 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
             <Link
               key={item.name}
               href={item.href}
-              className={`mobile-tab min-h-12 flex flex-col items-center justify-center gap-1 border-t-2 px-1 ${
+              className={`mobile-tab min-h-12 rounded-2xl flex flex-col items-center justify-center gap-1 border px-1 ${
                 isActive
-                  ? 'border-accent text-primary font-bold'
+                  ? 'border-accent/35 bg-accent/6 text-primary font-bold'
                   : 'border-transparent text-secondary'
               }`}
               aria-current={isActive ? 'page' : undefined}
@@ -201,9 +199,9 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
         {/* More Button */}
         <button
           onClick={() => setIsDrawerOpen(!isDrawerOpen)}
-          className={`mobile-tab min-h-12 flex flex-col items-center justify-center gap-1 border-t-2 px-1 cursor-pointer ${
+          className={`mobile-tab min-h-12 rounded-2xl flex flex-col items-center justify-center gap-1 border px-1 cursor-pointer ${
             isDrawerOpen || activeMoreItem
-              ? 'border-accent text-primary font-bold'
+              ? 'border-accent/35 bg-accent/6 text-primary font-bold'
               : 'border-transparent text-secondary'
           }`}
           aria-expanded={isDrawerOpen}
@@ -220,7 +218,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
       {!isModalActive && pathname !== '/academy' && !pathname.startsWith('/oracle') && (
         <button
           onClick={handleFabClick}
-          className="fixed bottom-20 right-6 bg-accent text-on-accent border border-accent/20 p-3.5 shadow-lg z-40 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 active:rotate-90 hover:opacity-90 rounded-none btn-press hover:shadow-xl"
+          className="fixed bottom-20 right-5 h-14 w-14 rounded-[20px] bg-accent text-on-accent border border-accent/20 shadow-[0_16px_32px_rgba(184,66,46,0.28)] z-40 cursor-pointer flex items-center justify-center transition-all duration-200 active:scale-90 hover:opacity-95 btn-press hover:shadow-xl"
           title={isTasksPage ? 'Create New Task' : 'Quick Capture'}
         >
           <Plus className="h-6 w-6" />
@@ -237,7 +235,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
           />
           
           {/* Drawer Card */}
-          <div className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-3 right-3 bg-surface border border-primary shadow-[0_18px_50px_rgba(0,0,0,0.22)] z-[9999] md:hidden animate-drawer">
+          <div className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-3 right-3 rounded-[24px] bg-surface border border-primary shadow-[0_18px_50px_rgba(0,0,0,0.22)] z-[9999] md:hidden animate-drawer overflow-hidden">
             <div className="flex justify-between items-start border-b border-border p-4 font-label">
               <div>
                 <span className="font-label text-[10px] text-secondary uppercase tracking-[0.18em] font-semibold">
@@ -263,7 +261,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsDrawerOpen(false)}
-                    className={`btn-press flex items-center gap-3 p-3 border text-left ${
+                    className={`btn-press flex items-center gap-3 rounded-2xl p-3 border text-left ${
                       isActive
                         ? 'bg-primary text-on-primary border-primary'
                         : 'bg-neutral-bg/45 border-border hover:border-primary'
@@ -271,7 +269,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
                     style={{ '--stagger-i': i } as React.CSSProperties}
                     aria-current={isActive ? 'page' : undefined}
                   >
-                    <span className={`h-10 w-10 border flex items-center justify-center shrink-0 ${
+                    <span className={`h-10 w-10 rounded-xl border flex items-center justify-center shrink-0 ${
                       isActive ? 'border-on-primary/30' : 'border-border bg-surface'
                     }`}>
                       <Icon className="h-5 w-5" />
@@ -297,7 +295,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
                 setIsDrawerOpen(false);
                 signOut();
               }}
-              className="w-[calc(100%-1.5rem)] mx-3 mb-3 py-3 border border-accent/40 hover:border-accent text-accent bg-neutral-bg/30 hover:bg-accent/5 font-label text-xs uppercase tracking-wider font-semibold cursor-pointer flex items-center justify-center gap-2 btn-press"
+              className="w-[calc(100%-1.5rem)] mx-3 mb-3 rounded-2xl py-3 border border-accent/40 hover:border-accent text-accent bg-neutral-bg/30 hover:bg-accent/5 font-label text-xs uppercase tracking-[0.18em] font-semibold cursor-pointer flex items-center justify-center gap-2 btn-press"
             >
               <LogOut className="h-4 w-4 shrink-0" />
               <span>Log Out</span>

@@ -7,6 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import EmptyState from '@/components/ui/EmptyState';
 import { Search, Calendar, ChevronRight, Activity, Moon, Droplet, CheckCircle } from 'lucide-react';
 
 export default function JournalPage() {
@@ -331,25 +332,25 @@ export default function JournalPage() {
     return (
       <PageShell>
         <div className="space-y-12 animate-pulse">
-          <div className="border-b border-border pb-4 w-full">
-            <div className="h-8 bg-border/40 w-48 rounded-none mb-2" />
-            <div className="h-4 bg-border/20 w-80 rounded-none" />
+          <div className="app-panel w-full px-6 py-6">
+            <div className="mb-2 h-8 w-48 bg-border/40 rounded-xl" />
+            <div className="h-4 w-80 bg-border/20 rounded-xl" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 bg-surface border border-border p-6 rounded-none space-y-6">
-              <div className="h-4 bg-border/30 w-32 rounded-none" />
+            <div className="app-panel lg:col-span-2 space-y-6 p-6">
+              <div className="h-4 w-32 bg-border/30 rounded-xl" />
               <div className="space-y-4">
-                <div className="h-8 bg-border/20 w-full rounded-none" />
-                <div className="h-8 bg-border/20 w-full rounded-none" />
-                <div className="h-24 bg-border/20 w-full rounded-none" />
+                <div className="h-8 w-full bg-border/20 rounded-2xl" />
+                <div className="h-8 w-full bg-border/20 rounded-2xl" />
+                <div className="h-24 w-full bg-border/20 rounded-[20px]" />
               </div>
             </div>
             <div className="space-y-8 lg:col-span-1">
-              <div className="bg-surface border border-border p-6 rounded-none space-y-4">
-                <div className="h-4 bg-border/30 w-24 rounded-none" />
-                <div className="h-8 bg-border/20 w-full rounded-none" />
-                <div className="h-16 bg-border/20 w-full rounded-none" />
+              <div className="app-panel space-y-4 p-6">
+                <div className="h-4 w-24 bg-border/30 rounded-xl" />
+                <div className="h-8 w-full bg-border/20 rounded-2xl" />
+                <div className="h-16 w-full bg-border/20 rounded-[20px]" />
               </div>
             </div>
           </div>
@@ -362,30 +363,31 @@ export default function JournalPage() {
     <PageShell>
       {/* Header */}
       <SectionHeader
-        title="THE CHRONICLES"
-        subtitle="Morning Intentions • Evening Reflections • Daily Journal"
+        title="Journal"
+        subtitle="Morning intentions, evening reflections, and one place to preserve the shape of the day."
+        meta={selectedDateStr}
       />
 
       {/* Mobile view Tab Selector */}
-      <div className="flex lg:hidden border border-border font-label text-xs rounded-none bg-background overflow-hidden">
+      <div className="app-panel-subtle flex overflow-hidden lg:hidden font-label text-xs">
         <button
           type="button"
           onClick={() => setMobileTab('editor')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer btn-press ${mobileTab === 'editor' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
+          className={`btn-press flex-1 px-3 py-3 text-center uppercase tracking-[0.18em] font-bold ${mobileTab === 'editor' ? 'bg-primary text-on-primary' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
         >
           Editor
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('metrics')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold border-x border-border cursor-pointer btn-press ${mobileTab === 'metrics' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
+          className={`btn-press flex-1 border-x border-border px-3 py-3 text-center uppercase tracking-[0.18em] font-bold ${mobileTab === 'metrics' ? 'bg-primary text-on-primary' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
         >
           Insights
         </button>
         <button
           type="button"
           onClick={() => setMobileTab('timeline')}
-          className={`flex-1 text-center py-2.5 uppercase tracking-wider font-bold cursor-pointer btn-press ${mobileTab === 'timeline' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
+          className={`btn-press flex-1 px-3 py-3 text-center uppercase tracking-[0.18em] font-bold ${mobileTab === 'timeline' ? 'bg-primary text-on-primary' : 'text-primary bg-surface hover:bg-neutral-bg/50'}`}
         >
           Timeline
         </button>
@@ -396,14 +398,15 @@ export default function JournalPage() {
         {/* ==========================================
             COLUMN 1 & 2: ACTIVE JOURNAL WRITER
            ========================================== */}
-        <section className={`lg:col-span-2 bg-surface border border-border p-6 rounded-none space-y-6 shadow-none ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
+        <section className={`app-panel lg:col-span-2 space-y-6 p-5 sm:p-6 ${mobileTab !== 'editor' ? 'hidden lg:block' : ''}`}>
           <form onSubmit={handleSaveJournal} className="space-y-6">
             
             {/* Header select date bar */}
-            <div className="flex justify-between items-center border-b border-border pb-3">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-bold">
-                Journal Entry Editor
-              </span>
+            <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="app-kicker">Entry</p>
+                <h2 className="mt-2 font-display text-2xl text-primary">Write the day while it is still clear.</h2>
+              </div>
 
               <div className="flex items-center space-x-2 font-label text-xs">
                 <Calendar className="h-4 w-4 text-accent" />
@@ -411,7 +414,7 @@ export default function JournalPage() {
                   type="date"
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="bg-neutral-bg border border-border px-2 py-1 font-sans focus:outline-none rounded-none text-xs text-primary font-bold"
+                  className="min-h-11 rounded-2xl bg-surface border border-border px-3 py-2 font-sans text-xs font-bold text-primary focus:outline-none"
                 />
               </div>
             </div>
@@ -429,21 +432,21 @@ export default function JournalPage() {
                   value={mIntention1}
                   onChange={(e) => { setMIntention1(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="1. e.g. Execute clean SQL migrations successfully"
-                  className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
                 />
                 <input
                   type="text"
                   value={mIntention2}
                   onChange={(e) => { setMIntention2(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="2. e.g. Interval running outdoors 35 minutes"
-                  className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
                 />
                 <input
                   type="text"
                   value={mIntention3}
                   onChange={(e) => { setMIntention3(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="3. e.g. Read draft of design system standard"
-                  className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
                 />
               </div>
             </div>
@@ -464,22 +467,22 @@ export default function JournalPage() {
                     value={eLearned1}
                     onChange={(e) => { setELearned1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Next.js fonts load as local stylesheet resources"
-                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
-                  />
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                />
                   <input
                     type="text"
                     value={eLearned2}
                     onChange={(e) => { setELearned2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Flat designs require clean negative spaces to feel premium"
-                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
-                  />
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                />
                   <input
                     type="text"
                     value={eLearned3}
                     onChange={(e) => { setELearned3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Leitner card deck reviews work best daily"
-                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
-                  />
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                />
                 </div>
               </div>
 
@@ -496,22 +499,22 @@ export default function JournalPage() {
                     value={eBetter1}
                     onChange={(e) => { setEBetter1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Avoid starting tasks past 9 PM"
-                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
-                  />
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                />
                   <input
                     type="text"
                     value={eBetter2}
                     onChange={(e) => { setEBetter2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Set reminders for hydration goals"
-                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
-                  />
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                />
                   <input
                     type="text"
                     value={eBetter3}
                     onChange={(e) => { setEBetter3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Keep card answers shorter for Leitner system"
-                    className="w-full bg-neutral-bg/45 border border-border px-3 py-1.5 focus:outline-none focus:border-primary font-sans rounded-none"
-                  />
+                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                />
                 </div>
               </div>
 
@@ -528,13 +531,13 @@ export default function JournalPage() {
                 onChange={(e) => { setFreeText(e.target.value); setSaveStatus('dirty'); }}
                 rows={5}
                 placeholder="Write freely here..."
-                className="w-full bg-neutral-bg/45 border border-border px-4 py-3 text-xs text-primary focus:outline-none focus:border-primary font-sans resize-none leading-relaxed rounded-none"
+                className="w-full rounded-[20px] bg-neutral-bg/45 border border-border px-4 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans resize-none leading-relaxed"
               />
             </div>
 
             {/* The single primary Terracotta red Reserved action button */}
-            <div className="flex items-center justify-between gap-4">
-              <span className="font-label text-xs uppercase tracking-wider text-secondary font-bold">
+            <div className="app-panel-subtle flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
+              <span className="font-label text-xs uppercase tracking-[0.18em] text-secondary font-bold">
                 {saveStatus === 'saved' && '• Saved'}
                 {saveStatus === 'saving' && '• Saving...'}
                 {saveStatus === 'dirty' && '• Unsaved changes'}
@@ -542,7 +545,7 @@ export default function JournalPage() {
               <PrimaryButton 
                 type="submit" 
                 disabled={saveStatus === 'saving'}
-                className="flex-grow"
+                className="w-full sm:w-auto"
               >
                 {saveStatus === 'saving' ? 'SAVING...' : 'SAVE CHRONICLE ENTRY'}
               </PrimaryButton>
@@ -557,8 +560,8 @@ export default function JournalPage() {
         <div className={`space-y-8 lg:col-span-1 ${mobileTab === 'editor' ? 'hidden lg:block' : ''}`}>
           
           {/* DAILY INSIGHTS & METRICS PANEL */}
-          <section className={`bg-surface border border-border p-6 rounded-none space-y-6 shadow-none ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
-            <div className="border-b border-border pb-2 flex items-center space-x-2">
+          <section className={`app-panel space-y-6 p-5 sm:p-6 ${mobileTab === 'timeline' ? 'hidden lg:block' : ''}`}>
+            <div className="border-b border-border pb-3 flex items-center space-x-2">
               <Activity className="h-4 w-4 text-accent" />
               <span className="font-label text-xs text-primary uppercase tracking-[0.15em] font-bold">
                 Day Insights & Metrics
@@ -577,13 +580,13 @@ export default function JournalPage() {
                   {mood === 5 && '5 - Excellent'}
                 </span>
               </div>
-              <div className="flex gap-1.5 bg-background border border-border rounded-none p-1">
+              <div className="flex gap-1.5 bg-background border border-border rounded-2xl p-1">
                 {[1, 2, 3, 4, 5].map((val) => (
                   <button
                     key={val}
                     type="button"
                     onClick={() => handleMetricChange(val, sleepHours, waterIntake)}
-                    className={`flex-1 py-1 text-center font-label text-xs uppercase border transition-all cursor-pointer rounded-none btn-press font-bold ${
+                    className={`btn-press flex-1 rounded-xl border py-2 text-center font-label text-xs uppercase transition-all font-bold ${
                       mood === val ? 'bg-primary text-on-primary border-primary font-bold' : 'border-transparent text-secondary hover:border-border hover:bg-neutral-bg/50'
                     }`}
                   >
@@ -607,7 +610,7 @@ export default function JournalPage() {
                   step="0.5"
                   value={sleepHours}
                   onChange={(e) => handleMetricChange(mood, parseFloat(e.target.value) || 0, waterIntake)}
-                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 font-sans focus:outline-none focus:border-primary rounded-none text-xs text-primary font-semibold"
+                  className="w-full rounded-2xl bg-neutral-bg border border-border px-3 py-2 font-sans text-xs font-semibold text-primary focus:outline-none focus:border-primary"
                 />
               </div>
               <div className="space-y-1.5 font-label text-xs">
@@ -622,7 +625,7 @@ export default function JournalPage() {
                   step="0.25"
                   value={waterIntake}
                   onChange={(e) => handleMetricChange(mood, sleepHours, parseFloat(e.target.value) || 0)}
-                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 font-sans focus:outline-none focus:border-primary rounded-none text-xs text-primary font-semibold"
+                  className="w-full rounded-2xl bg-neutral-bg border border-border px-3 py-2 font-sans text-xs font-semibold text-primary focus:outline-none focus:border-primary"
                 />
               </div>
             </div>
@@ -632,7 +635,7 @@ export default function JournalPage() {
               <span className="font-label text-xs text-secondary uppercase tracking-wider block font-bold">
                 Habits Tracker
               </span>
-              <div className="space-y-2.5 bg-neutral-bg/45 p-3 border border-border rounded-none">
+              <div className="space-y-2.5 rounded-[20px] bg-neutral-bg/45 p-4 border border-border">
                 {habits.filter(h => !h.is_archived).map((habit) => {
                   const checked = getHabitStatus(habit.id);
                   return (
@@ -661,7 +664,7 @@ export default function JournalPage() {
               <span className="font-label text-xs text-secondary uppercase tracking-wider block font-bold">
                 Tasks Completed Today
               </span>
-              <div className="space-y-2 bg-neutral-bg/45 p-3 border border-border rounded-none max-h-36 overflow-y-auto">
+              <div className="space-y-2 rounded-[20px] bg-neutral-bg/45 p-4 border border-border max-h-36 overflow-y-auto">
                 {completedTasks.map((task) => (
                   <div key={task.id} className="flex items-center space-x-2 text-xs font-sans text-primary">
                     <CheckCircle className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -676,7 +679,7 @@ export default function JournalPage() {
           </section>
 
           {/* HISTORICAL TIMELINE PANEL */}
-          <section className={`bg-surface border border-border p-6 rounded-none flex flex-col justify-between max-h-[500px] shadow-none ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
+          <section className={`app-panel flex max-h-[500px] flex-col justify-between p-5 sm:p-6 ${mobileTab === 'metrics' ? 'hidden lg:block' : ''}`}>
             <div className="space-y-4 flex-1 flex flex-col overflow-hidden">
               <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-1 font-bold">
                 Historical Timeline
@@ -690,7 +693,7 @@ export default function JournalPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search past logs..."
-                  className="w-full bg-neutral-bg border border-border pl-9 pr-3 py-2 focus:outline-none focus:border-primary font-sans rounded-none"
+                  className="w-full rounded-2xl bg-neutral-bg border border-border py-2.5 pl-9 pr-3 font-sans focus:outline-none focus:border-primary"
                 />
               </div>
 
@@ -712,7 +715,7 @@ export default function JournalPage() {
                         // Auto-toggle back to editor on mobile when selecting a past date
                         setMobileTab('editor');
                       }}
-                      className={`p-3 border rounded-none cursor-pointer transition-all flex justify-between items-center btn-press ${
+                      className={`btn-press flex items-center justify-between rounded-2xl border p-3 transition-all ${
                         selectedDateStr === entry.date ? 'bg-neutral-bg border-primary' : 'bg-surface border-border/60 hover:bg-neutral-bg/20 hover:border-primary'
                       }`}
                     >
@@ -732,7 +735,10 @@ export default function JournalPage() {
                 })}
 
                 {filteredLogs.length === 0 && (
-                  <p className="font-sans text-xs text-secondary italic text-center py-12">No matching logs found.</p>
+                  <EmptyState
+                    title="No matching entries"
+                    description="Try a different date or keyword to surface older journal entries."
+                  />
                 )}
               </div>
             </div>

@@ -661,7 +661,7 @@ function TasksContent() {
       </section>
 
       {showMobileFilters && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[3px] p-4 md:hidden flex items-end">
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[3px] p-4 pb-[calc(4.25rem+env(safe-area-inset-bottom)+1rem)] md:hidden flex items-end">
           <div className="w-full bg-surface border border-border shadow-2xl">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-neutral-bg/50">
               <div>

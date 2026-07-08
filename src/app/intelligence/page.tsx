@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
+import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton } from '@/components/ui/Buttons';
 import StatusBadge from '@/components/ui/StatusBadge';
 import {
@@ -282,18 +283,18 @@ export default function IntelligenceFeed() {
         subtitle="Daily synthesis, unresolved signals, and next actions"
         meta={new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }).toUpperCase()}
         action={
-          <PrimaryButton onClick={handleGenerateDigest} disabled={generating} className="flex items-center gap-1">
+          <PrimaryButton onClick={handleGenerateDigest} disabled={generating} className="w-full md:w-auto">
             <RefreshCw className={`h-4 w-4 ${generating ? 'animate-spin' : ''}`} />
             <span>{todayDigest ? 'Refresh Brief' : 'Generate Brief'}</span>
           </PrimaryButton>
         }
       />
 
-      <section className="bg-surface border border-primary">
+      <section className="app-panel overflow-hidden">
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.95fr)]">
           <div className="p-5 md:p-7 border-b xl:border-b-0 xl:border-r border-border">
             <div className="flex flex-wrap items-center gap-2 mb-4">
-              <span className="font-label text-[10px] bg-accent text-on-accent px-2 py-1 uppercase tracking-wider font-bold">
+              <span className="rounded-full bg-accent px-2.5 py-1 font-label text-[10px] uppercase tracking-[0.18em] font-bold text-on-accent">
                 Daily Brief
               </span>
               <span className="font-label text-[10px] text-secondary uppercase tracking-[0.16em]">
@@ -305,7 +306,7 @@ export default function IntelligenceFeed() {
                 </span>
               )}
             </div>
-            <h2 className="font-display text-2xl md:text-4xl font-bold text-primary leading-tight max-w-3xl">
+            <h2 className="max-w-3xl font-display text-[2rem] font-bold leading-[0.95] tracking-[-0.04em] text-primary md:text-[3.2rem]">
               {todayDigest?.summary || 'No synthesis exists yet. Generate a brief to turn today’s captures into an actionable picture.'}
             </h2>
             <p className="font-sans text-sm text-secondary max-w-2xl leading-relaxed mt-4">
@@ -313,16 +314,16 @@ export default function IntelligenceFeed() {
                 ? `${computedSuggestedActions.length} suggested action${computedSuggestedActions.length === 1 ? '' : 's'} are ready for approval, and ${computedQuestions.length} open question${computedQuestions.length === 1 ? '' : 's'} still need resolution.`
                 : 'The feed is quiet right now. Capture more material or regenerate the brief after you process today’s work.'}
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-6 font-label text-xs uppercase tracking-wider font-bold">
+            <div className="mt-6 flex flex-col gap-3 font-label text-xs font-bold uppercase tracking-wider sm:flex-row">
               <Link
                 href="/inbox"
-                className="bg-accent text-on-accent hover:opacity-95 transition-all py-3 px-5 text-center btn-press"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-accent px-5 py-3 text-center font-label text-xs font-bold uppercase tracking-[0.18em] text-on-accent shadow-[0_14px_28px_rgba(184,66,46,0.2)] transition-all btn-press"
               >
                 Open Inbox Queue
               </Link>
               <Link
                 href="/review"
-                className="border border-primary text-primary hover:bg-primary hover:text-on-primary transition-all py-3 px-5 text-center btn-press"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-primary px-5 py-3 text-center font-label text-xs font-bold uppercase tracking-[0.18em] text-primary transition-all hover:bg-primary hover:text-on-primary btn-press"
               >
                 Open Review Room
               </Link>
@@ -335,7 +336,7 @@ export default function IntelligenceFeed() {
                 <div key={metric.label} className="min-h-32 border-b border-r border-border even:border-r-0 xl:[&:nth-child(n+3)]:border-b-0 p-4 flex flex-col justify-between">
                   <Icon className={`h-4 w-4 ${metric.tone}`} />
                   <div>
-                    <div className={`font-display text-3xl font-bold ${metric.tone}`}>{metric.value}</div>
+                    <div className={`app-metric text-3xl ${metric.tone}`}>{metric.value}</div>
                     <div className="font-label text-[10px] text-secondary uppercase tracking-[0.16em] mt-1">
                       {metric.label} · {metric.detail}
                     </div>
@@ -351,28 +352,28 @@ export default function IntelligenceFeed() {
         
         <div className="lg:col-span-8 space-y-6">
           <EditorialCard title="Activity Ledger" subtitle="Today across capture, learning, and execution">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center font-label text-[10px] uppercase font-bold">
-              <div className="bg-background border border-border p-3">
+            <div className="grid grid-cols-2 gap-3 text-center font-label text-[10px] uppercase font-bold sm:grid-cols-3 lg:grid-cols-6">
+              <div className="app-panel-subtle p-3">
                 <span className="text-secondary block">Captured</span>
                 <span className="text-sm font-bold text-primary block mt-0.5">{stats.capturesToday}</span>
               </div>
-              <div className="bg-background border border-border p-3">
+              <div className="app-panel-subtle p-3">
                 <span className="text-secondary block">Processed</span>
                 <span className="text-sm font-bold text-success block mt-0.5">{stats.processedToday}</span>
               </div>
-              <div className="bg-background border border-border p-3">
+              <div className="app-panel-subtle p-3">
                 <span className="text-secondary block">Notes</span>
                 <span className="text-sm font-bold text-primary block mt-0.5">{stats.notesToday}</span>
               </div>
-              <div className="bg-background border border-border p-3">
+              <div className="app-panel-subtle p-3">
                 <span className="text-secondary block">Tasks</span>
                 <span className="text-sm font-bold text-primary block mt-0.5">{stats.tasksToday}</span>
               </div>
-              <div className="bg-background border border-border p-3">
+              <div className="app-panel-subtle p-3">
                 <span className="text-secondary block">Lessons</span>
                 <span className="text-sm font-bold text-primary block mt-0.5">{stats.lessonsToday}</span>
               </div>
-              <div className="bg-background border border-border p-3">
+              <div className="app-panel-subtle p-3">
                 <span className="text-secondary block">Journal</span>
                 <span className="text-sm font-bold text-primary block mt-0.5">{stats.journalsToday > 0 ? 'Logged' : 'None'}</span>
               </div>
@@ -384,18 +385,18 @@ export default function IntelligenceFeed() {
             {computedThemes.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {computedThemes.map((theme: any, i: number) => (
-                  <div key={i} className="border border-border bg-background p-4 flex flex-col justify-between">
+                  <div key={i} className="app-panel-subtle flex flex-col justify-between p-4">
                     <div>
                       <div className="flex justify-between items-baseline mb-2">
-                        <span className="font-label text-xs uppercase font-bold text-primary">{theme.title}</span>
+                        <span className="font-label text-xs uppercase font-bold tracking-[0.18em] text-primary">{theme.title}</span>
                         {theme.related_item_ids?.length > 0 && (
-                          <span className="font-label text-[9px] bg-secondary/15 px-1 py-0.5 uppercase">{theme.related_item_ids.length} items</span>
+                          <span className="rounded-full bg-secondary/15 px-2 py-1 font-label text-[9px] uppercase">{theme.related_item_ids.length} items</span>
                         )}
                       </div>
-                      <p className="font-sans text-xs text-secondary leading-relaxed mb-4">{theme.summary}</p>
+                      <p className="mb-4 text-sm leading-relaxed text-secondary">{theme.summary}</p>
                     </div>
                     {theme.suggested_action && (
-                      <div className="border-t border-border/40 pt-2 font-label text-[10px] text-accent flex items-center justify-between">
+                      <div className="flex items-center justify-between border-t border-border/40 pt-2 font-label text-[10px] text-accent">
                         <span>Action: {theme.suggested_action}</span>
                       </div>
                     )}
@@ -403,7 +404,10 @@ export default function IntelligenceFeed() {
                 ))}
               </div>
             ) : (
-              <p className="font-sans text-xs text-secondary italic">No themes identified yet. Captured context is minimal.</p>
+              <EmptyState
+                title="No themes yet"
+                description="Capture or process more material first, then regenerate the brief for stronger pattern detection."
+              />
             )}
           </EditorialCard>
 
@@ -412,20 +416,20 @@ export default function IntelligenceFeed() {
             {computedQuestions.length > 0 ? (
               <div className="space-y-3">
                 {computedQuestions.map((q, i) => (
-                  <div key={i} className="flex justify-between items-start gap-4 p-3 border border-border bg-background">
+                  <div key={i} className="app-panel-subtle flex flex-col gap-3 p-4 sm:flex-row sm:items-start sm:justify-between">
                     <div className="space-y-1">
-                      <p className="font-sans text-xs font-semibold text-primary italic flex items-center gap-1">
+                      <p className="flex items-center gap-1 text-sm font-semibold italic text-primary">
                         <HelpCircle className="h-3.5 w-3.5 text-accent shrink-0" />
                         <span>{q.question}</span>
                       </p>
                       {q.suggested_next_step && (
-                        <p className="font-sans text-[11px] text-secondary pl-4.5">Next step: {q.suggested_next_step}</p>
+                        <p className="pl-5 text-sm text-secondary">Next step: {q.suggested_next_step}</p>
                       )}
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex shrink-0 gap-2">
                       <Link
                         href={`/tasks?quickAddName=${encodeURIComponent(q.question)}`}
-                        className="text-[9px] font-label uppercase font-bold text-accent border border-accent/20 px-2 py-1 bg-accent/5 hover:bg-accent hover:text-on-accent"
+                        className="inline-flex min-h-10 items-center justify-center rounded-2xl border border-accent/20 bg-accent/5 px-3 py-2 font-label text-[10px] font-bold uppercase tracking-[0.16em] text-accent transition-all hover:bg-accent hover:text-on-accent"
                       >
                         Action Plan
                       </Link>
@@ -434,7 +438,10 @@ export default function IntelligenceFeed() {
                 ))}
               </div>
             ) : (
-              <p className="font-sans text-xs text-secondary italic">No open learning inquiries detected today.</p>
+              <EmptyState
+                title="No open questions"
+                description="The current brief does not contain unresolved learning threads."
+              />
             )}
           </EditorialCard>
 
@@ -446,23 +453,23 @@ export default function IntelligenceFeed() {
             {computedSuggestedActions.length > 0 ? (
               <div className="space-y-3">
                 {computedSuggestedActions.map((action, i) => (
-                  <div key={i} className="border border-border bg-surface p-3 space-y-2">
+                  <div key={i} className="app-panel-subtle space-y-3 p-4">
                     <div className="flex justify-between items-start">
                       <StatusBadge status={action.type} type="priority" />
                     </div>
-                    <p className="font-sans text-xs font-bold text-primary">{action.title}</p>
-                    <p className="font-sans text-[11px] text-secondary leading-relaxed">{action.reason}</p>
+                    <p className="text-sm font-bold text-primary">{action.title}</p>
+                    <p className="text-sm leading-relaxed text-secondary">{action.reason}</p>
                     
-                    <div className="flex gap-2 pt-2 border-t border-border/40">
+                    <div className="flex flex-col gap-2 border-t border-border/40 pt-3 sm:flex-row">
                       <button
                         onClick={() => handleApproveAction(action, i)}
-                        className="flex-1 text-[9px] font-label font-bold uppercase py-1 text-center bg-accent text-on-accent hover:opacity-90 transition-all cursor-pointer"
+                        className="btn-press inline-flex min-h-10 flex-1 items-center justify-center rounded-2xl bg-accent px-3 py-2 text-center font-label text-[10px] font-bold uppercase tracking-[0.16em] text-on-accent transition-all hover:opacity-90"
                       >
                         Approve
                       </button>
                       <button
                         onClick={() => handleDismissAction(i)}
-                        className="flex-1 text-[9px] font-label font-bold uppercase py-1 text-center border border-border text-secondary hover:bg-background transition-all cursor-pointer"
+                        className="btn-press inline-flex min-h-10 flex-1 items-center justify-center rounded-2xl border border-border px-3 py-2 text-center font-label text-[10px] font-bold uppercase tracking-[0.16em] text-secondary transition-all hover:bg-background"
                       >
                         Dismiss
                       </button>
@@ -471,7 +478,10 @@ export default function IntelligenceFeed() {
                 ))}
               </div>
             ) : (
-              <p className="font-sans text-xs text-secondary italic">All suggestions processed.</p>
+              <EmptyState
+                title="No pending suggestions"
+                description="Everything surfaced by the current brief has already been handled."
+              />
             )}
           </EditorialCard>
 
@@ -479,17 +489,17 @@ export default function IntelligenceFeed() {
             {urgentReviewItems.length > 0 ? (
               <div className="space-y-3">
                 {urgentReviewItems.map((item) => (
-                  <div key={item.id} className="border border-border bg-background p-3 space-y-1">
+                  <div key={item.id} className="app-panel-subtle space-y-2 p-4">
                     <div className="flex justify-between items-center">
                       <span className="font-label text-[9px] uppercase font-bold text-accent">{item.item_type}</span>
                       <span className="font-label text-[9px] text-secondary">{new Date(item.detected_at).toLocaleDateString()}</span>
                     </div>
-                    <p className="font-sans text-xs font-semibold text-primary">{item.title}</p>
-                    <p className="font-sans text-[11px] text-danger italic">{item.reason}</p>
+                    <p className="text-sm font-semibold text-primary">{item.title}</p>
+                    <p className="text-sm italic text-danger">{item.reason}</p>
                     <div className="pt-2 flex justify-end">
                       <Link
                         href="/review"
-                        className="text-[9px] font-label uppercase font-bold text-secondary hover:text-accent flex items-center gap-0.5"
+                        className="inline-flex items-center gap-1 font-label text-[10px] uppercase font-bold tracking-[0.16em] text-secondary hover:text-accent"
                       >
                         <span>Triage Queue</span>
                         <ArrowRight className="h-3 w-3" />
@@ -499,9 +509,10 @@ export default function IntelligenceFeed() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-6">
-                <p className="font-sans text-xs text-secondary italic">All system loops closed and healthy.</p>
-              </div>
+              <EmptyState
+                title="Loops are under control"
+                description="No urgent review signals are decaying right now."
+              />
             )}
           </EditorialCard>
 

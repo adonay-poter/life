@@ -4,7 +4,10 @@
   --background: #F7F5F2; /* Limestone */
   --foreground: #1A1C1E; /* Charcoal Ink */
   --surface: #FFFFFF;
+  --surface-muted: #F1EEE8;
+  --surface-elevated: rgba(255, 255, 255, 0.82);
   --border: #E5E2DC;
+  --border-strong: #D1CBC2;
   
   --primary: #1A1C1E;
   --secondary: #6C7278;
@@ -14,8 +17,15 @@
   --danger: #A63A2B;
   --success: #2C6B4E;
   --warning: #B38600;
+  --focus-ring: rgba(184, 66, 46, 0.18);
+  --shadow-soft: 0 18px 40px rgba(26, 28, 30, 0.06);
+  --shadow-hover: 0 22px 48px rgba(26, 28, 30, 0.1);
   
   --heatmap-zero: #EAE8E4;
+  
+  --gradient-oracle-bg: radial-gradient(circle at top, rgba(255, 255, 255, 0.98), rgba(247, 245, 242, 0.88) 52%, rgba(240, 236, 229, 0.92) 100%);
+  --gradient-composer-bg: linear-gradient(180deg, rgba(247, 245, 242, 0.1), rgba(247, 245, 242, 0.92) 18%, rgba(247, 245, 242, 0.98) 100%);
+  --gradient-header-bg: linear-gradient(180deg, rgba(247, 245, 242, 0.92), rgba(247, 245, 242, 0.72));
   
   --font-fraunces: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-public-sans: var(--font-public-sans), Arial, Helvetica, sans-serif;
@@ -26,7 +36,10 @@
   --background: #101112; /* Dark Limestone */
   --foreground: #F7F5F2; /* Off-white */
   --surface: #1A1C1E;    /* Dark Charcoal Surface */
+  --surface-muted: #151719;
+  --surface-elevated: rgba(26, 28, 30, 0.78);
   --border: #2D3135;     /* Dark subtle border */
+  --border-strong: #3D4349;
   
   --primary: #F7F5F2;
   --secondary: #9BA1A6;
@@ -36,15 +49,25 @@
   --danger: #E85E4D;
   --success: #4EAD7B;
   --warning: #F5C453;
+  --focus-ring: rgba(226, 88, 62, 0.22);
+  --shadow-soft: 0 18px 44px rgba(0, 0, 0, 0.28);
+  --shadow-hover: 0 22px 52px rgba(0, 0, 0, 0.38);
   
   --heatmap-zero: #222426;
+  
+  --gradient-oracle-bg: radial-gradient(circle at top, rgba(26, 28, 30, 0.98), rgba(16, 17, 18, 0.88) 52%, rgba(10, 11, 12, 0.92) 100%);
+  --gradient-composer-bg: linear-gradient(180deg, rgba(16, 17, 18, 0.1), rgba(16, 17, 18, 0.92) 18%, rgba(16, 17, 18, 0.98) 100%);
+  --gradient-header-bg: linear-gradient(180deg, rgba(16, 17, 18, 0.92), rgba(16, 17, 18, 0.72));
 }
 
 @theme {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-elevated: var(--surface-elevated);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   
   --color-neutral-bg: var(--background);
   --color-on-primary: var(--on-accent);
@@ -65,9 +88,9 @@
   --font-label: var(--font-space-grotesk), monospace;
   --font-amharic: var(--font-zemach), sans-serif;
   
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
+  --radius-sm: 10px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
 
   /* Global slightly larger typography scale for readability */
   --text-xs: 0.8rem;
@@ -99,11 +122,61 @@ body {
   margin: 0;
   padding: 0;
   overflow-x: clip;
+  background-image:
+    radial-gradient(circle at top left, rgba(184, 66, 46, 0.08), transparent 30%),
+    radial-gradient(circle at top right, rgba(108, 114, 120, 0.08), transparent 24%);
+}
+
+::selection {
+  background: rgba(184, 66, 46, 0.18);
+  color: var(--foreground);
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 /* Smooth transitions for navigation and lists */
 .transition-all-custom {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-panel {
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface-elevated);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(18px);
+}
+
+.app-panel-subtle {
+  border: 1px solid color-mix(in srgb, var(--border) 88%, transparent);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-muted) 76%, transparent);
+}
+
+.app-kicker {
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--secondary);
+}
+
+.app-metric {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 /* ===================================================
@@ -307,7 +380,10 @@ body.academy-reader-open .app-mobile-nav {
 
 /* Make form elements sitewide slightly larger for easier interaction */
 form input[type="text"],
+form input[type="email"],
+form input[type="number"],
 form input[type="date"],
+form input[type="search"],
 form select,
 form textarea {
   padding-top: 0.5rem !important;
@@ -346,4 +422,65 @@ form textarea {
 @utility slide-in-from-top-4 {
   --tw-enter-translate-y: -1rem;
   animation-name: enter;
+}
+
+/* --- Sidebar responsive height scaling --- */
+@media (max-height: 850px) {
+  /* Shrink sidebar padding and gaps */
+  .app-sidebar-shell:not(.w-20) {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  .app-sidebar-shell:not(.w-20) .flex.min-h-0.flex-1.flex-col {
+    gap: 0.75rem !important;
+  }
+  
+  /* Shrink header panel padding */
+  .app-sidebar-shell:not(.w-20) .app-panel-subtle {
+    padding: 0.5rem 0.75rem !important;
+  }
+  
+  /* Shrink navigation group titles and spacing */
+  .app-sidebar-shell:not(.w-20) nav {
+    gap: 0.5rem !important;
+  }
+  .app-sidebar-shell:not(.w-20) nav .space-y-1 {
+    margin-top: 0.25rem !important;
+  }
+  .app-sidebar-shell:not(.w-20) nav span.font-label {
+    font-size: 8px !important;
+    margin-bottom: 2px !important;
+  }
+  
+  /* Shrink nav link padding */
+  .app-sidebar-shell:not(.w-20) .nav-link {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+    font-size: 12px !important;
+  }
+  
+  /* Shrink Quick Capture button */
+  .app-sidebar-shell:not(.w-20) button.bg-accent {
+    min-height: 2.25rem !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+  }
+
+  /* Shrink footer sections */
+  .app-sidebar-shell:not(.w-20) .border-t {
+    padding-top: 0.5rem !important;
+    gap: 0.5rem !important;
+  }
+  .app-sidebar-shell:not(.w-20) .app-panel-subtle.w-full {
+    padding: 0.5rem !important;
+  }
+  .app-sidebar-shell:not(.w-20) .app-panel-subtle.w-full .font-display {
+    font-size: 14px !important;
+  }
+  .app-sidebar-shell:not(.w-20) button.text-secondary {
+    padding-top: 0.35rem !important;
+    padding-bottom: 0.35rem !important;
+  }
 }

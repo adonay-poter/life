@@ -8,6 +8,8 @@ import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import EmptyState from '@/components/ui/EmptyState';
+import { Input, Select } from '@/components/ui/Inputs';
 import { Trash2, Check, Smile, Moon, Droplet, Archive, X } from 'lucide-react';
 
 export default function HabitsPage() {
@@ -259,8 +261,9 @@ export default function HabitsPage() {
     <PageShell>
       {/* Header */}
       <SectionHeader
-        title="THE HABIT ENGINE"
-        subtitle="Daily Tracker Matrix • 180-Day Discipline Heatmap"
+        title="Habit Engine"
+        subtitle="Track consistency, review the month, and keep the system honest without making it heavy."
+        meta={formattedMonth}
         action={
           <PrimaryButton onClick={() => setShowAddHabitModal(true)}>
             Add Habit
@@ -269,8 +272,8 @@ export default function HabitsPage() {
       />
 
       {/* 180-DAY HEATMAP SECTION */}
-      <section className="bg-surface border border-border p-6 rounded-none space-y-4 shadow-none">
-        <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-1 mb-2 font-bold">
+      <section className="app-panel space-y-4 p-5 sm:p-6">
+        <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-2 mb-2 font-bold">
           Discipline Heatmap (Last 180 Days)
         </span>
         
@@ -294,7 +297,7 @@ export default function HabitsPage() {
                   {week.map((day, dayIdx) => (
                     <div
                       key={day.date || `empty-${weekIdx}-${dayIdx}`}
-                      className={`h-3 w-3 rounded-none border border-background/20 ${getHeatmapColor(day.level)} transition-colors`}
+                      className={`h-3 w-3 rounded-[4px] border border-background/20 ${getHeatmapColor(day.level)} transition-colors`}
                       title={day.date ? `${day.date}: ${day.completed}/${day.total} habits checked` : undefined}
                     />
                   ))}
@@ -320,7 +323,7 @@ export default function HabitsPage() {
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
         
         {/* DAILY MATRIX TABLE */}
-        <section className="xl:col-span-3 bg-surface border border-border p-6 rounded-none space-y-6 shadow-none">
+        <section className="app-panel xl:col-span-3 space-y-6 p-5 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center border-b border-border pb-2 mb-4 gap-3">
             <h4 className="font-serif text-lg font-bold text-primary tracking-tight">
               {formattedMonth} MATRIX
@@ -330,24 +333,25 @@ export default function HabitsPage() {
               {/* Category Filter */}
               <div className="flex items-center space-x-1.5">
                 <span className="text-secondary uppercase font-bold text-[10px]">Sector:</span>
-                <select
+                <Select
                   value={selectedCategoryFilter}
                   onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                  className="bg-neutral-bg border border-border px-2 py-0.5 focus:outline-none uppercase font-bold text-[10px] rounded-none font-sans"
-                >
-                  <option value="All">All Sectors</option>
-                  <option value="Mind">Mind</option>
-                  <option value="Body">Body</option>
-                  <option value="Spirit">Spirit</option>
-                  <option value="Other">Other</option>
-                </select>
+                  className="min-h-9 px-3 py-1 text-[10px] uppercase font-bold"
+                  options={[
+                    { value: 'All', label: 'All Sectors' },
+                    { value: 'Mind', label: 'Mind' },
+                    { value: 'Body', label: 'Body' },
+                    { value: 'Spirit', label: 'Spirit' },
+                    { value: 'Other', label: 'Other' }
+                  ]}
+                />
               </div>
 
               {/* Show Archived Toggle */}
               <button
                 type="button"
                 onClick={() => setShowArchived(!showArchived)}
-                className={`px-2 py-0.5 border transition-colors cursor-pointer font-bold text-[10px] uppercase rounded-none btn-press ${
+                className={`btn-press rounded-xl px-2.5 py-1 border transition-colors cursor-pointer font-bold text-[10px] uppercase ${
                   showArchived ? 'bg-primary text-on-primary border-primary font-bold' : 'border-border text-secondary hover:text-primary hover:bg-neutral-bg/50'
                 }`}
               >
@@ -359,13 +363,13 @@ export default function HabitsPage() {
               <div className="flex space-x-1 font-bold">
                 <button
                   onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() - 1, 1))}
-                  className="px-2 py-0.5 border border-border hover:bg-neutral-bg/50 font-bold text-[10px] uppercase rounded-none btn-press cursor-pointer"
+                  className="btn-press rounded-xl px-2.5 py-1 border border-border hover:bg-neutral-bg/50 font-bold text-[10px] uppercase cursor-pointer"
                 >
                   &larr; PREV
                 </button>
                 <button
                   onClick={() => setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 1))}
-                  className="px-2 py-0.5 border border-border hover:bg-neutral-bg/50 font-bold text-[10px] uppercase rounded-none btn-press cursor-pointer"
+                  className="btn-press rounded-xl px-2.5 py-1 border border-border hover:bg-neutral-bg/50 font-bold text-[10px] uppercase cursor-pointer"
                 >
                   NEXT &rarr;
                 </button>
@@ -374,7 +378,7 @@ export default function HabitsPage() {
           </div>
 
           {/* MATRIX HORIZONTAL CONTAINER (Desktop only) */}
-          <div className="hidden md:block overflow-x-auto border border-border rounded-none shadow-none">
+          <div className="hidden md:block overflow-x-auto border border-border rounded-[20px]">
             <table className="min-w-[800px] w-full border-collapse text-left font-label text-xs">
               <thead className="bg-neutral-bg/60 border-b border-border">
                 <tr>
@@ -423,7 +427,7 @@ export default function HabitsPage() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-1.5 mt-1 font-label text-[9px] text-secondary uppercase font-bold select-none">
-                        <span className="bg-neutral-bg/60 border border-border px-1.5 py-0.5 rounded-none">{habit.category || 'Other'}</span>
+                        <span className="rounded-full bg-neutral-bg/60 border border-border px-2 py-1">{habit.category || 'Other'}</span>
                         <span>Goal: {habit.frequency || 'daily'} ({habit.goal}{habit.unit || ''})</span>
                       </div>
                     </td>
@@ -437,7 +441,7 @@ export default function HabitsPage() {
                           {habit.type === 'binary' ? (
                             <button
                               onClick={() => handleCheckboxToggle(habit.id, day.dateStr, val)}
-                              className={`mx-auto h-5 w-5 border flex items-center justify-center rounded-none transition-all cursor-pointer ${
+                              className={`mx-auto flex h-5 w-5 items-center justify-center rounded-md border transition-all cursor-pointer ${
                                 val > 0 ? 'bg-primary text-on-primary border-primary' : 'bg-transparent text-transparent border-border hover:bg-neutral-bg/50'
                               } ${animatingCell === `${habit.id}-${day.dateStr}` ? 'animate-pop' : ''}`}
                             >
@@ -555,7 +559,7 @@ export default function HabitsPage() {
 
           {/* MOBILE FRIENDLY DAILY LIST */}
           <div className="block md:hidden space-y-4">
-            <div className="flex justify-between items-center bg-neutral-bg/60 border border-border p-4 rounded-none font-label text-xs">
+            <div className="app-panel-subtle flex items-center justify-between p-4 font-label text-xs">
               <span className="font-bold text-secondary uppercase">Today Focus Matrix</span>
               <span className="text-accent font-bold">{todayStr}</span>
             </div>
@@ -571,12 +575,12 @@ export default function HabitsPage() {
                   return (
                     <div 
                       key={habit.id}
-                      className="bg-surface border border-secondary/25 p-4 rounded-sm flex items-center justify-between shadow-sm transition-all hover:border-primary"
+                      className="app-panel flex items-center justify-between p-4 transition-all hover:border-primary"
                     >
                       <div className="space-y-1 min-w-0 flex-1 mr-4">
                         <div className="flex items-center space-x-2">
                           <span className="font-sans text-sm font-bold text-primary truncate">{habit.name}</span>
-                          <span className="font-label text-[9px] bg-secondary/10 text-secondary px-1 rounded-[2px] font-bold uppercase shrink-0">
+                          <span className="font-label text-[9px] bg-secondary/10 text-secondary px-2 py-1 rounded-full font-bold uppercase shrink-0">
                             {habit.category || 'Other'}
                           </span>
                         </div>
@@ -594,7 +598,7 @@ export default function HabitsPage() {
                         {habit.type === 'binary' ? (
                           <button
                             onClick={() => handleCheckboxToggle(habit.id, todayStr, val)}
-                            className={`h-10 w-10 border border-secondary flex items-center justify-center transition-all cursor-pointer ${
+                            className={`h-10 w-10 rounded-2xl border border-secondary flex items-center justify-center transition-all cursor-pointer ${
                               isDone ? 'bg-primary text-on-primary border-primary' : 'bg-transparent text-transparent hover:bg-neutral-bg'
                             } ${animatingCell === `${habit.id}-${todayStr}` ? 'animate-pop' : ''}`}
                           >
@@ -604,7 +608,7 @@ export default function HabitsPage() {
                           <div className="flex items-center space-x-1 font-sans">
                             <button
                               onClick={() => recordHabitValue(habit.id, todayStr, Math.max(0, val - 1))}
-                              className="h-8 w-8 border border-secondary/30 flex items-center justify-center text-xs font-bold hover:bg-neutral-bg cursor-pointer"
+                              className="h-8 w-8 rounded-xl border border-secondary/30 flex items-center justify-center text-xs font-bold hover:bg-neutral-bg cursor-pointer"
                             >
                               -
                             </button>
@@ -619,7 +623,7 @@ export default function HabitsPage() {
                                 }
                                 recordHabitValue(habit.id, todayStr, nextVal);
                               }}
-                              className={`h-8 w-8 border border-secondary/30 flex items-center justify-center text-xs font-bold hover:bg-neutral-bg cursor-pointer ${
+                              className={`h-8 w-8 rounded-xl border border-secondary/30 flex items-center justify-center text-xs font-bold hover:bg-neutral-bg cursor-pointer ${
                                 isDone ? 'bg-primary text-on-primary border-primary' : ''
                               }`}
                             >
@@ -632,9 +636,10 @@ export default function HabitsPage() {
                   );
                 })
               ) : (
-                <div className="bg-surface border border-border py-10 text-center rounded-none shadow-none">
-                  <p className="font-sans text-xs text-secondary italic">No active habits in this category.</p>
-                </div>
+                <EmptyState
+                  title="No habits here yet"
+                  description="Change the filter or add a habit to start populating this view."
+                />
               )}
             </div>
           </div>
@@ -653,12 +658,12 @@ export default function HabitsPage() {
           }}
           className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] z-[9990] flex items-center justify-center p-4 animate-in fade-in duration-200"
         >
-          <div className="bg-surface border border-border p-6 max-w-sm w-full space-y-4 shadow-none rounded-none font-label text-xs">
+          <div className="app-panel max-w-sm w-full space-y-4 p-6 font-label text-xs">
             <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="font-bold uppercase text-primary text-sm tracking-wide">Configure New Habit</span>
               <button 
                 onClick={() => setShowAddHabitModal(false)} 
-                className="text-secondary hover:text-accent cursor-pointer p-0.5 btn-press"
+                className="text-secondary hover:text-accent cursor-pointer p-2 rounded-xl btn-press"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -667,80 +672,67 @@ export default function HabitsPage() {
             <form onSubmit={handleCreateHabit} className="space-y-4 font-label">
               <div className="space-y-1.5">
                 <label className="block text-xs uppercase text-secondary font-bold">Habit Name *</label>
-                <input
+                <Input
                   type="text"
                   value={newHabitName}
                   onChange={(e) => setNewHabitName(e.target.value)}
                   placeholder="e.g. Workout (30 mins)"
                   required
-                  className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-secondary font-bold">Sector (Category)</label>
-                  <select
-                    value={newHabitCategory}
-                    onChange={(e) => setNewHabitCategory(e.target.value)}
-                    className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none rounded-none"
-                  >
-                    <option value="Mind">Mind</option>
-                    <option value="Body">Body</option>
-                    <option value="Spirit">Spirit</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+                <Select
+                  label="Sector (Category)"
+                  value={newHabitCategory}
+                  onChange={(e) => setNewHabitCategory(e.target.value)}
+                  options={[
+                    { value: 'Mind', label: 'Mind' },
+                    { value: 'Body', label: 'Body' },
+                    { value: 'Spirit', label: 'Spirit' },
+                    { value: 'Other', label: 'Other' }
+                  ]}
+                />
                 
-                <div className="space-y-1.5">
-                  <label className="block text-xs uppercase text-secondary font-bold">Frequency Goal</label>
-                  <select
-                    value={newHabitFrequency}
-                    onChange={(e) => setNewHabitFrequency(e.target.value)}
-                    className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none rounded-none"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="3x/week">3x/Week</option>
-                    <option value="5x/week">5x/Week</option>
-                  </select>
-                </div>
+                <Select
+                  label="Frequency Goal"
+                  value={newHabitFrequency}
+                  onChange={(e) => setNewHabitFrequency(e.target.value)}
+                  options={[
+                    { value: 'daily', label: 'Daily' },
+                    { value: 'weekly', label: 'Weekly' },
+                    { value: '3x/week', label: '3x/Week' },
+                    { value: '5x/week', label: '5x/Week' }
+                  ]}
+                />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary font-bold">Tracker Type</label>
-                <select
-                  value={newHabitType}
-                  onChange={(e) => setNewHabitType(e.target.value as 'binary' | 'numeric')}
-                  className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none rounded-none"
-                >
-                  <option value="binary">Binary Checked (Yes/No)</option>
-                  <option value="numeric">Numeric Metric (Volume)</option>
-                </select>
-              </div>
+              <Select
+                label="Tracker Type"
+                value={newHabitType}
+                onChange={(e) => setNewHabitType(e.target.value as 'binary' | 'numeric')}
+                options={[
+                  { value: 'binary', label: 'Binary Checked (Yes/No)' },
+                  { value: 'numeric', label: 'Numeric Metric (Volume)' }
+                ]}
+              />
 
               {newHabitType === 'numeric' && (
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Unit</label>
-                    <input
-                      type="text"
-                      value={newHabitUnit}
-                      onChange={(e) => setNewHabitUnit(e.target.value)}
-                      placeholder="e.g. glass, km, page"
-                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Goal</label>
-                    <input
-                      type="number"
-                      step="any"
-                      value={newHabitGoal}
-                      onChange={(e) => setNewHabitGoal(parseFloat(e.target.value) || 1)}
-                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
-                    />
-                  </div>
+                  <Input
+                    type="text"
+                    label="Unit"
+                    value={newHabitUnit}
+                    onChange={(e) => setNewHabitUnit(e.target.value)}
+                    placeholder="e.g. glass, km, page"
+                  />
+                  <Input
+                    type="number"
+                    label="Goal"
+                    step="any"
+                    value={newHabitGoal}
+                    onChange={(e) => setNewHabitGoal(parseFloat(e.target.value) || 1)}
+                  />
                 </div>
               )}
 

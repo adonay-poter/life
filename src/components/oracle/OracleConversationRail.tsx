@@ -6,6 +6,7 @@ import { Loader2, MessageSquare, Plus, Search, Trash2 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { supabase } from '@/utils/supabaseClient';
+import EmptyState from '@/components/ui/EmptyState';
 
 interface Conversation {
   id: string;
@@ -96,8 +97,8 @@ export default function OracleConversationRail({
   });
 
   return (
-    <section className="flex h-full min-h-[680px] flex-col overflow-hidden border border-border bg-surface">
-      <div className="border-b border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.92),rgba(247,245,242,0.72))] p-5">
+    <section className="app-panel flex h-full min-h-[680px] flex-col overflow-hidden">
+      <div className="border-b border-border bg-[var(--gradient-header-bg)] p-5">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h3 className="font-display text-xl font-bold text-primary">Threads</h3>
@@ -106,7 +107,7 @@ export default function OracleConversationRail({
             <button
               type="button"
               onClick={onNewChat}
-              className="flex h-10 w-10 items-center justify-center border border-border text-primary transition-colors hover:border-primary"
+              className="btn-press flex h-10 w-10 items-center justify-center rounded-xl border border-border text-primary transition-colors hover:border-primary hover:bg-surface-muted"
               title="New chat"
             >
               <Plus className="h-4 w-4" />
@@ -114,7 +115,7 @@ export default function OracleConversationRail({
           ) : (
             <Link
               href="/oracle"
-              className="flex h-10 items-center gap-2 border border-border px-3 text-xs font-label uppercase tracking-[0.24em] text-primary transition-colors hover:border-primary"
+              className="btn-press flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-xs font-label uppercase tracking-[0.24em] text-primary transition-colors hover:border-primary hover:bg-surface-muted"
             >
               <Plus className="h-4 w-4" />
               New Chat
@@ -122,7 +123,7 @@ export default function OracleConversationRail({
           )}
         </div>
 
-        <div className="mt-4 border border-border bg-surface px-3 py-2">
+        <div className="mt-4 rounded-2xl border border-border bg-surface px-3 py-2.5">
           <div className="flex items-center gap-2 text-secondary">
             <Search className="h-4 w-4" />
             <input
@@ -149,13 +150,15 @@ export default function OracleConversationRail({
             <Loader2 className="h-4 w-4 animate-spin" />
           </div>
         ) : conversations.length === 0 ? (
-          <div className="border border-dashed border-border bg-neutral-bg/40 p-5 text-center">
-            <span className="font-serif text-sm italic text-secondary">No saved conversations yet.</span>
-          </div>
+          <EmptyState
+            title="No saved conversations yet"
+            description="Start a new Oracle thread and it will appear here for quick return."
+          />
         ) : filteredConversations.length === 0 ? (
-          <div className="border border-dashed border-border bg-neutral-bg/40 p-5 text-center">
-            <span className="font-serif text-sm italic text-secondary">No matches.</span>
-          </div>
+          <EmptyState
+            title="No matches"
+            description="Try a different search term to find a saved conversation."
+          />
         ) : (
           <div className="space-y-2">
             {filteredConversations.map((conversation) => {
@@ -172,7 +175,7 @@ export default function OracleConversationRail({
                       onSelectConversation(conversation.id);
                     }
                   }}
-                  className={`group flex items-start justify-between gap-3 border p-3 text-left transition-all ${
+                  className={`group flex items-start justify-between gap-3 rounded-2xl border p-3 text-left transition-all ${
                     isActive
                       ? 'border-primary bg-neutral-bg text-primary shadow-[inset_3px_0_0_0_var(--primary)]'
                       : 'border-border bg-surface text-primary hover:border-primary hover:bg-neutral-bg/40'
@@ -192,7 +195,7 @@ export default function OracleConversationRail({
                   <button
                     type="button"
                     onClick={(event) => void handleDeleteConversation(event, conversation.id)}
-                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center border border-transparent text-secondary opacity-100 transition-colors hover:border-border hover:text-accent lg:opacity-0 lg:group-hover:opacity-100"
+                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-transparent text-secondary opacity-100 transition-colors hover:border-border hover:text-accent lg:opacity-0 lg:group-hover:opacity-100"
                     aria-label="Delete conversation"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

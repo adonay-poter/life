@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { AlertTriangle } from 'lucide-react';
+import { PrimaryButton, SecondaryButton } from './ui/Buttons';
 
 interface ConfirmDeleteModalProps {
   isOpen: boolean;
@@ -76,44 +77,45 @@ export default function ConfirmDeleteModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-modal-title"
-        className="animate-modal relative bg-surface border-2 border-primary p-6 max-w-sm w-full shadow-2xl rounded-none flex flex-col space-y-4"
+        className="animate-modal relative flex w-full max-w-md flex-col space-y-5 rounded-[28px] border border-primary/20 bg-surface p-6 shadow-[0_28px_80px_rgba(26,28,30,0.2)]"
       >
         <div className="flex items-start space-x-3">
-          <div className="bg-[#FFEBEE] p-2 text-tertiary shrink-0 border border-[#FFCDD2]">
+          <div className="shrink-0 rounded-2xl border border-danger/20 bg-danger/8 p-2.5 text-danger">
             <AlertTriangle className="h-5 w-5" />
           </div>
           <div>
             <h3 
               id="delete-modal-title"
-              className="font-display text-lg font-bold text-primary uppercase tracking-wide"
+              className="font-display text-2xl font-bold tracking-[-0.03em] text-primary"
             >
               Confirm Deletion
             </h3>
-            <p className="font-sans text-xs text-secondary mt-1 leading-relaxed">
+            <p className="mt-2 text-sm leading-relaxed text-secondary">
               Are you sure you want to permanently delete the {itemType} <strong className="text-primary font-semibold">"{itemName}"</strong>? This action is irreversible.
             </p>
           </div>
         </div>
 
-        <div className="flex justify-end space-x-3 pt-2 font-label text-xs uppercase tracking-wider font-bold">
-          <button
+        <div className="app-panel-subtle flex flex-col gap-3 px-4 py-4 sm:flex-row sm:justify-end">
+          <SecondaryButton
             type="button"
             data-autofocus
             onClick={onClose}
-            className="btn-press px-4 py-2 border border-secondary text-primary hover:bg-neutral-bg rounded-sm cursor-pointer"
+            className="w-full sm:w-auto"
           >
             Cancel
-          </button>
-          <button
+          </SecondaryButton>
+          <PrimaryButton
             type="button"
             onClick={() => {
               onConfirm();
               onClose();
             }}
-            className="btn-press px-4 py-2 bg-tertiary text-on-primary hover:bg-tertiary/90 border border-tertiary rounded-sm cursor-pointer"
+            variant="danger"
+            className="w-full sm:w-auto"
           >
             Delete
-          </button>
+          </PrimaryButton>
         </div>
       </div>
     </div>

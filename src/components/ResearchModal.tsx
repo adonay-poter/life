@@ -87,15 +87,15 @@ export default function ResearchModal({
       }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-primary/25 backdrop-blur-[2px] p-4 animate-in fade-in duration-200"
     >
-      <div className="bg-surface border border-border rounded-none shadow-none max-w-lg w-full">
+      <div className="app-panel max-w-xl w-full overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border bg-primary text-on-primary rounded-none">
-          <h2 className="font-label text-xs uppercase tracking-[0.15em] flex items-center gap-2 font-bold">
+        <div className="flex items-center justify-between border-b border-border bg-[linear-gradient(135deg,rgba(184,66,46,0.12),rgba(26,28,30,0.04)_55%,rgba(26,28,30,0.01))] px-6 py-5">
+          <h2 className="flex items-center gap-2 font-label text-xs font-bold uppercase tracking-[0.18em] text-primary">
             <Search className="w-4 h-4 text-accent" />
-            AI Research Agent
+            Research Agent
           </h2>
-          <button onClick={handleClose} className="text-on-primary/70 hover:text-on-primary text-2xl font-light cursor-pointer btn-press leading-none">×</button>
+          <button onClick={handleClose} className="btn-press rounded-xl p-2 text-secondary hover:bg-surface hover:text-primary text-2xl font-light leading-none cursor-pointer">×</button>
         </div>
 
         {/* Body */}
@@ -109,7 +109,7 @@ export default function ResearchModal({
                 <input
                   type="text"
                   placeholder="e.g., The Cynics of Ancient Greece"
-                  className="w-full px-4 py-3 bg-neutral-bg border border-border rounded-none focus:outline-none focus:border-primary text-xs text-primary font-sans"
+                  className="w-full rounded-[20px] border border-border bg-neutral-bg px-4 py-3 text-sm text-primary font-sans focus:outline-none focus:border-primary"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !isRateLimited && handleStartResearch()}
@@ -121,11 +121,11 @@ export default function ResearchModal({
                 <label className="block font-label text-xs text-secondary mb-2 uppercase tracking-wide font-bold">
                   AI Model
                 </label>
-                <div className="flex bg-background border border-border rounded-none p-1">
+                <div className="flex rounded-[20px] bg-background border border-border p-1">
                   <button
                     type="button"
                     onClick={() => setSelectedModel('gemini-2.5-flash')}
-                    className={`flex-grow py-2 px-4 rounded-none text-xs font-sans font-bold transition-colors cursor-pointer btn-press ${
+                    className={`btn-press flex-grow rounded-2xl px-4 py-2.5 text-xs font-sans font-bold transition-colors cursor-pointer ${
                       selectedModel === 'gemini-2.5-flash'
                         ? 'bg-primary text-on-primary'
                         : 'text-secondary hover:text-primary hover:bg-neutral-bg/50'
@@ -136,7 +136,7 @@ export default function ResearchModal({
                   <button
                     type="button"
                     onClick={() => setSelectedModel('gemini-3.5-flash')}
-                    className={`flex-grow py-2 px-4 rounded-none text-xs font-sans font-bold transition-colors cursor-pointer btn-press ${
+                    className={`btn-press flex-grow rounded-2xl px-4 py-2.5 text-xs font-sans font-bold transition-colors cursor-pointer ${
                       selectedModel === 'gemini-3.5-flash'
                         ? 'bg-primary text-on-primary'
                         : 'text-secondary hover:text-primary hover:bg-neutral-bg/50'
@@ -154,7 +154,7 @@ export default function ResearchModal({
                 <button
                   type="button"
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="w-full px-4 py-3 bg-neutral-bg border border-border rounded-none text-primary flex items-center justify-between font-sans text-xs tracking-wide cursor-pointer hover:border-primary focus:border-primary focus:ring-0 outline-none transition-all duration-200"
+                  className="flex w-full items-center justify-between rounded-[20px] border border-border bg-neutral-bg px-4 py-3 font-sans text-sm tracking-wide text-primary cursor-pointer transition-all duration-200 hover:border-primary focus:border-primary focus:ring-0 outline-none"
                 >
                   <span className="truncate font-semibold">
                     {existingCourseId === "" 
@@ -165,14 +165,14 @@ export default function ResearchModal({
                 </button>
 
                 {dropdownOpen && (
-                  <div className="absolute left-0 right-0 mt-1 bg-surface border border-border shadow-none rounded-none z-50 overflow-hidden font-sans text-xs py-1 max-h-60 overflow-y-auto">
+                  <div className="absolute left-0 right-0 z-50 mt-2 max-h-60 overflow-y-auto rounded-[20px] border border-border bg-surface py-1 shadow-[0_20px_40px_rgba(26,28,30,0.12)] font-sans text-xs">
                     <button
                       type="button"
                       onClick={() => {
                         setExistingCourseId("");
                         setDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-4 py-2.5 transition-colors cursor-pointer flex items-center justify-between rounded-none font-bold ${
+                      className={`flex w-full items-center justify-between px-4 py-2.5 text-left font-bold transition-colors cursor-pointer ${
                         existingCourseId === "" 
                           ? "bg-primary text-on-primary" 
                           : "text-primary hover:bg-neutral-bg/60"
@@ -188,7 +188,7 @@ export default function ResearchModal({
                           setExistingCourseId(c.id);
                           setDropdownOpen(false);
                         }}
-                        className={`w-full text-left px-4 py-2.5 transition-colors cursor-pointer flex items-center justify-between rounded-none ${
+                        className={`flex w-full items-center justify-between px-4 py-2.5 text-left transition-colors cursor-pointer ${
                           existingCourseId === c.id 
                             ? "bg-primary text-on-primary font-bold" 
                             : "text-primary hover:bg-neutral-bg/60"
@@ -203,7 +203,7 @@ export default function ResearchModal({
               
               <div className="pt-2">
                 {isRateLimited && (
-                  <div className="mb-3 p-3 bg-accent/10 border border-accent/25 rounded-none flex items-start gap-2 text-accent text-xs font-bold">
+                  <div className="mb-3 flex items-start gap-2 rounded-2xl border border-accent/25 bg-accent/10 p-3 text-accent text-xs font-bold">
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     <p>Daily or minute API limit reached. Please wait before generating again.</p>
                   </div>
@@ -223,9 +223,9 @@ export default function ResearchModal({
               {status === 'running' && (
                 <>
                   <Loader2 className="w-12 h-12 text-accent animate-spin" />
-                  <div className="w-full max-w-xs bg-neutral-bg border border-border h-2.5 overflow-hidden rounded-none">
+                  <div className="h-2.5 w-full max-w-xs overflow-hidden rounded-full border border-border bg-neutral-bg">
                     <div 
-                      className="bg-accent h-full transition-all duration-300 ease-out" 
+                      className="h-full rounded-full bg-accent transition-all duration-300 ease-out" 
                       style={{ width: `${progress}%` }} 
                     />
                   </div>
@@ -245,7 +245,7 @@ export default function ResearchModal({
               
               {status === 'success' && (
                 <>
-                  <div className="w-16 h-16 rounded-none border border-border bg-emerald-800/10 flex items-center justify-center text-emerald-800">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-border bg-emerald-800/10 text-emerald-800">
                     <CheckCircle className="w-8 h-8" />
                   </div>
                   <div>
@@ -257,7 +257,7 @@ export default function ResearchModal({
 
               {status === 'error' && (
                 <>
-                  <div className="w-16 h-16 rounded-none border border-border bg-accent/10 flex items-center justify-center text-accent">
+                  <div className="flex h-16 w-16 items-center justify-center rounded-[20px] border border-border bg-accent/10 text-accent">
                     <AlertCircle className="w-8 h-8" />
                   </div>
                   <div>
@@ -277,7 +277,7 @@ export default function ResearchModal({
         </div>
 
         {/* Footer Rate Limit Display */}
-        <div className="px-6 py-3 border-t border-border bg-surface rounded-none flex items-center justify-between text-[10px] uppercase font-sans tracking-widest font-bold">
+        <div className="flex items-center justify-between border-t border-border bg-surface px-6 py-4 text-[10px] uppercase font-sans tracking-widest font-bold">
           <div className="flex items-center gap-1.5 text-secondary">
             <Activity className="w-3 h-3 text-accent" />
             <span>API Usage</span>

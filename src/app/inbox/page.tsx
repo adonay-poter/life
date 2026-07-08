@@ -34,7 +34,8 @@ import {
   Check,
   ArrowRight,
   PlusCircle,
-  RotateCcw
+  RotateCcw,
+  SlidersHorizontal
 } from 'lucide-react';
 
 export default function InboxPage() {
@@ -76,6 +77,7 @@ function InboxContent() {
   const [typeFilter, setTypeFilter] = useState<'All' | InboxItem['type']>('All');
   const [signalFilter, setSignalFilter] = useState<'all' | 'tagged' | 'with_url' | 'with_content'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'type'>('newest');
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   // Load itemId query param if present
   useEffect(() => {
@@ -298,6 +300,12 @@ function InboxContent() {
   const activeRefinementCount = [typeFilter !== 'All', signalFilter !== 'all', hasSearch, sortBy !== 'newest']
     .filter(Boolean)
     .length;
+  const activeFilterCount = [typeFilter !== 'All', signalFilter !== 'all', sortBy !== 'newest'].filter(Boolean).length;
+  const activeFilterLabels = [
+    typeFilter !== 'All' ? `Type: ${typeFilter}` : null,
+    signalFilter !== 'all' ? `Signal: ${signalFilter.replace('_', ' ')}` : null,
+    sortBy !== 'newest' ? `Sort: ${sortBy.replace('_', ' ')}` : null
+  ].filter(Boolean) as string[];
   const channelTabs = [
     { key: 'unprocessed' as const, label: 'Intake', icon: Inbox, count: statusCounts.unprocessed },
     { key: 'processed' as const, label: 'Processed', icon: Check, count: statusCounts.processed },
@@ -1209,69 +1217,96 @@ function InboxContent() {
           })}
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.72fr))_auto] gap-3 font-label text-xs">
-          <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3 md:py-2">
-            <Search className="h-4 w-4 text-secondary shrink-0" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search title, content, or tags"
-              className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
-            />
-          </label>
-
-          <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Type</span>
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])}
-              className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+        <div className="space-y-2 font-label text-xs">
+          <div className="flex gap-2 md:hidden">
+            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 flex-1">
+              <Search className="h-4 w-4 text-secondary shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search title, content, or tags"
+                className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
+              />
+            </label>
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              className="border border-border px-3 py-2 text-primary hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center gap-2 shrink-0"
             >
-              <option value="All">All types</option>
-              {inboxTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
-              ))}
-            </select>
-          </label>
+              <SlidersHorizontal className="h-4 w-4" />
+              <span>Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</span>
+            </button>
+          </div>
 
-          <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Signal</span>
-            <select
-              value={signalFilter}
-              onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)}
-              className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+          <div className="hidden md:grid md:grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.72fr))_auto] gap-3">
+            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3 md:py-2">
+              <Search className="h-4 w-4 text-secondary shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search title, content, or tags"
+                className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
+              />
+            </label>
+
+            <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Type</span>
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])}
+                className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+              >
+                <option value="All">All types</option>
+                {inboxTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </label>
+
+            <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Signal</span>
+              <select
+                value={signalFilter}
+                onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)}
+                className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+              >
+                <option value="all">All slips</option>
+                <option value="tagged">Tagged</option>
+                <option value="with_url">With URL</option>
+                <option value="with_content">With notes</option>
+              </select>
+            </label>
+
+            <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
+              <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Sort</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
+              >
+                <option value="newest">Newest first</option>
+                <option value="oldest">Oldest first</option>
+                <option value="title">Title A-Z</option>
+                <option value="type">Type</option>
+              </select>
+            </label>
+
+            <button
+              type="button"
+              onClick={resetTriageControls}
+              disabled={activeRefinementCount === 0}
+              className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center justify-center gap-2"
             >
-              <option value="all">All slips</option>
-              <option value="tagged">Tagged</option>
-              <option value="with_url">With URL</option>
-              <option value="with_content">With notes</option>
-            </select>
-          </label>
+              <RotateCcw className="h-3.5 w-3.5" />
+              Reset {activeRefinementCount > 0 ? `(${activeRefinementCount})` : ''}
+            </button>
+          </div>
 
-          <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
-            <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Sort</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-              className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
-            >
-              <option value="newest">Newest first</option>
-              <option value="oldest">Oldest first</option>
-              <option value="title">Title A-Z</option>
-              <option value="type">Type</option>
-            </select>
-          </label>
-
-          <button
-            type="button"
-            onClick={resetTriageControls}
-            disabled={activeRefinementCount === 0}
-            className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center justify-center gap-2"
-          >
-            <RotateCcw className="h-3.5 w-3.5" />
-            Reset {activeRefinementCount > 0 ? `(${activeRefinementCount})` : ''}
-          </button>
+          <div className="md:hidden text-[11px] text-secondary min-h-[1rem]">
+            {activeFilterLabels.length > 0 ? activeFilterLabels.join(' • ') : 'No filters applied'}
+          </div>
         </div>
       </section>
 
@@ -1383,6 +1418,80 @@ function InboxContent() {
         itemName={itemToDelete?.title || ''}
         itemType="Intake Slip"
       />
+
+      {/* Mobile Filters Pop-up Modal overlay */}
+      {showMobileFilters && (
+        <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[3px] p-4 pb-[calc(4.25rem+env(safe-area-inset-bottom)+1rem)] md:hidden flex items-end">
+          <div className="w-full bg-surface border border-border shadow-2xl">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-neutral-bg/50">
+              <div>
+                <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Inbox Filters</div>
+                <h3 className="font-display text-lg text-primary font-bold">Adjust the triage view</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(false)}
+                className="text-secondary hover:text-primary transition-colors cursor-pointer btn-press"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="p-4 space-y-3 font-label text-xs">
+              <label className="bg-neutral-bg border border-border px-3 py-3 flex flex-col gap-1 uppercase">
+                <span className="text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">Type</span>
+                <select
+                  value={typeFilter}
+                  onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])}
+                  className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer w-full"
+                >
+                  <option value="All">All types</option>
+                  {inboxTypes.map((type) => (
+                    <option key={type} value={type}>{type}</option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="bg-neutral-bg border border-border px-3 py-3 flex flex-col gap-1 uppercase">
+                <span className="text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">Signal</span>
+                <select
+                  value={signalFilter}
+                  onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)}
+                  className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer w-full"
+                >
+                  <option value="all">All slips</option>
+                  <option value="tagged">Tagged</option>
+                  <option value="with_url">With URL</option>
+                  <option value="with_content">With notes</option>
+                </select>
+              </label>
+
+              <label className="bg-neutral-bg border border-border px-3 py-3 flex flex-col gap-1 uppercase">
+                <span className="text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">Sort</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer w-full"
+                >
+                  <option value="newest">Newest first</option>
+                  <option value="oldest">Oldest first</option>
+                  <option value="title">Title A-Z</option>
+                  <option value="type">Type</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 p-4 border-t border-border">
+              <SecondaryButton type="button" onClick={resetTriageControls} disabled={activeRefinementCount === 0}>
+                Reset
+              </SecondaryButton>
+              <PrimaryButton type="button" onClick={() => setShowMobileFilters(false)}>
+                Apply
+              </PrimaryButton>
+            </div>
+          </div>
+        </div>
+      )}
     </PageShell>
   );
 }

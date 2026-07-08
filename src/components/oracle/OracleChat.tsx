@@ -226,7 +226,7 @@ export default function OracleChat() {
   const composer = (
     <div className="mx-auto w-full max-w-4xl">
       {/* Mobile Composer layout (hidden on desktop) */}
-      <div className="flex items-end gap-2 p-1.5 bg-surface border border-border md:hidden">
+      <div className="flex items-end gap-2 rounded-[24px] border border-border bg-surface p-2 shadow-[0_14px_32px_rgba(26,28,30,0.06)] md:hidden">
         <textarea
           ref={inputRef}
           value={input}
@@ -240,7 +240,7 @@ export default function OracleChat() {
         <button
           type="submit"
           disabled={!input.trim() || sending || loadingMessages}
-          className="flex h-9 w-9 shrink-0 items-center justify-center border border-accent bg-accent text-on-accent transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-accent bg-accent text-on-accent transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-[0_10px_24px_rgba(184,66,46,0.22)]"
           aria-label="Send"
         >
           <Send className="h-3.5 w-3.5" />
@@ -248,7 +248,7 @@ export default function OracleChat() {
       </div>
 
       {/* Desktop Composer layout (hidden on mobile) */}
-      <div className="hidden md:flex border border-border bg-surface shadow-[0_12px_32px_rgba(26,28,30,0.05)] flex-col focus-within:border-primary transition-colors">
+      <div className="hidden rounded-[28px] border border-border bg-surface shadow-[0_18px_40px_rgba(26,28,30,0.06)] md:flex flex-col focus-within:border-primary transition-colors">
         <div className="flex items-start gap-3 p-3.5">
           <textarea
             ref={inputRef}
@@ -288,7 +288,7 @@ export default function OracleChat() {
             <button
               type="submit"
               disabled={!input.trim() || sending || loadingMessages}
-              className="flex h-8 w-8 items-center justify-center border border-accent bg-accent text-on-accent transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+              className="flex h-9 w-9 items-center justify-center rounded-2xl border border-accent bg-accent text-on-accent transition-opacity hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shadow-[0_10px_24px_rgba(184,66,46,0.22)]"
               aria-label="Send"
             >
               <Send className="h-3 w-3" />
@@ -300,14 +300,14 @@ export default function OracleChat() {
   );
 
   return (
-    <section className="relative flex h-full min-h-0 flex-col overflow-hidden border border-border bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(247,245,242,0.88)_52%,rgba(240,236,229,0.92)_100%)]">
+    <section className="relative flex h-full min-h-0 flex-col overflow-hidden border border-border bg-[var(--gradient-oracle-bg)]">
       <header className="border-b border-border bg-surface/90 px-4 py-3 backdrop-blur sm:px-6 shrink-0">
         <div className="flex items-center justify-between gap-4 h-10">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={() => setRailOpen((open) => !open)}
-              className="flex h-10 w-10 shrink-0 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary cursor-pointer"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-surface text-primary transition-colors hover:border-primary cursor-pointer"
               aria-label="Toggle conversations"
             >
               <PanelLeft className="h-4 w-4" />
@@ -317,7 +317,7 @@ export default function OracleChat() {
                 {threadTitle}
               </h3>
               {!hasThread && (
-                <span className="border border-border bg-neutral-bg px-1.5 py-0.5 font-label text-[9px] uppercase tracking-[0.25em] text-secondary shrink-0 leading-none">
+                <span className="rounded-full border border-border bg-neutral-bg px-2 py-1 font-label text-[9px] uppercase tracking-[0.25em] text-secondary shrink-0 leading-none">
                   Draft
                 </span>
               )}
@@ -327,7 +327,7 @@ export default function OracleChat() {
           <button
             type="button"
             onClick={handleNewChat}
-            className="flex h-10 w-10 shrink-0 items-center justify-center border border-border bg-surface text-primary transition-colors hover:border-primary sm:w-auto sm:px-4 sm:gap-2 cursor-pointer"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-surface text-primary transition-colors hover:border-primary sm:w-auto sm:px-4 sm:gap-2 cursor-pointer"
             title="New Conversation"
           >
             <Plus className="h-4 w-4" />
@@ -339,7 +339,7 @@ export default function OracleChat() {
       <div ref={messageScrollRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-5 sm:px-6">
         {loadingMessages ? (
           <div className="flex h-full items-center justify-center">
-            <div className="flex items-center gap-3 border border-border bg-surface px-5 py-4 text-secondary shadow-[0_12px_30px_rgba(26,28,30,0.05)]">
+            <div className="flex items-center gap-3 rounded-[24px] border border-border bg-surface px-5 py-4 text-secondary shadow-[0_12px_30px_rgba(26,28,30,0.05)]">
               <Loader2 className="h-4 w-4 animate-spin text-accent" />
               <span className="font-serif italic text-sm">Loading…</span>
             </div>
@@ -377,7 +377,7 @@ export default function OracleChat() {
                       </span>
                     </div>
                     <div
-                      className={`border p-4 shadow-[0_10px_24px_rgba(26,28,30,0.04)] sm:p-5 ${
+                      className={`rounded-[24px] border p-4 shadow-[0_10px_24px_rgba(26,28,30,0.04)] sm:p-5 ${
                         isAssistant
                           ? 'border-border bg-surface text-primary'
                           : 'border-primary bg-primary text-on-primary font-medium'
@@ -397,7 +397,7 @@ export default function OracleChat() {
                     <Sparkles className="h-3.5 w-3.5 text-accent" />
                     <span className="font-label text-[10px] uppercase tracking-[0.24em] text-secondary">Oracle</span>
                   </div>
-                  <div className="flex items-center gap-3 border border-border bg-surface p-4 shadow-[0_10px_24px_rgba(26,28,30,0.04)]">
+                  <div className="flex items-center gap-3 rounded-[24px] border border-border bg-surface p-4 shadow-[0_10px_24px_rgba(26,28,30,0.04)]">
                     <Loader2 className="h-4 w-4 animate-spin text-accent" />
                     <span className="font-serif text-sm italic text-secondary">Oracle is thinking...</span>
                   </div>
@@ -425,7 +425,7 @@ export default function OracleChat() {
       )}
 
       {showStickyComposer && (
-        <div className="sticky bottom-0 z-10 mt-auto border-t border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.1),rgba(247,245,242,0.92)_18%,rgba(247,245,242,0.98)_100%)] px-2 pb-2 pt-2 backdrop-blur-md sm:px-6 sm:pb-4 sm:pt-4">
+        <div className="sticky bottom-0 z-10 mt-auto border-t border-border bg-[var(--gradient-composer-bg)] px-2 pb-2 pt-2 backdrop-blur-md sm:px-6 sm:pb-4 sm:pt-4">
           <form onSubmit={handleSend} className="px-2 md:px-0">
             {composer}
           </form>

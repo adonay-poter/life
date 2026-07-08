@@ -162,57 +162,60 @@ export default function NotificationCenter() {
     <div className="relative flex items-center" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="btn-press relative p-2 text-secondary hover:text-primary transition-colors cursor-pointer"
+        className="btn-press relative flex h-10 w-10 items-center justify-center rounded-xl text-secondary transition-colors cursor-pointer hover:bg-surface hover:text-primary"
         title="Notification Center"
       >
         <Bell className="h-5 w-5" />
         {activeAlerts.length > 0 && (
-          <span className="animate-badge-pulse absolute top-1.5 right-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-tertiary text-[8px] font-bold text-on-primary ring-2 ring-white">
+          <span className="animate-badge-pulse absolute right-1.5 top-1.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-accent text-[8px] font-bold text-on-accent ring-2 ring-white">
             {activeAlerts.length}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="animate-dropdown absolute top-full right-0 md:right-auto md:left-0 mt-2 w-80 bg-surface border border-secondary shadow-lg rounded-sm z-50 overflow-hidden">
-          <div className="flex justify-between items-center p-3 border-b border-secondary/20 bg-surface">
-            <span className="font-label text-xs uppercase tracking-widest text-primary font-bold">
+        <div className="animate-dropdown absolute right-0 top-full z-50 mt-3 w-[22rem] overflow-hidden rounded-[24px] border border-border bg-surface shadow-[0_24px_60px_rgba(26,28,30,0.18)] md:left-0 md:right-auto">
+          <div className="flex items-center justify-between border-b border-border bg-surface px-4 py-4">
+            <span className="font-label text-xs font-bold uppercase tracking-[0.22em] text-primary">
               Notifications
             </span>
             {activeAlerts.length > 0 && (
-              <span className="bg-tertiary text-on-primary text-[10px] px-1.5 py-0.5 rounded-sm font-bold">
-                {activeAlerts.length} NEW
+              <span className="rounded-full bg-accent px-2 py-1 font-label text-[10px] font-bold uppercase tracking-[0.16em] text-on-accent">
+                {activeAlerts.length} New
               </span>
             )}
           </div>
 
           <div className="max-h-96 overflow-y-auto">
             {activeAlerts.length === 0 ? (
-              <div className="p-6 text-center">
-                <span className="block font-display text-md text-primary">All clear</span>
-                <span className="block font-sans text-xs text-secondary mt-1">You're on track ✓</span>
+              <div className="px-6 py-10 text-center">
+                <span className="block font-display text-xl text-primary">All clear</span>
+                <span className="mt-2 block text-sm text-secondary">Nothing urgent is pulling you off course.</span>
               </div>
             ) : (
-              <div className="divide-y divide-secondary/15">
+              <div className="divide-y divide-border/60">
                 {activeAlerts.map(alert => (
                   <Link href={alert.link} key={alert.id} onClick={() => setIsOpen(false)}>
-                    <div className="p-3 hover:bg-neutral-bg/50 transition-colors cursor-pointer group relative">
+                    <div className="group relative cursor-pointer px-4 py-4 transition-colors hover:bg-neutral-bg/50">
                       <div className="flex gap-3">
                         <div className="pt-0.5 shrink-0">
                           {alert.icon}
                         </div>
                         <div className="flex-1 pr-6">
-                          <p className="font-label text-xs font-bold text-primary uppercase tracking-wide">
+                          <p className="font-label text-xs font-bold text-primary uppercase tracking-[0.16em]">
                             {alert.title}
                           </p>
-                          <p className="font-sans text-xs text-secondary mt-0.5 leading-tight">
+                          <p className="mt-1 text-sm leading-relaxed text-secondary">
                             {alert.description}
+                          </p>
+                          <p className="mt-2 font-label text-[10px] uppercase tracking-[0.16em] text-secondary/80">
+                            {alert.category}
                           </p>
                         </div>
                       </div>
                       <button
                         onClick={(e) => dismissAlert(alert.id, e)}
-                        className="absolute right-3 top-3 text-secondary/50 hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                        className="absolute right-3 top-3 rounded-xl p-1 text-secondary/50 opacity-0 transition-opacity cursor-pointer hover:bg-surface hover:text-primary group-hover:opacity-100"
                         title="Dismiss alert"
                       >
                         <X className="h-4 w-4" />

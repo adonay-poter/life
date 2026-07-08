@@ -18,7 +18,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
         <input
           ref={ref}
-          className={`w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors placeholder:text-secondary/60 ${
+          className={`w-full min-h-11 rounded-2xl bg-surface border border-border px-4 py-2.5 text-sm focus:outline-none focus:border-accent font-sans transition-[border-color,box-shadow,background-color] placeholder:text-secondary/60 ${
             error ? 'border-danger' : ''
           } ${className}`}
           {...props}
@@ -46,7 +46,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         <textarea
           ref={ref}
-          className={`w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors resize-y min-h-[100px] placeholder:text-secondary/60 ${
+          className={`w-full rounded-[20px] bg-surface border border-border px-4 py-3 text-sm focus:outline-none focus:border-accent font-sans transition-[border-color,box-shadow,background-color] resize-y min-h-[120px] placeholder:text-secondary/60 ${
             error ? 'border-danger' : ''
           } ${className}`}
           {...props}
@@ -80,7 +80,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         )}
         <select
           ref={ref}
-          className={`w-full bg-surface border border-border px-3 py-2.5 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors cursor-pointer ${
+          className={`w-full min-h-11 rounded-2xl bg-surface border border-border px-4 py-2.5 text-sm focus:outline-none focus:border-accent font-sans transition-[border-color,box-shadow,background-color] cursor-pointer ${
             error ? 'border-danger' : ''
           } ${className}`}
           {...props}

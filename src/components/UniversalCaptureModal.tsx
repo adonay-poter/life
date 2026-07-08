@@ -306,11 +306,11 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
         role="dialog"
         aria-modal="true"
         aria-labelledby="capture-modal-title"
-        className="animate-modal relative bg-surface border-2 border-primary p-6 md:p-8 max-w-xl w-full shadow-2xl rounded-none flex flex-col space-y-5"
+        className="animate-modal relative flex w-full max-w-2xl flex-col space-y-6 rounded-[28px] border border-primary/20 bg-surface p-6 shadow-[0_28px_80px_rgba(26,28,30,0.2)] md:p-8"
       >
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-secondary hover:text-primary p-1 cursor-pointer transition-colors btn-press"
+          className="btn-press absolute right-4 top-4 rounded-xl p-2 text-secondary transition-colors hover:bg-neutral-bg hover:text-primary"
           title="Close Modal"
         >
           <X className="h-5 w-5" />
@@ -318,24 +318,24 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
 
         <div className="border-b border-border pb-3">
           <div className="flex items-center space-x-2">
-            <div className="bg-accent/10 p-1.5 text-accent border border-accent/20">
+            <div className="rounded-2xl border border-accent/20 bg-accent/10 p-2 text-accent">
               <Sparkles className="h-4 w-4" />
             </div>
             <h3
               id="capture-modal-title"
-              className="font-display text-lg md:text-xl font-bold text-primary uppercase tracking-wide"
+              className="font-display text-2xl font-bold tracking-[-0.03em] text-primary md:text-[2rem]"
             >
-              Universal Intake Capture
+              Quick Capture
             </h3>
           </div>
-          <p className="font-sans text-[11px] text-secondary mt-1 uppercase tracking-wider">
-            Paste first. Categorize later.
+          <p className="mt-2 text-sm leading-relaxed text-secondary">
+            Capture the raw thing now. Sorting and enrichment can happen later.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label htmlFor="cap-raw-input" className="block font-label text-[10px] uppercase tracking-wider text-secondary font-bold">
+            <label htmlFor="cap-raw-input" className="block font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">
               Paste text, quotes, ideas, or links
             </label>
             <textarea
@@ -346,17 +346,18 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
               onPaste={handlePaste}
               placeholder="Drop the raw thing here. A pasted link files itself automatically."
               rows={7}
-              className="w-full bg-neutral-bg border border-border px-3 py-3 text-sm focus:outline-none focus:border-accent font-sans rounded-none transition-colors resize-none"
+              className="w-full rounded-[22px] bg-neutral-bg border border-border px-4 py-4 text-sm focus:outline-none focus:border-accent font-sans transition-colors resize-none"
             />
-            <p className="font-sans text-xs text-secondary">
+            <p className="text-sm text-secondary">
               Titles, metadata, and AI suggestions are inferred for you. Review happens later.
             </p>
           </div>
 
-          <div className="border border-dashed border-border p-3 space-y-3 bg-neutral-bg/40">
+          <div className="rounded-[22px] border border-dashed border-border bg-neutral-bg/40 p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 text-sm text-primary">
+              <div className="flex items-center gap-2 text-sm font-medium text-primary">
                 <ImagePlus className="h-4 w-4 text-accent" />
+                <span>Add an image</span>
               </div>
               <input
                 ref={fileInputRef}
@@ -368,7 +369,7 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex w-full items-center justify-center gap-2 border border-border px-3 py-2 text-xs font-label uppercase tracking-wider text-primary hover:border-accent transition-colors cursor-pointer"
+                className="btn-press inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-border px-3 py-2 text-xs font-label uppercase tracking-[0.16em] text-primary transition-colors cursor-pointer hover:border-accent"
               >
                 <Upload className="h-3.5 w-3.5" />
                 Upload Image
@@ -382,7 +383,7 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
                   <button
                     type="button"
                     onClick={clearAttachment}
-                    className="text-primary hover:text-accent transition-colors cursor-pointer"
+                    className="btn-press rounded-xl px-2 py-1 text-primary transition-colors cursor-pointer hover:bg-surface hover:text-accent"
                   >
                     Remove
                   </button>
@@ -391,13 +392,13 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
                 <img
                   src={attachmentPreviewUrl}
                   alt={attachmentName || 'Capture preview'}
-                  className="max-h-48 w-full object-contain border border-border bg-surface"
+                  className="max-h-48 w-full rounded-[18px] border border-border bg-surface object-contain"
                 />
               </div>
             ) : null}
           </div>
 
-          <div className="flex gap-3 pt-3 border-t border-border font-label text-xs uppercase tracking-wider font-bold">
+          <div className="border-t border-border pt-3">
             <div className="grid w-full grid-cols-2 gap-3">
               <SecondaryButton type="button" onClick={onClose}>
                 Cancel

@@ -10,8 +10,11 @@ import ResearchModal from '@/components/ResearchModal';
 import QAPanel from '@/components/QAPanel';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
+import EditorialCard from '@/components/ui/EditorialCard';
+import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
+import { Input, Textarea, Select } from '@/components/ui/Inputs';
 import { 
   BookOpen, 
   HelpCircle, 
@@ -988,11 +991,11 @@ function AcademyContent() {
         />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-surface border border-border p-6 rounded-none space-y-4 shadow-none">
-              <div className="h-4 bg-secondary/15 w-1/4 rounded-none" />
-              <div className="h-6 bg-secondary/15 w-3/4 rounded-none" />
-              <div className="h-16 bg-secondary/10 w-full rounded-none" />
-              <div className="h-8 bg-secondary/10 w-full rounded-none" />
+            <div key={n} className="app-panel space-y-4">
+              <div className="h-4 bg-secondary/15 w-1/4 rounded-full" />
+              <div className="h-6 bg-secondary/15 w-3/4 rounded-full" />
+              <div className="h-16 bg-secondary/10 w-full rounded-[24px]" />
+              <div className="h-8 bg-secondary/10 w-full rounded-full" />
             </div>
           ))}
         </div>
@@ -1008,11 +1011,11 @@ function AcademyContent() {
           title="The Academy"
           subtitle="Course Matrices • Spaced Repetition Flashcards"
           action={
-            <div className="flex border border-border font-label text-xs uppercase tracking-wider select-none shrink-0 rounded-none bg-background overflow-hidden">
+            <div className="flex shrink-0 rounded-2xl border border-border bg-surface p-1 font-label text-xs uppercase tracking-wider">
               <button
                 onClick={() => setAcademyTab('matrix')}
-                className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
-                  academyTab === 'matrix' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+                className={`rounded-xl px-3 py-2 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                  academyTab === 'matrix' ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
                 }`}
               >
                 <BookOpen className="h-3.5 w-3.5" />
@@ -1020,8 +1023,8 @@ function AcademyContent() {
               </button>
               <button
                 onClick={() => setAcademyTab('knowledge')}
-                className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-border cursor-pointer btn-press font-bold ${
-                  academyTab === 'knowledge' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+                className={`rounded-xl px-3 py-2 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                  academyTab === 'knowledge' ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
                 }`}
               >
                 <FileText className="h-3.5 w-3.5" />
@@ -1029,8 +1032,8 @@ function AcademyContent() {
               </button>
               <button
                 onClick={() => setAcademyTab('flashcards')}
-                className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-border cursor-pointer btn-press font-bold ${
-                  academyTab === 'flashcards' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+                className={`rounded-xl px-3 py-2 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                  academyTab === 'flashcards' ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
                 }`}
               >
                 <HelpCircle className="h-3.5 w-3.5" />
@@ -1061,11 +1064,11 @@ function AcademyContent() {
             </div>
           </div>
 
-          <div className="flex border border-border font-label text-xs uppercase tracking-wider select-none shrink-0 self-end rounded-none bg-background overflow-hidden">
+          <div className="flex shrink-0 self-end rounded-2xl border border-border bg-surface p-1 font-label text-xs uppercase tracking-wider">
             <button
               onClick={() => setAcademyTab('matrix')}
-              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
-                academyTab === 'matrix' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+              className={`rounded-xl px-3 py-2 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                academyTab === 'matrix' ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
               }`}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -1073,8 +1076,8 @@ function AcademyContent() {
             </button>
             <button
               onClick={() => setAcademyTab('flashcards')}
-              className={`px-3 py-1.5 flex items-center space-x-1.5 transition-all border-l border-border cursor-pointer btn-press font-bold ${
-                academyTab === 'flashcards' ? 'bg-primary text-on-primary font-bold' : 'text-primary hover:bg-neutral-bg/50'
+              className={`rounded-xl px-3 py-2 flex items-center space-x-1.5 transition-all cursor-pointer btn-press font-bold ${
+                academyTab === 'flashcards' ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
               }`}
             >
               <HelpCircle className="h-3.5 w-3.5" />
@@ -1106,95 +1109,83 @@ function AcademyContent() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative w-full sm:max-w-sm">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search courses..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-surface border border-border text-xs focus:outline-none focus:border-primary font-sans rounded-none"
+                className="pl-10"
               />
             </div>
 
             <div className="flex gap-2 w-full sm:w-auto">
-              <button
+              <PrimaryButton
                 onClick={() => setResearchModalOpen(true)}
-                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer flex-1 sm:flex-none bg-primary text-on-primary hover:bg-primary/90 px-4 py-2 text-xs font-label font-bold border border-primary rounded-none"
+                className="flex-1 sm:flex-none"
               >
                 <Sparkles className="h-4 w-4" />
-                <span>AI RESEARCH</span>
-              </button>
-              <button
+                <span>AI Research</span>
+              </PrimaryButton>
+              <SecondaryButton
                 onClick={() => setShowAddCourse(!showAddCourse)}
-                className="btn-press flex items-center justify-center space-x-1.5 cursor-pointer flex-1 sm:flex-none bg-surface border border-border text-primary hover:bg-neutral-bg/40 px-4 py-2 text-xs font-label font-bold rounded-none"
+                className="flex-1 sm:flex-none"
               >
                 <Plus className="h-4 w-4" />
-                <span>ADD COURSE</span>
-              </button>
+                <span>Add Course</span>
+              </SecondaryButton>
             </div>
           </div>
 
           {showAddCourse && (
-            <form onSubmit={handleAddCourse} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
-              <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
+            <form onSubmit={handleAddCourse} className="app-panel space-y-5">
+              <span className="block font-label font-bold text-sm uppercase tracking-[0.2em] text-primary border-b border-border pb-3">
                 Configure New Skill Matrix
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-secondary font-bold">Course / Matrix Title</label>
-                  <input
-                    type="text"
-                    value={newCourseTitle}
-                    onChange={(e) => setNewCourseTitle(e.target.value)}
-                    placeholder="e.g. History of Modern Architecture"
-                    required
-                    className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="block text-[10px] uppercase text-secondary font-bold">Category (Skill Class)</label>
-                  <input
-                    type="text"
-                    value={newCourseCategory}
-                    onChange={(e) => setNewCourseCategory(e.target.value)}
-                    placeholder="e.g. Design, Philosophy, Technology"
-                    className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-[10px] uppercase text-secondary font-bold">Skill Roadmap Summary</label>
-                <textarea
-                  value={newCourseDesc}
-                  onChange={(e) => setNewCourseDesc(e.target.value)}
-                  rows={2}
-                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
+                <Input
+                  type="text"
+                  label="Course / Matrix Title"
+                  value={newCourseTitle}
+                  onChange={(e) => setNewCourseTitle(e.target.value)}
+                  placeholder="e.g. History of Modern Architecture"
+                  required
+                />
+                <Input
+                  type="text"
+                  label="Category (Skill Class)"
+                  value={newCourseCategory}
+                  onChange={(e) => setNewCourseCategory(e.target.value)}
+                  placeholder="e.g. Design, Philosophy, Technology"
                 />
               </div>
-              <div className="flex space-x-3 pt-2">
-                <PrimaryButton type="submit" className="flex-1">
-                  Save Skill Matrix
-                </PrimaryButton>
+              <Textarea
+                label="Skill Roadmap Summary"
+                value={newCourseDesc}
+                onChange={(e) => setNewCourseDesc(e.target.value)}
+                rows={3}
+                className="min-h-[112px]"
+              />
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-1">
                 <SecondaryButton type="button" onClick={() => setShowAddCourse(false)}>
                   Cancel
                 </SecondaryButton>
+                <PrimaryButton type="submit">
+                  Save Skill Matrix
+                </PrimaryButton>
               </div>
             </form>
           )}
 
           {courses.length === 0 ? (
-            <div className="text-center py-20 bg-surface border border-border rounded-none shadow-none">
-              <BookOpen className="h-12 w-12 text-secondary/40 mx-auto mb-4" />
-              <h3 className="font-serif text-lg font-bold text-primary mb-2 uppercase">No skill matrices yet</h3>
-              <p className="font-sans text-xs text-secondary max-w-sm mx-auto mb-6">
-                Create a skill matrix to start organizing your courses, modules, lessons, and flashcards.
-              </p>
-              <button
-                onClick={() => setShowAddCourse(true)}
-                className="bg-primary text-on-primary px-5 py-2.5 uppercase text-xs tracking-wider font-bold cursor-pointer hover:bg-primary/90 transition-all rounded-none border border-primary btn-press"
-              >
-                Create one to begin
-              </button>
-            </div>
+            <EmptyState
+              title="No skill matrices yet"
+              description="Create a skill matrix to start organizing your courses, modules, lessons, and flashcards."
+              action={
+                <PrimaryButton onClick={() => setShowAddCourse(true)}>
+                  Create One to Begin
+                </PrimaryButton>
+              }
+            />
           ) : (
             <div className="space-y-3">
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -1211,61 +1202,54 @@ function AcademyContent() {
                     const courseDueCards = flashcards.filter((card) => card.course_id === course.id && new Date(card.next_review_date) <= new Date()).length;
 
                     return (
-                      <div
+                      <EditorialCard
                         key={course.id}
-                        className="bg-surface border border-border p-4 md:p-5 flex flex-col justify-between space-y-4 rounded-none relative group hover:border-primary transition-all shadow-none"
+                        title={course.title}
+                        subtitle={course.category || 'Skill Matrix'}
+                        className="relative group h-full"
+                        action={
+                          <div className="flex space-x-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => {
+                                setCourseToEdit(course);
+                                setEditCourseTitle(course.title);
+                                setEditCourseDesc(course.description || '');
+                                setEditCourseCategory(course.category || '');
+                                setEditCourseModalOpen(true);
+                              }}
+                              className="text-secondary hover:text-primary cursor-pointer btn-press"
+                            >
+                              <Edit3 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => {
+                                setItemToDelete({ id: course.id, title: course.title, type: 'course' });
+                                setDeleteModalOpen(true);
+                              }}
+                              className="text-secondary hover:text-tertiary cursor-pointer btn-press"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
+                        }
                       >
                         <div className="space-y-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="space-y-2 min-w-0">
-                              <span className="inline-flex font-label text-[10px] bg-neutral-bg/60 border border-border px-1.5 py-0.5 text-primary uppercase tracking-wide font-bold">
-                                {course.category}
-                              </span>
-                              <h4 className="font-serif text-lg font-bold text-primary tracking-tight leading-tight">
-                                {course.title}
-                              </h4>
-                              {course.description && (
-                                <p className="font-sans text-xs text-secondary leading-relaxed line-clamp-2">
-                                  {course.description}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="flex space-x-1.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => {
-                                  setCourseToEdit(course);
-                                  setEditCourseTitle(course.title);
-                                  setEditCourseDesc(course.description || '');
-                                  setEditCourseCategory(course.category || '');
-                                  setEditCourseModalOpen(true);
-                                }}
-                                className="text-secondary hover:text-primary cursor-pointer btn-press"
-                              >
-                                <Edit3 className="h-4 w-4" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  setItemToDelete({ id: course.id, title: course.title, type: 'course' });
-                                  setDeleteModalOpen(true);
-                                }}
-                                className="text-secondary hover:text-tertiary cursor-pointer"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
-                            </div>
-                          </div>
+                          {course.description && (
+                            <p className="font-sans text-sm text-secondary leading-relaxed line-clamp-3">
+                              {course.description}
+                            </p>
+                          )}
 
                           <div className="grid grid-cols-3 gap-2">
-                            <div className="border border-border bg-background px-3 py-2">
+                            <div className="app-panel-subtle px-3 py-3">
                               <span className="block font-label text-[9px] uppercase tracking-[0.14em] text-secondary font-bold">Modules</span>
                               <span className="block mt-1 text-sm font-semibold text-primary">{modules.length}</span>
                             </div>
-                            <div className="border border-border bg-background px-3 py-2">
+                            <div className="app-panel-subtle px-3 py-3">
                               <span className="block font-label text-[9px] uppercase tracking-[0.14em] text-secondary font-bold">Lessons</span>
                               <span className="block mt-1 text-sm font-semibold text-primary">{courseLessons.length}</span>
                             </div>
-                            <div className="border border-border bg-background px-3 py-2">
+                            <div className="app-panel-subtle px-3 py-3">
                               <span className="block font-label text-[9px] uppercase tracking-[0.14em] text-secondary font-bold">Due</span>
                               <span className="block mt-1 text-sm font-semibold text-accent">{courseDueCards}</span>
                             </div>
@@ -1283,7 +1267,7 @@ function AcademyContent() {
                               </span>
                             </div>
 
-                            <button
+                            <PrimaryButton
                               onClick={() => {
                                 setSelectedCourseId(course.id);
                                 if (modules.length > 0) {
@@ -1291,20 +1275,20 @@ function AcademyContent() {
                                 }
                                 window.scrollTo({ top: 0, behavior: 'smooth' });
                               }}
-                              className="border border-primary bg-primary text-on-primary hover:bg-primary/95 transition-all px-3 py-2 font-label text-xs uppercase tracking-widest font-bold cursor-pointer btn-press rounded-none"
+                              className="min-h-10 px-4"
                             >
                               Open Studio
-                            </button>
+                            </PrimaryButton>
                           </div>
 
-                          <div className="w-full bg-border h-1.5 rounded-none overflow-hidden">
+                          <div className="w-full bg-border h-2.5 rounded-full overflow-hidden">
                             <div 
-                              className="bg-accent h-full transition-all duration-500 ease-out rounded-none"
+                              className="bg-accent h-full transition-all duration-500 ease-out"
                               style={{ width: `${progress}%` }}
                             />
                           </div>
                         </div>
-                      </div>
+                      </EditorialCard>
                     );
                   })}
               </div>
@@ -1335,12 +1319,12 @@ function AcademyContent() {
             </div>
           </div>
 
-          <div className="flex lg:hidden border border-border font-label text-xs rounded-none bg-background overflow-hidden">
+          <div className="flex lg:hidden rounded-2xl border border-border bg-surface p-1 font-label text-xs">
             <button
               type="button"
               onClick={() => setMobileStudioTab('index')}
-              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer btn-press ${
-                mobileStudioTab === 'index' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'
+              className={`flex-1 rounded-xl px-3 py-2 text-center uppercase tracking-[0.18em] font-bold cursor-pointer btn-press ${
+                mobileStudioTab === 'index' ? 'bg-primary text-on-primary font-bold shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
               }`}
             >
               Outline
@@ -1348,8 +1332,8 @@ function AcademyContent() {
             <button
               type="button"
               onClick={() => setMobileStudioTab('notepad')}
-              className={`flex-1 text-center py-2 uppercase tracking-wider font-bold cursor-pointer border-l border-border btn-press ${
-                mobileStudioTab === 'notepad' ? 'bg-primary text-on-primary font-bold' : 'text-primary bg-surface hover:bg-neutral-bg/50'
+              className={`flex-1 rounded-xl px-3 py-2 text-center uppercase tracking-[0.18em] font-bold cursor-pointer btn-press ${
+                mobileStudioTab === 'notepad' ? 'bg-primary text-on-primary font-bold shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'
               }`}
             >
               Notes
@@ -1358,37 +1342,40 @@ function AcademyContent() {
 
           <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6 items-start">
             <section className={`space-y-4 ${mobileStudioTab !== 'index' ? 'hidden lg:block' : ''}`}>
-              <div className="border border-border bg-surface p-5 space-y-4">
+              <EditorialCard
+                title={activeCourse?.title || 'Course Overview'}
+                subtitle="Course overview"
+                action={
+                  <PrimaryButton
+                    onClick={() => setNewModuleModalOpen(true)}
+                    className="min-h-10 px-4"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    <span>New Module</span>
+                  </PrimaryButton>
+                }
+              >
                 <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                   <div className="space-y-1 min-w-0">
-                    <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Course Overview</span>
-                    <h3 className="font-display text-xl font-bold text-primary">{activeCourse?.title}</h3>
                     {activeCourse?.description && (
                       <p className="text-sm text-secondary leading-relaxed">{activeCourse.description}</p>
                     )}
                   </div>
-                  <button
-                    onClick={() => setNewModuleModalOpen(true)}
-                    className="bg-primary text-on-primary text-[10px] font-bold px-2.5 py-2 uppercase tracking-wider rounded-none cursor-pointer hover:bg-opacity-90 btn-press flex items-center justify-center space-x-1 border border-primary shrink-0 self-start lg:self-auto"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    <span>New Module</span>
-                  </button>
                 </div>
 
                 <div className="relative w-full">
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
-                  <input
+                  <Input
                     type="text"
                     placeholder="Search modules or lessons..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-none text-xs focus:outline-none focus:border-primary font-sans"
+                    className="pl-10"
                   />
                 </div>
-              </div>
+              </EditorialCard>
 
-              <div className="border border-border bg-surface overflow-visible lg:max-h-[calc(100vh-19rem)] lg:overflow-y-auto">
+              <div className="app-panel overflow-visible lg:max-h-[calc(100vh-19rem)] lg:overflow-y-auto">
                 <div className="p-4 space-y-4">
                   {activeCourseModules
                     .filter((mod) => {
@@ -1412,28 +1399,28 @@ function AcademyContent() {
                       return (
                         <div
                           key={mod.id}
-                          className={`border p-4 space-y-3 transition-all ${isSelected ? 'border-primary bg-background' : 'border-border bg-surface'}`}
+                          className={`app-panel-subtle space-y-3 transition-all ${isSelected ? 'border-primary bg-surface-muted shadow-[0_18px_36px_rgba(26,28,30,0.08)]' : ''}`}
                         >
                           <div className="flex justify-between items-start gap-3 group/mod">
                             {editingModuleId === mod.id ? (
                               <div className="flex-grow flex gap-2">
-                                <input
+                                <Input
                                   type="text"
                                   value={editModuleName}
                                   onChange={(e) => setEditModuleName(e.target.value)}
-                                  className="flex-grow bg-surface border border-border px-2 py-1 font-sans text-sm text-primary focus:outline-none rounded-none"
+                                  className="min-h-10"
                                 />
-                                <button
+                                <PrimaryButton
                                   onClick={async () => {
                                     if (!editModuleName.trim()) return;
                                     await updateModule(mod.id, { title: editModuleName });
                                     setEditingModuleId(null);
                                     showToast('Module title updated.', 'success');
                                   }}
-                                  className="bg-primary text-on-primary px-2 py-1 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
+                                  className="min-h-10 px-3 shadow-none"
                                 >
                                   Save
-                                </button>
+                                </PrimaryButton>
                               </div>
                             ) : (
                               <>
@@ -1467,25 +1454,23 @@ function AcademyContent() {
 
                           <div className="space-y-2">
                             {modLessons.map((lesson) => (
-                              <div key={lesson.id} className="flex items-center justify-between gap-2 p-2 bg-background border border-border group/les">
+                              <div key={lesson.id} className="app-panel-subtle flex items-center justify-between gap-2 p-3 group/les">
                                 {editingLessonId === lesson.id ? (
                                   <div className="flex-grow flex flex-col gap-1.5 font-label text-xs w-full">
-                                    <input
+                                    <Input
                                       type="text"
                                       value={editLessonName}
                                       onChange={(e) => setEditLessonName(e.target.value)}
-                                      className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
                                       placeholder="Lesson title"
                                     />
-                                    <input
+                                    <Input
                                       type="text"
                                       value={editLessonLink}
                                       onChange={(e) => setEditLessonLink(e.target.value)}
-                                      className="w-full bg-surface border border-border px-2 py-1 focus:outline-none rounded-none font-sans"
                                       placeholder="Link (optional)"
                                     />
                                     <div className="flex gap-1.5 justify-end mt-1">
-                                      <button
+                                      <PrimaryButton
                                         onClick={async () => {
                                           if (!editLessonName.trim()) return;
                                           const { isValid, formatted } = formatAndValidateUrl(editLessonLink);
@@ -1497,11 +1482,11 @@ function AcademyContent() {
                                           setEditingLessonId(null);
                                           showToast('Lesson updated.', 'success');
                                         }}
-                                        className="bg-primary text-on-primary px-2 py-0.5 text-[10px] uppercase font-bold rounded-none cursor-pointer btn-press border border-primary"
+                                        className="min-h-9 px-3 shadow-none"
                                       >
                                         Save
-                                      </button>
-                                      <button onClick={() => setEditingLessonId(null)} className="border border-border bg-surface hover:bg-neutral-bg px-2 py-0.5 text-[10px] uppercase rounded-none cursor-pointer btn-press">Cancel</button>
+                                      </PrimaryButton>
+                                      <SecondaryButton onClick={() => setEditingLessonId(null)} className="min-h-9 px-3">Cancel</SecondaryButton>
                                     </div>
                                   </div>
                                 ) : (
@@ -1538,27 +1523,26 @@ function AcademyContent() {
 
                           {isSelected && (
                             <div className="pt-3 border-t border-border space-y-2 font-label text-xs">
-                              <input
+                              <Input
                                 type="text"
                                 value={newLessonName}
                                 onChange={(e) => setNewLessonName(e.target.value)}
                                 placeholder="Add lesson title..."
-                                className="w-full bg-background border border-border px-2 py-2 text-xs focus:outline-none rounded-none font-sans"
                               />
                               <div className="flex gap-2">
-                                <input
+                                <Input
                                   type="text"
                                   value={newLessonLink}
                                   onChange={(e) => setNewLessonLink(e.target.value)}
                                   placeholder="Link (optional)..."
-                                  className="flex-grow bg-background border border-border px-2 py-2 text-xs focus:outline-none rounded-none font-sans"
+                                  className="flex-grow"
                                 />
-                                <button
+                                <PrimaryButton
                                   onClick={() => handleAddLesson(mod.id)}
-                                  className="bg-primary text-on-primary px-4 py-2 font-bold uppercase tracking-wider cursor-pointer rounded-none shrink-0 btn-press border border-primary"
+                                  className="shrink-0"
                                 >
                                   Add
-                                </button>
+                                </PrimaryButton>
                               </div>
                             </div>
                           )}
@@ -1572,30 +1556,23 @@ function AcademyContent() {
             <section className={`space-y-4 ${mobileStudioTab !== 'notepad' ? 'hidden lg:block' : ''}`}>
               {activeModule ? (
                 <>
-                  <div className="border border-border bg-surface p-5 space-y-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="space-y-2 min-w-0">
-                        <span className="font-label text-[10px] text-secondary uppercase tracking-[0.16em] font-bold">Study Studio</span>
-                        <h3 className="font-display text-xl font-bold text-primary">{activeModule.title}</h3>
-                        <div className="flex flex-wrap gap-2 text-[11px] text-secondary">
-                          <span className="border border-border bg-background px-2 py-1">{noteWordCount} words</span>
-                          <span className="border border-border bg-background px-2 py-1">{estimatedReadMinutes} min read</span>
-                          <span className="border border-border bg-background px-2 py-1">{noteHeadings.length} sections</span>
-                        </div>
-                      </div>
-
+                  <EditorialCard
+                    title={activeModule.title}
+                    subtitle="Study studio"
+                    action={
                       <div className="flex flex-wrap items-center gap-2 shrink-0">
                         <div className="relative">
-                          <button
+                          <SecondaryButton
                             onClick={() => setShowHistoryDropdown(!showHistoryDropdown)}
-                            className="p-2 border border-border bg-surface hover:bg-neutral-bg/40 transition-all text-primary flex items-center justify-center cursor-pointer rounded-none btn-press"
-                            title="Version History"
+                            className="min-h-10 px-3"
+                            title="Version history"
                           >
                             <History className="h-4 w-4" />
-                          </button>
+                            <span>History</span>
+                          </SecondaryButton>
                           {showHistoryDropdown && (
-                            <div className="absolute right-0 mt-1 w-64 bg-surface border border-border shadow-none rounded-none z-50 text-[11px] max-h-48 overflow-y-auto">
-                              <span className="block p-2 font-bold border-b border-border bg-neutral-bg uppercase text-[10px]">Notes Version History</span>
+                            <div className="absolute right-0 mt-2 w-72 app-panel-subtle z-50 text-[11px] max-h-56 overflow-y-auto">
+                              <span className="block p-2 font-bold border-b border-border bg-surface-muted uppercase text-[10px]">Notes Version History</span>
                               {notesHistory.length === 0 ? (
                                 <p className="p-3 text-center text-secondary italic">No saved history yet</p>
                               ) : (
@@ -1607,7 +1584,7 @@ function AcademyContent() {
                                       setShowHistoryDropdown(false);
                                       showToast('Notes restored to historical version.', 'info');
                                     }}
-                                    className="w-full text-left p-2 border-b border-border hover:bg-neutral-bg flex flex-col justify-start btn-press"
+                                    className="w-full text-left p-3 border-b last:border-b-0 border-border hover:bg-surface-muted flex flex-col justify-start btn-press"
                                   >
                                     <span className="font-bold text-primary">{hIdx === 0 ? 'Current Session' : `Version ${notesHistory.length - hIdx}`}</span>
                                     <span className="text-[9px] text-secondary">{new Date(historyItem.timestamp).toLocaleString()}</span>
@@ -1619,21 +1596,31 @@ function AcademyContent() {
                           )}
                         </div>
 
-                        <div className="flex border border-border font-label text-xs rounded-none overflow-hidden bg-background">
-                          <button onClick={() => setIsNotePreview(false)} className={`px-3 py-2 flex items-center space-x-1 cursor-pointer btn-press font-bold ${!isNotePreview ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/50'}`}><Edit3 className="h-3 w-3" /><span>Edit</span></button>
-                          <button onClick={() => setIsNotePreview(true)} className={`px-3 py-2 flex items-center space-x-1 border-l border-border cursor-pointer btn-press font-bold ${isNotePreview ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/50'}`}><Eye className="h-3 w-3" /><span>Preview</span></button>
+                        <div className="flex rounded-2xl border border-border bg-surface p-1 font-label text-xs overflow-hidden">
+                          <button onClick={() => setIsNotePreview(false)} className={`rounded-xl px-3 py-2 flex items-center space-x-1 cursor-pointer btn-press font-bold ${!isNotePreview ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'}`}><Edit3 className="h-3 w-3" /><span>Edit</span></button>
+                          <button onClick={() => setIsNotePreview(true)} className={`rounded-xl px-3 py-2 flex items-center space-x-1 cursor-pointer btn-press font-bold ${isNotePreview ? 'bg-primary text-on-primary shadow-[0_10px_24px_rgba(26,28,30,0.12)]' : 'text-primary hover:bg-surface-muted'}`}><Eye className="h-3 w-3" /><span>Preview</span></button>
                         </div>
 
-                        <button
+                        <SecondaryButton
                           onClick={() => {
                             setIsNotePreview(true);
                             setIsReaderOpen(true);
                           }}
-                          className="border border-border bg-surface px-3 py-2 text-xs font-label uppercase font-bold tracking-[0.16em] text-primary hover:bg-neutral-bg/40 btn-press flex items-center gap-2"
+                          className="min-h-10 px-4"
                         >
                           <Maximize2 className="h-3.5 w-3.5" />
                           <span>Reader</span>
-                        </button>
+                        </SecondaryButton>
+                      </div>
+                    }
+                  >
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div className="space-y-2 min-w-0">
+                        <div className="flex flex-wrap gap-2 text-[11px] text-secondary">
+                          <span className="app-panel-subtle px-3 py-1.5">{noteWordCount} words</span>
+                          <span className="app-panel-subtle px-3 py-1.5">{estimatedReadMinutes} min read</span>
+                          <span className="app-panel-subtle px-3 py-1.5">{noteHeadings.length} sections</span>
+                        </div>
                       </div>
                     </div>
 
@@ -1643,7 +1630,7 @@ function AcademyContent() {
                           type="button"
                           disabled={!previousModule}
                           onClick={() => previousModule && setSelectedModuleId(previousModule.id)}
-                          className="border border-border bg-background px-3 py-3 text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
+                          className="app-panel-subtle text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
                         >
                           <span className="font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold flex items-center gap-1"><ChevronLeft className="h-3 w-3" />Previous</span>
                           <span className="block mt-1 text-sm font-semibold text-primary truncate">{previousModule?.title || 'Start of course'}</span>
@@ -1652,17 +1639,17 @@ function AcademyContent() {
                           type="button"
                           disabled={!nextModule}
                           onClick={() => nextModule && setSelectedModuleId(nextModule.id)}
-                          className="border border-border bg-background px-3 py-3 text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
+                          className="app-panel-subtle text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
                         >
                           <span className="font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold flex items-center justify-end gap-1">Next<ChevronRight className="h-3 w-3" /></span>
                           <span className="block mt-1 text-sm font-semibold text-primary truncate text-left">{nextModule?.title || 'End of course'}</span>
                         </button>
                       </div>
                     )}
-                  </div>
+                  </EditorialCard>
 
                   {noteHeadings.length > 0 && (
-                    <div className="border border-border bg-surface p-4">
+                    <EditorialCard title="Section Guide" subtitle="Jump within notes">
                       <div className="flex items-center gap-2 mb-3">
                         <List className="h-4 w-4 text-secondary" />
                         <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Section Guide</span>
@@ -1682,26 +1669,26 @@ function AcademyContent() {
                                 });
                               });
                             }}
-                            className="border border-border bg-background px-2.5 py-1.5 text-xs text-primary hover:border-primary btn-press"
+                            className="app-panel-subtle px-3 py-2 text-xs text-primary hover:border-primary btn-press"
                           >
                             {heading.title}
                           </button>
                         ))}
                       </div>
-                    </div>
+                    </EditorialCard>
                   )}
 
-                  <div className="border border-border bg-surface p-5 min-h-[560px] flex flex-col">
+                  <div className="app-panel min-h-[560px] flex flex-col">
                     <div className="flex-grow mt-1 flex flex-col">
                       {!isNotePreview ? (
                         <textarea
                           value={localNotes}
                           onChange={(e) => setLocalNotes(e.target.value)}
                           placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                          className="w-full flex-grow min-h-[420px] bg-neutral-bg/45 border border-border px-4 py-4 text-sm text-primary focus:outline-none font-mono resize-none leading-relaxed rounded-none"
+                          className="w-full flex-grow min-h-[420px] rounded-[24px] bg-neutral-bg/45 border border-border px-4 py-4 text-sm text-primary focus:outline-none focus:border-accent font-mono resize-none leading-relaxed transition-[border-color,box-shadow,background-color]"
                         />
                       ) : (
-                        <div className="w-full flex-grow min-h-[420px] bg-background border border-border px-4 py-4 overflow-y-auto rounded-none">
+                        <div className="w-full flex-grow min-h-[420px] rounded-[24px] bg-background border border-border px-4 py-4 overflow-y-auto">
                           {renderMarkdown(localNotes)}
                         </div>
                       )}
@@ -1714,10 +1701,10 @@ function AcademyContent() {
                   </div>
                 </>
               ) : (
-                <div className="text-center py-24 border border-border bg-surface">
-                  <BookOpen className="h-10 w-10 text-secondary/40 mx-auto mb-2" />
-                  <p className="font-sans text-xs text-secondary italic">No active module selected. Select a module from the outline.</p>
-                </div>
+                <EmptyState
+                  title="No active module selected"
+                  description="Select a module from the outline to open the study studio and notes workspace."
+                />
               )}
             </section>
           </div>
@@ -1729,30 +1716,30 @@ function AcademyContent() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Flashcard Study Desk (Deck queue viewer) */}
-          <section className="lg:col-span-2 bg-surface border border-border p-6 rounded-none flex flex-col justify-between min-h-[400px] shadow-none">
-            <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 border-b border-border pb-2">
-                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-bold">
-                  Leitner Review Station ({dueCards.length} cards due)
-                </span>
-                <div className="relative w-full sm:w-48">
-                  <Search className="absolute left-2 top-2 h-3 w-3 text-secondary" />
-                  <input
-                    type="text"
-                    placeholder="Search deck..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-7 pr-3 py-1 bg-neutral-bg/50 border border-border rounded-none text-[10px] focus:outline-none focus:border-primary font-sans"
-                  />
-                </div>
+          <EditorialCard
+            title="Leitner Review Station"
+            subtitle={`${dueCards.length} cards due`}
+            className="lg:col-span-2 min-h-[400px]"
+            action={
+              <div className="relative w-full sm:w-56">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
+                <Input
+                  type="text"
+                  placeholder="Search deck..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 text-xs"
+                />
               </div>
-
+            }
+          >
+            <div>
               {activeCard ? (
                 <div className="space-y-8 flex flex-col items-center py-8">
                   {/* Flip Card Container */}
                   <div
                     onClick={() => setIsFlipped(!isFlipped)}
-                    className="w-full max-w-md h-48 cursor-pointer select-none"
+                    className="w-full max-w-md h-56 cursor-pointer select-none"
                     style={{ perspective: '1000px' }}
                   >
                     <div
@@ -1764,7 +1751,7 @@ function AcademyContent() {
                     >
                       {/* Front Side */}
                       <div
-                        className="absolute inset-0 w-full h-full border border-border bg-neutral-bg flex flex-col justify-center p-6 rounded-none shadow-none"
+                        className="absolute inset-0 w-full h-full border border-border bg-[linear-gradient(180deg,rgba(244,239,230,0.96),rgba(236,229,215,0.9))] flex flex-col justify-center p-6 rounded-[30px] shadow-[0_22px_48px_rgba(26,28,30,0.12)]"
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden'
@@ -1783,7 +1770,7 @@ function AcademyContent() {
 
                       {/* Back Side */}
                       <div
-                        className="absolute inset-0 w-full h-full border border-border bg-neutral-bg flex flex-col justify-center p-6 rounded-none shadow-none"
+                        className="absolute inset-0 w-full h-full border border-border bg-[linear-gradient(180deg,rgba(243,234,227,0.98),rgba(230,220,208,0.92))] flex flex-col justify-center p-6 rounded-[30px] shadow-[0_22px_48px_rgba(26,28,30,0.12)]"
                         style={{
                           backfaceVisibility: 'hidden',
                           WebkitBackfaceVisibility: 'hidden',
@@ -1805,8 +1792,8 @@ function AcademyContent() {
 
                   {/* Actions */}
                   {isFlipped && (
-                    <div className="flex space-x-4 w-full max-w-sm font-label text-xs">
-                      <button
+                    <div className="flex flex-col sm:flex-row gap-4 w-full max-w-md font-label text-xs">
+                      <PrimaryButton
                         onClick={async () => {
                           const nextDue = dueCards.filter(fc => fc.id !== activeCard.id);
                           await reviewFlashcard(activeCard.id, true);
@@ -1818,11 +1805,11 @@ function AcademyContent() {
                           }
                           showToast('Marked correct!', 'success');
                         }}
-                        className="flex-1 bg-emerald-800 hover:bg-emerald-900 border border-emerald-800 text-white py-2 uppercase font-bold tracking-wider rounded-none cursor-pointer btn-press"
+                        className="flex-1 bg-emerald-800 text-white hover:bg-emerald-900 hover:shadow-[0_14px_28px_rgba(6,95,70,0.24)]"
                       >
                         Correct (Box +1)
-                      </button>
-                      <button
+                      </PrimaryButton>
+                      <PrimaryButton
                         onClick={async () => {
                           const nextDue = dueCards.filter(fc => fc.id !== activeCard.id);
                           await reviewFlashcard(activeCard.id, false);
@@ -1834,65 +1821,62 @@ function AcademyContent() {
                           }
                           showToast('Marked incorrect.', 'error');
                         }}
-                        className="flex-1 bg-accent hover:bg-accent/90 text-on-primary py-2 uppercase font-bold tracking-wider rounded-none cursor-pointer btn-press"
+                        className="flex-1"
                       >
                         Incorrect (Box 1)
-                      </button>
+                      </PrimaryButton>
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="text-center py-24">
-                  <span className="font-serif text-md italic text-secondary block">No cards due for review.</span>
-                  <span className="font-sans text-xs text-secondary mt-1 block">Leitner box intervals satisfied. Add flashcards below.</span>
-                </div>
+                <EmptyState
+                  title="No cards due for review"
+                  description="Leitner intervals are satisfied. Add new flashcards or come back when the next review window opens."
+                />
               )}
             </div>
 
             {/* Deck queue list footer */}
             {dueCards.length > 1 && (
               <div className="flex justify-between items-center pt-4 border-t border-border font-label text-xs font-bold">
-                <button
+                <SecondaryButton
                   disabled={activeFlashcardIndex === 0}
                   onClick={() => { setActiveFlashcardIndex(prev => prev - 1); setIsFlipped(false); }}
-                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer btn-press hover:text-accent"
+                  className="min-h-10 px-4"
                 >
                   &larr; Prev Card
-                </button>
+                </SecondaryButton>
                 <span className="text-secondary">Card {activeFlashcardIndex + 1} of {dueCards.length}</span>
-                <button
+                <SecondaryButton
                   disabled={activeFlashcardIndex === dueCards.length - 1}
                   onClick={() => { setActiveFlashcardIndex(prev => prev + 1); setIsFlipped(false); }}
-                  className="text-secondary disabled:opacity-30 uppercase cursor-pointer btn-press hover:text-accent"
+                  className="min-h-10 px-4"
                 >
                   Next Card &rarr;
-                </button>
+                </SecondaryButton>
               </div>
             )}
-          </section>
+          </EditorialCard>
 
           {/* Flashcard Side Panel: Stats + Single Add / Bulk Import */}
           <div className="space-y-6">
             
             {/* Statistics */}
-            <section className="bg-surface border border-border p-5 rounded-none space-y-4 font-label text-xs shadow-none">
-              <span className="block text-xs uppercase text-secondary font-bold border-b border-border pb-1">
-                Deck Statistics
-              </span>
+            <EditorialCard title="Deck Statistics" subtitle="Review health and distribution">
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                <div className="app-panel-subtle p-3">
                   <span className="block text-[9px] text-secondary uppercase font-bold">Total Cards</span>
                   <span className="text-md font-bold font-serif text-primary">{totalCards}</span>
                 </div>
-                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                <div className="app-panel-subtle p-3">
                   <span className="block text-[9px] text-secondary uppercase font-bold">Mastery Rate</span>
                   <span className="text-md font-bold font-serif text-accent">{masteryRate}%</span>
                 </div>
-                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                <div className="app-panel-subtle p-3">
                   <span className="block text-[9px] text-secondary uppercase font-bold">Accuracy Rate</span>
                   <span className="text-md font-bold font-serif text-emerald-800">{totalReviews > 0 ? `${accuracyRate}%` : '0%'}</span>
                 </div>
-                <div className="bg-neutral-bg p-2.5 border border-border rounded-none">
+                <div className="app-panel-subtle p-3">
                   <span className="block text-[9px] text-secondary uppercase font-bold">Total Reviews</span>
                   <span className="text-md font-bold font-serif text-primary">{totalReviews}</span>
                 </div>
@@ -1905,9 +1889,9 @@ function AcademyContent() {
                     const pct = totalCards > 0 ? (count / totalCards) * 100 : 0;
                     return (
                       <div key={i} className="flex-grow flex flex-col items-center">
-                        <div className="w-full bg-neutral-bg h-12 rounded-none relative border border-border flex items-end">
+                        <div className="w-full bg-surface-muted h-12 rounded-2xl relative border border-border flex items-end overflow-hidden">
                           <div 
-                            className="w-full bg-accent/80 rounded-none transition-all duration-300"
+                            className="w-full bg-accent/80 transition-all duration-300"
                             style={{ height: `${pct}%` }}
                           />
                           <span className="absolute inset-0 flex items-center justify-center font-mono font-bold text-[9px] text-primary">
@@ -1920,124 +1904,107 @@ function AcademyContent() {
                   })}
                 </div>
               </div>
-            </section>
+            </EditorialCard>
 
             {/* Flashcard Add Panel */}
-            <section className="bg-surface border border-border p-6 rounded-none shadow-none">
-              <div className="flex justify-between items-center mb-4 border-b border-border pb-2">
-                <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] font-bold">
-                  {isBulkImport ? 'Bulk Import' : 'Add Flashcard'}
-                </span>
-                <button
+            <EditorialCard
+              title={isBulkImport ? 'Bulk Import' : 'Add Flashcard'}
+              subtitle="Create cards from the current course"
+              action={
+                <SecondaryButton
                   onClick={() => setIsBulkImport(!isBulkImport)}
-                  className="text-secondary hover:text-accent text-[10px] uppercase font-bold flex items-center space-x-1 cursor-pointer btn-press"
+                  className="min-h-10 px-3"
                 >
                   <Upload className="h-3 w-3" />
                   <span>{isBulkImport ? 'Single' : 'Bulk'}</span>
-                </button>
-              </div>
-
+                </SecondaryButton>
+              }
+            >
               {!isBulkImport ? (
                 <form onSubmit={handleAddFlashcardSubmit} className="space-y-4 font-label text-xs">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Module Source</label>
-                    <select
-                      value={fcModuleId}
-                      onChange={(e) => setFcModuleId(e.target.value)}
-                      required
-                      className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
-                    >
-                      <option value="">-- Choose Module --</option>
-                      {courseModules
+                  <Select
+                    label="Module Source"
+                    value={fcModuleId}
+                    onChange={(e) => setFcModuleId(e.target.value)}
+                    required
+                    options={[
+                      { value: '', label: '-- Choose Module --' },
+                      ...courseModules
                         .filter((m) => m.course_id === selectedCourseId)
-                        .map((m) => (
-                          <option key={m.id} value={m.id}>{m.title}</option>
-                        ))}
-                    </select>
-                  </div>
+                        .map((m) => ({ value: m.id, label: m.title }))
+                    ]}
+                  />
 
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Front Question</label>
-                    <textarea
-                      value={fcQuestion}
-                      onChange={(e) => setFcQuestion(e.target.value)}
-                      rows={2}
-                      placeholder="e.g. What is a Service Worker lifecycle?"
-                      required
-                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
-                    />
-                  </div>
+                  <Textarea
+                    label="Front Question"
+                    value={fcQuestion}
+                    onChange={(e) => setFcQuestion(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. What is a Service Worker lifecycle?"
+                  />
 
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Back Answer</label>
-                    <textarea
-                      value={fcAnswer}
-                      onChange={(e) => setFcAnswer(e.target.value)}
-                      rows={2}
-                      placeholder="e.g. Install, Activate, Idle, Fetch"
-                      required
-                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-sans rounded-none"
-                    />
-                  </div>
+                  <Textarea
+                    label="Back Answer"
+                    value={fcAnswer}
+                    onChange={(e) => setFcAnswer(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. Install, Activate, Idle, Fetch"
+                  />
 
-                  <button
+                  <PrimaryButton
                     type="submit"
                     disabled={!fcModuleId || !fcQuestion || !fcAnswer}
-                    className="w-full border border-primary bg-primary text-on-primary hover:bg-primary/95 py-2 uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer rounded-none disabled:opacity-50 btn-press"
+                    className="w-full"
                   >
-                    SAVE FLASHCARD
-                  </button>
+                    Save Flashcard
+                  </PrimaryButton>
                 </form>
               ) : (
                 <form onSubmit={handleBulkImportSubmit} className="space-y-4 font-label text-xs">
-                  <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Module Source</label>
-                    <select
-                      value={fcModuleId}
-                      onChange={(e) => setFcModuleId(e.target.value)}
-                      required
-                      className="w-full bg-neutral-bg border border-border px-2 py-1.5 focus:outline-none font-sans rounded-none"
-                    >
-                      <option value="">-- Choose Module --</option>
-                      {courseModules
+                  <Select
+                    label="Module Source"
+                    value={fcModuleId}
+                    onChange={(e) => setFcModuleId(e.target.value)}
+                    required
+                    options={[
+                      { value: '', label: '-- Choose Module --' },
+                      ...courseModules
                         .filter((m) => m.course_id === selectedCourseId)
-                        .map((m) => (
-                          <option key={m.id} value={m.id}>{m.title}</option>
-                        ))}
-                    </select>
-                  </div>
+                        .map((m) => ({ value: m.id, label: m.title }))
+                    ]}
+                  />
 
                   <div className="space-y-1.5">
-                    <label className="block text-xs uppercase text-secondary font-bold">Paste CSV or TSV (one card per line)</label>
-                    <textarea
+                    <Textarea
+                      label="Paste CSV or TSV (one card per line)"
                       value={bulkText}
                       onChange={(e) => setBulkText(e.target.value)}
-                      rows={6}
+                      rows={7}
                       placeholder="Question 1, Answer 1&#10;Question 2, Answer 2&#10;Or use tab-separation from spreadsheet"
-                      required
-                      className="w-full bg-neutral-bg border border-border px-3 py-1.5 focus:outline-none font-mono rounded-none"
+                      className="font-mono"
                     />
                     <p className="text-[9px] text-secondary mt-1 font-sans">Format: Front / Question, Back / Answer</p>
                   </div>
 
-                  <button
+                  <PrimaryButton
                     type="submit"
                     disabled={!fcModuleId || !bulkText.trim()}
-                    className="w-full border border-primary bg-primary text-on-primary hover:bg-primary/95 py-2 uppercase text-xs tracking-wider font-bold mt-2 cursor-pointer rounded-none disabled:opacity-50 btn-press"
+                    className="w-full"
                   >
-                    IMPORT FLASHCARDS
-                  </button>
+                    Import Flashcards
+                  </PrimaryButton>
                 </form>
               )}
-            </section>
+            </EditorialCard>
           </div>
 
           {/* Flashcard list footer directory */}
           {courseCards.length > 0 && (
-            <section className="lg:col-span-3 bg-surface border border-border p-6 rounded-none space-y-4 shadow-none">
-              <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block border-b border-border pb-1 font-bold">
-                Deck Cards Directory ({courseCards.length} cards)
-              </span>
+            <EditorialCard
+              title="Deck Cards Directory"
+              subtitle={`${courseCards.length} cards`}
+              className="lg:col-span-3"
+            >
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs font-label">
                   <thead>
@@ -2078,7 +2045,7 @@ function AcademyContent() {
                   </tbody>
                 </table>
               </div>
-            </section>
+            </EditorialCard>
           )}
 
         </div>
@@ -2087,7 +2054,7 @@ function AcademyContent() {
       {isReaderOpen && activeModule && (
         <div className="fixed inset-0 z-[120] h-dvh bg-background">
           <div className="flex h-full flex-col">
-            <div className="border-b border-border bg-surface/95 backdrop-blur px-3 py-2 md:px-4">
+            <div className="border-b border-border bg-surface/95 backdrop-blur px-3 py-3 md:px-4">
               <div className="flex items-center gap-2">
                 <div className="min-w-0 flex-1">
                   <h3 className="truncate font-display text-sm font-bold text-primary md:text-base">{activeModule.title}</h3>
@@ -2095,17 +2062,17 @@ function AcademyContent() {
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <button type="button" onClick={() => setReaderFontSize((value) => Math.max(14, value - 1))} className="border border-border bg-background p-2 text-primary hover:bg-neutral-bg/40 btn-press" aria-label="Decrease font size">
+                  <button type="button" onClick={() => setReaderFontSize((value) => Math.max(14, value - 1))} className="h-10 w-10 rounded-xl border border-border bg-background text-primary hover:bg-surface-muted btn-press inline-flex items-center justify-center" aria-label="Decrease font size">
                     <Minus className="h-4 w-4" />
                   </button>
                   <span className="min-w-[46px] text-center text-xs font-semibold text-primary">{readerFontSize}px</span>
-                  <button type="button" onClick={() => setReaderFontSize((value) => Math.min(24, value + 1))} className="border border-border bg-background p-2 text-primary hover:bg-neutral-bg/40 btn-press" aria-label="Increase font size">
+                  <button type="button" onClick={() => setReaderFontSize((value) => Math.min(24, value + 1))} className="h-10 w-10 rounded-xl border border-border bg-background text-primary hover:bg-surface-muted btn-press inline-flex items-center justify-center" aria-label="Increase font size">
                     <Plus className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setIsNotePreview((value) => !value)}
-                    className="border border-border bg-background px-2.5 py-2 text-primary hover:bg-neutral-bg/40 btn-press"
+                    className="h-10 rounded-xl border border-border bg-background px-3 text-primary hover:bg-surface-muted btn-press inline-flex items-center justify-center"
                     aria-label={isNotePreview ? 'Edit notes' : 'Preview notes'}
                   >
                     <Type className="h-4 w-4" />
@@ -2113,7 +2080,7 @@ function AcademyContent() {
                   <button
                     type="button"
                     onClick={() => setShowReaderSettings((value) => !value)}
-                    className={`border border-border px-2.5 py-2 text-primary btn-press ${showReaderSettings ? 'bg-primary text-on-primary' : 'bg-background hover:bg-neutral-bg/40'}`}
+                    className={`h-10 rounded-xl border border-border px-3 text-primary btn-press inline-flex items-center justify-center ${showReaderSettings ? 'bg-primary text-on-primary' : 'bg-background hover:bg-surface-muted'}`}
                     aria-label="Reader settings"
                   >
                     <Maximize2 className="h-4 w-4" />
@@ -2124,7 +2091,7 @@ function AcademyContent() {
                       setShowReaderSettings(false);
                       setIsReaderOpen(false);
                     }}
-                    className="border border-border bg-background p-2 text-primary hover:bg-neutral-bg/40 btn-press"
+                    className="h-10 w-10 rounded-xl border border-border bg-background text-primary hover:bg-surface-muted btn-press inline-flex items-center justify-center"
                     aria-label="Exit reader"
                   >
                     <X className="h-4 w-4" />
@@ -2133,16 +2100,16 @@ function AcademyContent() {
               </div>
 
               {showReaderSettings && (
-                <div className="mt-2 border border-border bg-background p-3">
+                <div className="mt-3 app-panel-subtle">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className="flex border border-border bg-surface overflow-hidden">
-                      <button type="button" onClick={() => setReaderLineHeight('relaxed')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerLineHeight === 'relaxed' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Tight</button>
-                      <button type="button" onClick={() => setReaderLineHeight('loose')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold border-l border-border ${readerLineHeight === 'loose' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Open</button>
+                    <div className="flex rounded-2xl border border-border bg-surface p-1 overflow-hidden">
+                      <button type="button" onClick={() => setReaderLineHeight('relaxed')} className={`rounded-xl px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerLineHeight === 'relaxed' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface-muted'}`}>Tight</button>
+                      <button type="button" onClick={() => setReaderLineHeight('loose')} className={`rounded-xl px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerLineHeight === 'loose' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface-muted'}`}>Open</button>
                     </div>
 
-                    <div className="flex border border-border bg-surface overflow-hidden">
-                      <button type="button" onClick={() => setReaderWidth('focused')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerWidth === 'focused' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Focused</button>
-                      <button type="button" onClick={() => setReaderWidth('wide')} className={`px-3 py-1.5 text-[10px] font-label uppercase font-bold border-l border-border ${readerWidth === 'wide' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-neutral-bg/40'}`}>Wide</button>
+                    <div className="flex rounded-2xl border border-border bg-surface p-1 overflow-hidden">
+                      <button type="button" onClick={() => setReaderWidth('focused')} className={`rounded-xl px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerWidth === 'focused' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface-muted'}`}>Focused</button>
+                      <button type="button" onClick={() => setReaderWidth('wide')} className={`rounded-xl px-3 py-1.5 text-[10px] font-label uppercase font-bold ${readerWidth === 'wide' ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface-muted'}`}>Wide</button>
                     </div>
                   </div>
 
@@ -2157,7 +2124,7 @@ function AcademyContent() {
                             target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                             setShowReaderSettings(false);
                           }}
-                          className="border border-border bg-surface px-2 py-1.5 text-[11px] text-primary whitespace-nowrap hover:border-primary btn-press"
+                          className="app-panel-subtle px-3 py-2 text-[11px] text-primary whitespace-nowrap hover:border-primary btn-press"
                         >
                           {heading.title}
                         </button>
@@ -2175,12 +2142,12 @@ function AcademyContent() {
                     value={localNotes}
                     onChange={(e) => setLocalNotes(e.target.value)}
                     placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                    className="w-full min-h-[calc(100dvh-5.5rem)] bg-surface border border-border px-4 py-4 text-primary focus:outline-none font-mono resize-none rounded-none"
+                    className="w-full min-h-[calc(100dvh-5.5rem)] app-panel text-primary focus:outline-none font-mono resize-none"
                     style={{ fontSize: `${Math.max(14, readerFontSize - 1)}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
                   />
                 ) : (
                   <div
-                    className="bg-surface border border-border px-4 py-4 md:px-8 md:py-7"
+                    className="app-panel md:px-8 md:py-7"
                     style={{ fontSize: `${readerFontSize}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
                   >
                     {renderMarkdown(localNotes, {
@@ -2213,40 +2180,39 @@ function AcademyContent() {
           }}
           className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
         >
-          <div className="bg-surface border border-border p-6 rounded-none w-full max-w-lg space-y-4 font-label text-xs shadow-none">
-            <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
+          <div className="app-panel w-full max-w-lg space-y-5">
+            <span className="block font-label font-bold text-sm uppercase tracking-[0.18em] text-primary border-b border-border pb-3">
               Edit Skill Matrix
             </span>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary font-bold">Course / Matrix Title</label>
-                <input
-                  type="text"
-                  value={editCourseTitle}
-                  onChange={(e) => setEditCourseTitle(e.target.value)}
-                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary font-bold">Category (Skill Class)</label>
-                <input
-                  type="text"
-                  value={editCourseCategory}
-                  onChange={(e) => setEditCourseCategory(e.target.value)}
-                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
-                />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-xs uppercase text-secondary font-bold">Skill Roadmap Summary</label>
-              <textarea
-                value={editCourseDesc}
-                onChange={(e) => setEditCourseDesc(e.target.value)}
-                rows={3}
-                className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans rounded-none"
+              <Input
+                type="text"
+                label="Course / Matrix Title"
+                value={editCourseTitle}
+                onChange={(e) => setEditCourseTitle(e.target.value)}
+              />
+              <Input
+                type="text"
+                label="Category (Skill Class)"
+                value={editCourseCategory}
+                onChange={(e) => setEditCourseCategory(e.target.value)}
               />
             </div>
-            <div className="flex space-x-3 pt-2">
+            <Textarea
+              label="Skill Roadmap Summary"
+              value={editCourseDesc}
+              onChange={(e) => setEditCourseDesc(e.target.value)}
+              rows={4}
+            />
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-1">
+              <SecondaryButton
+                onClick={() => {
+                  setEditCourseModalOpen(false);
+                  setCourseToEdit(null);
+                }}
+              >
+                Cancel
+              </SecondaryButton>
               <PrimaryButton
                 onClick={async () => {
                   if (courseToEdit) {
@@ -2260,18 +2226,9 @@ function AcademyContent() {
                     setCourseToEdit(null);
                   }
                 }}
-                className="flex-grow"
               >
                 Save Changes
               </PrimaryButton>
-              <SecondaryButton
-                onClick={() => {
-                  setEditCourseModalOpen(false);
-                  setCourseToEdit(null);
-                }}
-              >
-                Cancel
-              </SecondaryButton>
             </div>
           </div>
         </div>
@@ -2288,8 +2245,8 @@ function AcademyContent() {
           }}
           className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
         >
-          <div className="bg-surface border border-border p-6 rounded-none w-full max-w-md space-y-4 font-label text-xs shadow-none">
-            <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
+          <div className="app-panel w-full max-w-md space-y-5">
+            <span className="block font-label font-bold text-sm uppercase tracking-[0.18em] text-primary border-b border-border pb-3">
               Create New Module
             </span>
             <form
@@ -2301,27 +2258,17 @@ function AcademyContent() {
                   setNewModuleModalOpen(false);
                 }
               }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              <div className="space-y-1.5">
-                <label className="block text-xs uppercase text-secondary font-bold">Module Title</label>
-                <input
-                  type="text"
-                  value={newModuleName}
-                  onChange={(e) => setNewModuleName(e.target.value)}
-                  placeholder="e.g. Fundamental Concepts..."
-                  required
-                  className="w-full bg-neutral-bg border border-border px-2.5 py-1.5 focus:outline-none font-sans text-primary text-xs rounded-none"
-                />
-              </div>
-              <div className="flex space-x-3 pt-2">
-                <PrimaryButton
-                  type="submit"
-                  disabled={!newModuleName.trim()}
-                  className="flex-grow"
-                >
-                  Create Module
-                </PrimaryButton>
+              <Input
+                type="text"
+                label="Module Title"
+                value={newModuleName}
+                onChange={(e) => setNewModuleName(e.target.value)}
+                placeholder="e.g. Fundamental Concepts..."
+                required
+              />
+              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end pt-1">
                 <SecondaryButton
                   type="button"
                   onClick={() => {
@@ -2331,6 +2278,12 @@ function AcademyContent() {
                 >
                   Cancel
                 </SecondaryButton>
+                <PrimaryButton
+                  type="submit"
+                  disabled={!newModuleName.trim()}
+                >
+                  Create Module
+                </PrimaryButton>
               </div>
             </form>
           </div>
@@ -2562,87 +2515,72 @@ function KnowledgeBaseTab({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
         {/* LEFT COLUMN: LIBRARY & SEARCH */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="flex justify-between items-center border-b-2 border-primary pb-3">
-            <h3 className="font-display text-lg font-bold text-primary uppercase tracking-wider">
+          <div className="flex justify-between items-center border-b border-border pb-4">
+            <h3 className="font-display text-2xl font-bold text-primary">
               Knowledge Ledger
             </h3>
-            <button
+            <PrimaryButton
               onClick={() => setIsAddingNote(!isAddingNote)}
-              className="btn-press flex items-center space-x-1.5 cursor-pointer bg-primary text-on-primary hover:bg-primary/90 px-3.5 py-2 text-xs font-label font-bold border border-primary rounded-none"
             >
               <Plus className="h-4 w-4" />
               <span>{isAddingNote ? 'Close Editor' : 'Catalog Note'}</span>
-            </button>
+            </PrimaryButton>
           </div>
 
           {isAddingNote && (
-            <form onSubmit={handleCreateNote} className="bg-surface border border-border p-6 rounded-none space-y-4 font-label text-xs shadow-none">
-              <span className="block font-bold text-sm uppercase text-primary border-b border-border pb-2">
+            <form onSubmit={handleCreateNote} className="app-panel space-y-5">
+              <span className="block font-label font-bold text-sm uppercase tracking-[0.18em] text-primary border-b border-border pb-3">
                 Catalog Knowledge Note
               </span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="noteTitle" className="block text-[10px] uppercase text-secondary font-bold">Title *</label>
-                  <input
-                    id="noteTitle"
-                    type="text"
-                    value={noteTitle}
-                    onChange={(e) => setNoteTitle(e.target.value)}
-                    required
-                    placeholder="Key insight or concept..."
-                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="noteTopic" className="block text-[10px] uppercase text-secondary font-bold">Topic/Category</label>
-                  <input
-                    id="noteTopic"
-                    type="text"
-                    value={noteTopic}
-                    onChange={(e) => setNoteTopic(e.target.value)}
-                    placeholder="e.g. Systems Architecture, Finance..."
-                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
+                <Input
+                  id="noteTitle"
+                  type="text"
+                  label="Title *"
+                  value={noteTitle}
+                  onChange={(e) => setNoteTitle(e.target.value)}
+                  required
+                  placeholder="Key insight or concept..."
+                />
+                <Input
+                  id="noteTopic"
+                  type="text"
+                  label="Topic/Category"
+                  value={noteTopic}
+                  onChange={(e) => setNoteTopic(e.target.value)}
+                  placeholder="e.g. Systems Architecture, Finance..."
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label htmlFor="noteSourceUrl" className="block text-[10px] uppercase text-secondary font-bold">Source URL</label>
-                  <input
-                    id="noteSourceUrl"
-                    type="text"
-                    value={noteSourceUrl}
-                    onChange={(e) => setNoteSourceUrl(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="noteSummary" className="block text-[10px] uppercase text-secondary font-bold">Brief Summary</label>
-                  <input
-                    id="noteSummary"
-                    type="text"
-                    value={noteSummary}
-                    onChange={(e) => setNoteSummary(e.target.value)}
-                    placeholder="Core takeaway in 1 sentence..."
-                    className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label htmlFor="noteContent" className="block text-[10px] uppercase text-secondary font-bold">Detailed Content *</label>
-                <textarea
-                  id="noteContent"
-                  value={noteContent}
-                  onChange={(e) => setNoteContent(e.target.value)}
-                  required
-                  rows={6}
-                  placeholder="Explain the concept in detail, quotes, formulas..."
-                  className="w-full bg-neutral-bg border border-border px-2.5 py-2 focus:outline-none font-sans rounded-none resize-none"
+                <Input
+                  id="noteSourceUrl"
+                  type="text"
+                  label="Source URL"
+                  value={noteSourceUrl}
+                  onChange={(e) => setNoteSourceUrl(e.target.value)}
+                  placeholder="https://..."
+                />
+                <Input
+                  id="noteSummary"
+                  type="text"
+                  label="Brief Summary"
+                  value={noteSummary}
+                  onChange={(e) => setNoteSummary(e.target.value)}
+                  placeholder="Core takeaway in 1 sentence..."
                 />
               </div>
+
+              <Textarea
+                id="noteContent"
+                label="Detailed Content *"
+                value={noteContent}
+                onChange={(e) => setNoteContent(e.target.value)}
+                required
+                rows={7}
+                placeholder="Explain the concept in detail, quotes, formulas..."
+                className="resize-none"
+              />
 
               <PrimaryButton type="submit" className="w-full">
                 Catalog Note
@@ -2654,12 +2592,12 @@ function KnowledgeBaseTab({
           <div className="space-y-4">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
-              <input
+              <Input
                 type="text"
                 placeholder="Search ledger by title, summary, or category..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-surface border border-border text-xs focus:outline-none focus:border-primary font-sans rounded-none"
+                className="pl-10"
               />
             </div>
 
@@ -2668,10 +2606,9 @@ function KnowledgeBaseTab({
                 {filteredNotes.map((note) => {
                   const isAddingFc = addingFcNoteId === note.id;
                   return (
-                    <div key={note.id} className="border border-border bg-surface p-4 flex flex-col justify-between space-y-4 rounded-none shadow-none">
+                    <EditorialCard key={note.id} title={note.title} subtitle={note.topic || 'General'} className="h-full">
                       <div className="space-y-2">
                         <div className="flex justify-between items-start">
-                          <span className="font-label text-[9px] uppercase font-bold text-accent">{note.topic || 'General'}</span>
                           <button
                             onClick={() => deleteKnowledgeItem(note.id)}
                             className="text-secondary hover:text-tertiary font-label text-[9px] uppercase font-bold cursor-pointer"
@@ -2679,7 +2616,6 @@ function KnowledgeBaseTab({
                             Delete
                           </button>
                         </div>
-                        <h4 className="font-display text-sm font-bold text-primary leading-tight">{note.title}</h4>
                         {note.summary && <p className="font-sans text-xs text-secondary leading-relaxed font-semibold italic">{note.summary}</p>}
                         <p className="font-sans text-xs text-primary leading-relaxed whitespace-pre-wrap">{note.content}</p>
                         {note.source_url && (
@@ -2700,16 +2636,16 @@ function KnowledgeBaseTab({
                       <div className="pt-3 border-t border-border/40 flex justify-between items-center">
                         <span className="font-label text-[8px] text-secondary">Added {new Date(note.created_at).toLocaleDateString()}</span>
                         {!isAddingFc ? (
-                          <button
+                          <SecondaryButton
                             onClick={() => {
                               setAddingFcNoteId(note.id);
                               setFcQuestion(`What is the core definition of "${note.title}"?`);
                               setFcAnswer(note.summary || note.content.slice(0, 100));
                             }}
-                            className="font-label text-[9px] uppercase font-bold text-accent border border-accent/25 hover:border-accent px-2 py-0.5 bg-accent/5 rounded-none cursor-pointer"
+                            className="min-h-9 px-3 text-[10px] border-accent/25 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10"
                           >
                             Create Flashcard
-                          </button>
+                          </SecondaryButton>
                         ) : (
                           <button
                             onClick={() => setAddingFcNoteId(null)}
@@ -2722,77 +2658,68 @@ function KnowledgeBaseTab({
 
                       {/* Inline Create Flashcard form */}
                       {isAddingFc && (
-                        <form onSubmit={handleCreateFlashcard} className="mt-3 p-3 bg-background border border-border space-y-3 font-label text-[10px]">
-                          <span className="block font-bold text-[10px] uppercase text-primary border-b border-border/40 pb-1">
+                        <form onSubmit={handleCreateFlashcard} className="mt-3 app-panel-subtle space-y-4 font-label text-[10px]">
+                          <span className="block font-bold text-[10px] uppercase tracking-[0.16em] text-primary border-b border-border/40 pb-2">
                             Add Leitner Flashcard
                           </span>
-                          <div className="space-y-1.5">
-                            <label className="block text-[9px] uppercase text-secondary font-bold">Front Question *</label>
-                            <input
-                              type="text"
-                              value={fcQuestion}
-                              onChange={(e) => setFcQuestion(e.target.value)}
-                              required
-                              className="w-full bg-surface border border-border px-2 py-1 text-xs font-sans rounded-none"
-                            />
-                          </div>
-                          <div className="space-y-1.5">
-                            <label className="block text-[9px] uppercase text-secondary font-bold">Back Answer *</label>
-                            <textarea
-                              value={fcAnswer}
-                              onChange={(e) => setFcAnswer(e.target.value)}
-                              required
-                              rows={2}
-                              className="w-full bg-surface border border-border px-2 py-1 text-xs font-sans rounded-none resize-none"
-                            />
-                          </div>
+                          <Input
+                            type="text"
+                            label="Front Question *"
+                            value={fcQuestion}
+                            onChange={(e) => setFcQuestion(e.target.value)}
+                            required
+                            className="text-xs"
+                          />
+                          <Textarea
+                            label="Back Answer *"
+                            value={fcAnswer}
+                            onChange={(e) => setFcAnswer(e.target.value)}
+                            required
+                            rows={3}
+                            className="text-xs resize-none"
+                          />
                           <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <label className="block text-[9px] uppercase text-secondary font-bold">Target Course *</label>
-                              <select
-                                value={fcCourseId}
-                                onChange={(e) => {
-                                  setFcCourseId(e.target.value);
-                                  setFcModuleId('');
-                                }}
-                                required
-                                className="w-full bg-surface border border-border px-1.5 py-1 text-xs font-sans rounded-none"
-                              >
-                                <option value="">Select Course...</option>
-                                {courses.map(c => (
-                                  <option key={c.id} value={c.id}>{c.title}</option>
-                                ))}
-                              </select>
-                            </div>
-                            <div className="space-y-1">
-                              <label className="block text-[9px] uppercase text-secondary font-bold">Target Module *</label>
-                              <select
-                                value={fcModuleId}
-                                onChange={(e) => setFcModuleId(e.target.value)}
-                                required
-                                disabled={!fcCourseId}
-                                className="w-full bg-surface border border-border px-1.5 py-1 text-xs font-sans rounded-none"
-                              >
-                                <option value="">Select Module...</option>
-                                {modulesForCourse.map(m => (
-                                  <option key={m.id} value={m.id}>{m.name}</option>
-                                ))}
-                              </select>
-                            </div>
+                            <Select
+                              label="Target Course *"
+                              value={fcCourseId}
+                              onChange={(e) => {
+                                setFcCourseId(e.target.value);
+                                setFcModuleId('');
+                              }}
+                              required
+                              className="text-xs"
+                              options={[
+                                { value: '', label: 'Select Course...' },
+                                ...courses.map((c) => ({ value: c.id, label: c.title }))
+                              ]}
+                            />
+                            <Select
+                              label="Target Module *"
+                              value={fcModuleId}
+                              onChange={(e) => setFcModuleId(e.target.value)}
+                              required
+                              disabled={!fcCourseId}
+                              className="text-xs"
+                              options={[
+                                { value: '', label: 'Select Module...' },
+                                ...modulesForCourse.map((m: any) => ({ value: m.id, label: m.name }))
+                              ]}
+                            />
                           </div>
-                          <PrimaryButton type="submit" className="w-full py-1.5 text-[9px]">
+                          <PrimaryButton type="submit" className="w-full">
                             Save Flashcard
                           </PrimaryButton>
                         </form>
                       )}
-                    </div>
+                    </EditorialCard>
                   );
                 })}
               </div>
             ) : (
-              <div className="text-center py-12 border border-dashed border-border bg-surface/30">
-                <p className="font-sans text-xs text-secondary italic">No knowledge notes found. Catalog some insights above.</p>
-              </div>
+              <EmptyState
+                title="No knowledge notes found"
+                description="Catalog some insights above, or refine the search to surface matching notes."
+              />
             )}
           </div>
         </div>
@@ -2800,11 +2727,11 @@ function KnowledgeBaseTab({
         {/* RIGHT COLUMN: RAW CAPTURES & INQUIRIES */}
         <div className="space-y-6 flex flex-col justify-start">
           {/* Unprocessed captures */}
-          <div className="bg-surface border border-border p-5 space-y-4 rounded-none shadow-none">
+          <EditorialCard
+            title="Inbox Study Resources"
+            subtitle={`${unprocessedResources.length} items to process`}
+          >
             <div className="border-b border-border/40 pb-2">
-              <span className="font-label text-xs uppercase tracking-wider font-bold text-primary block">
-                Inbox Study Resources ({unprocessedResources.length})
-              </span>
               <span className="font-sans text-[10px] text-secondary leading-relaxed block mt-0.5">
                 Process unfiled slips and convert them to structured knowledge.
               </span>
@@ -2813,9 +2740,9 @@ function KnowledgeBaseTab({
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
               {unprocessedResources.length > 0 ? (
                 unprocessedResources.map((item) => (
-                  <div key={item.id} className="p-3 bg-background border border-border space-y-2 text-xs">
+                  <div key={item.id} className="app-panel-subtle space-y-2 text-xs">
                     <div className="flex justify-between items-center">
-                      <span className="font-label text-[8px] bg-accent/10 text-accent px-1.5 py-0.5 uppercase tracking-wider font-bold">
+                      <span className="font-label text-[8px] bg-accent/10 text-accent px-2 py-1 uppercase tracking-[0.16em] font-bold rounded-full">
                         {item.type}
                       </span>
                       <button
@@ -2828,28 +2755,31 @@ function KnowledgeBaseTab({
                     <p className="font-sans font-bold text-primary truncate">{item.title}</p>
                     {item.content && <p className="font-sans text-[10px] text-secondary line-clamp-2 leading-relaxed">{item.content}</p>}
                     <div className="pt-1 flex justify-end">
-                      <button
+                      <SecondaryButton
                         onClick={() => handleConvertCapture(item)}
-                        className="font-label text-[9px] uppercase font-bold text-accent hover:opacity-85 flex items-center gap-1 cursor-pointer"
+                        className="min-h-9 px-3 text-[10px] border-accent/25 bg-accent/5 text-accent hover:border-accent hover:bg-accent/10"
                       >
                         <span>Convert to Note</span>
                         <span>&rarr;</span>
-                      </button>
+                      </SecondaryButton>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="font-sans text-xs text-secondary italic text-center py-4">No unprocessed study resources.</p>
+                <EmptyState
+                  title="No unprocessed study resources"
+                  description="New learning captures from the inbox will appear here when they need filing."
+                />
               )}
             </div>
-          </div>
+          </EditorialCard>
 
           {/* Open inquiries */}
-          <div className="bg-surface border border-border p-5 space-y-4 rounded-none shadow-none">
+          <EditorialCard
+            title="Open Learning Questions"
+            subtitle={`${openQuestions.length} active questions`}
+          >
             <div className="border-b border-border/40 pb-2">
-              <span className="font-label text-xs uppercase tracking-wider font-bold text-primary block">
-                Open Learning Questions ({openQuestions.length})
-              </span>
               <span className="font-sans text-[10px] text-secondary block mt-0.5">
                 Derived dynamically from daily command briefs.
               </span>
@@ -2858,13 +2788,13 @@ function KnowledgeBaseTab({
             <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
               {openQuestions.length > 0 ? (
                 openQuestions.map((q) => (
-                  <div key={q.id} className="p-3.5 bg-background border border-border space-y-2 text-xs animate-fade-in">
+                  <div key={q.id} className="app-panel-subtle space-y-2 text-xs animate-fade-in">
                     <span className="font-label text-[8px] text-secondary block">{new Date(q.date).toLocaleDateString()}</span>
                     <p className="font-sans font-bold text-primary leading-snug">{q.question}</p>
                     <div className="flex gap-2 justify-end pt-1 font-label text-[8px] font-bold">
                       <Link
                         href={`/review/midday`}
-                        className="border border-border hover:border-primary px-2 py-0.5 bg-surface"
+                        className="app-panel-subtle px-3 py-2 hover:border-primary"
                       >
                         ANSWER
                       </Link>
@@ -2872,10 +2802,13 @@ function KnowledgeBaseTab({
                   </div>
                 ))
               ) : (
-                <p className="font-sans text-xs text-secondary italic text-center py-4">All inquiries resolved.</p>
+                <EmptyState
+                  title="All inquiries resolved"
+                  description="When new learning questions are extracted from your review flow, they will surface here."
+                />
               )}
             </div>
-          </div>
+          </EditorialCard>
         </div>
       </div>
     </div>
@@ -2886,7 +2819,7 @@ export default function AcademyPage() {
   return (
     <Suspense fallback={
       <PageShell>
-        <div className="bg-surface border border-border py-16 text-center rounded-none shadow-none">
+        <div className="app-panel-subtle py-16 text-center">
           <p className="font-label text-xs uppercase tracking-wider text-secondary font-bold">Loading Academy Studio...</p>
         </div>
       </PageShell>

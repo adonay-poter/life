@@ -152,8 +152,8 @@ function ProjectCard({
   return (
     <article
       id={`project-card-${project.id}`}
-      className={`group relative overflow-hidden border bg-surface transition-all duration-200 hover:border-primary hover:shadow-[0_18px_40px_rgba(26,28,30,0.06)] ${
-        isTarget ? 'ring-1 ring-accent border-accent/40' : 'border-border'
+      className={`app-panel group relative overflow-hidden transition-all duration-200 hover:border-primary hover:shadow-[0_18px_40px_rgba(26,28,30,0.06)] ${
+        isTarget ? 'ring-1 ring-accent border-accent/40' : ''
       }`}
     >
       <div
@@ -205,9 +205,9 @@ function ProjectCard({
         <div className="space-y-3 border-y border-border py-3">
           <div className="flex items-center gap-3">
             <span className="w-12 shrink-0 font-display text-2xl text-primary">{progress}%</span>
-            <div className="h-2 flex-1 bg-secondary/10">
+            <div className="h-2 flex-1 rounded-full bg-secondary/10">
               <div
-                className="h-full transition-all duration-300"
+                className="h-full rounded-full transition-all duration-300"
                 style={{ width: `${progress}%`, backgroundColor: project.color || 'var(--accent)' }}
               />
             </div>
@@ -463,39 +463,39 @@ function ProjectsContent() {
         }
       />
 
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-        <div className="border border-border bg-surface p-3">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div className="app-panel p-3">
           <p className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary">Active</p>
           <div className="mt-2 flex items-end justify-between gap-3">
-            <span className="font-display text-3xl text-primary">{portfolioStats.activeCount}</span>
+            <span className="app-metric text-3xl text-primary">{portfolioStats.activeCount}</span>
             <FolderKanban className="h-5 w-5 text-secondary" />
           </div>
         </div>
-        <div className="border border-border bg-surface p-3">
+        <div className="app-panel p-3">
           <p className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary">At Risk</p>
           <div className="mt-2 flex items-end justify-between gap-3">
-            <span className={`font-display text-3xl ${portfolioStats.atRiskCount > 0 ? 'text-danger' : 'text-primary'}`}>{portfolioStats.atRiskCount}</span>
+            <span className={`app-metric text-3xl ${portfolioStats.atRiskCount > 0 ? 'text-danger' : 'text-primary'}`}>{portfolioStats.atRiskCount}</span>
             <AlertTriangle className="h-5 w-5 text-danger" />
           </div>
         </div>
-        <div className="border border-border bg-surface p-3">
+        <div className="app-panel p-3">
           <p className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary">Progress</p>
           <div className="mt-2 flex items-end justify-between gap-3">
-            <span className="font-display text-3xl text-primary">{portfolioStats.avgProgress}%</span>
+            <span className="app-metric text-3xl text-primary">{portfolioStats.avgProgress}%</span>
             <TrendingUp className="h-5 w-5 text-secondary" />
           </div>
         </div>
-        <div className="border border-border bg-surface p-3">
+        <div className="app-panel p-3">
           <p className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary">Due Soon</p>
           <div className="mt-2 flex items-end justify-between gap-3">
-            <span className="font-display text-3xl text-primary">{portfolioStats.dueSoonCount}</span>
+            <span className="app-metric text-3xl text-primary">{portfolioStats.dueSoonCount}</span>
             <CalendarDays className="h-5 w-5 text-secondary" />
           </div>
         </div>
       </section>
 
       {showAddProject && (
-        <section className="border border-border bg-surface p-5 lg:p-6">
+        <section className="app-panel p-5 lg:p-6">
           <div className="mb-5 flex items-center justify-between gap-3 border-b border-border pb-3">
             <div>
               <p className="font-label text-[11px] uppercase tracking-[0.24em] text-secondary">New Project</p>
@@ -530,7 +530,7 @@ function ProjectsContent() {
                     key={color.value}
                     type="button"
                     onClick={() => setNewProjColor(color.value)}
-                    className={`h-8 w-8 border transition-transform btn-press ${
+                    className={`h-9 w-9 rounded-xl border transition-transform btn-press ${
                       newProjColor === color.value ? 'scale-110 border-primary ring-1 ring-primary' : 'border-border'
                     }`}
                     style={{ backgroundColor: color.value }}
@@ -567,7 +567,7 @@ function ProjectsContent() {
       )}
 
       <section className="space-y-4">
-          <div className="border border-border bg-surface p-3">
+          <div className="app-panel p-4">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-secondary" />
               <Input
@@ -579,7 +579,7 @@ function ProjectsContent() {
               />
             </div>
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-[1fr_1fr_1fr_auto_auto]">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto_auto]">
               <Select
                 label="Area"
                 value={selectedAreaFilter}
@@ -678,7 +678,7 @@ export default function ProjectsPage() {
   return (
     <Suspense
       fallback={
-        <div className="border border-secondary/30 bg-surface py-16 text-center">
+        <div className="app-panel py-16 text-center">
           <p className="font-sans text-sm italic text-secondary">Loading projects workspace...</p>
         </div>
       }

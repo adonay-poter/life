@@ -86,7 +86,7 @@ export default function BlueprintContextViewer() {
   return (
     <article className="flex h-full sm:min-h-[620px] min-h-0 flex-col overflow-hidden border border-border bg-surface">
       {/* Desktop Header (Hidden on Mobile) */}
-      <div className="hidden sm:block border-b border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.92),rgba(247,245,242,0.72))] p-6 shrink-0">
+      <div className="hidden sm:block border-b border-border bg-[var(--gradient-header-bg)] p-6 shrink-0">
         <div className="flex flex-col items-start justify-between gap-4 lg:flex-row">
           <div className="max-w-lg">
             <h3 className="font-display text-2xl font-bold text-primary">
@@ -127,7 +127,7 @@ export default function BlueprintContextViewer() {
       </div>
 
       {/* Mobile Compact Header (Hidden on Desktop) */}
-      <div className="flex sm:hidden items-center justify-between border-b border-border bg-[linear-gradient(180deg,rgba(247,245,242,0.92),rgba(247,245,242,0.72))] px-4 py-2.5 shrink-0">
+      <div className="flex sm:hidden items-center justify-between border-b border-border bg-[var(--gradient-header-bg)] px-4 py-2.5 shrink-0">
         <h3 className="font-serif italic text-xs text-primary font-bold">
           Soul Blueprint
         </h3>

@@ -78,9 +78,10 @@ export default function ClientWrapper({ children }: { children: React.ReactNode 
                 <MobileNav onCaptureTrigger={() => setIsCaptureOpen(true)} />
 
                 {/* Main Content Area — PageTransition re-mounts on every route change */}
-                <main className={`flex-1 min-w-0 flex flex-col min-h-screen px-4 py-6 md:px-6 md:py-8 lg:px-8 lg:py-10 xl:px-12 xl:py-12 ${
+                <main className={`relative flex-1 min-w-0 flex flex-col min-h-screen px-4 py-5 md:px-6 md:py-8 lg:px-8 lg:py-10 xl:px-10 xl:py-10 ${
                   pathname.startsWith('/oracle') ? 'pb-[calc(4rem+env(safe-area-inset-bottom))]' : 'pb-24'
-                } md:pb-12 max-w-7xl mx-auto w-full`}>
+                } md:pb-12 max-w-[1320px] mx-auto w-full`}>
+                  <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-56 rounded-[32px] bg-gradient-to-r from-accent/6 via-transparent to-secondary/8 blur-3xl" />
                   <PageTransition>{children}</PageTransition>
                 </main>
 

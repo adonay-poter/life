@@ -11,28 +11,29 @@ interface SectionHeaderProps {
 
 export default function SectionHeader({ title, subtitle, action, meta }: SectionHeaderProps) {
   return (
-    <header className="border-b-2 border-primary pb-4 flex flex-col md:flex-row justify-between items-baseline gap-4 w-full">
-      <div>
-        <h2 className="font-display text-3xl font-bold tracking-tight text-primary uppercase">
+    <header className="app-panel px-5 py-5 sm:px-6 sm:py-6 flex flex-col gap-5 md:flex-row md:items-end md:justify-between w-full">
+      <div className="min-w-0">
+        {(subtitle || meta) && (
+          <p className="app-kicker mb-2">
+            {meta || subtitle}
+          </p>
+        )}
+        <h2 className="font-display text-[2rem] leading-none font-bold tracking-[-0.04em] text-primary sm:text-[2.5rem]">
           {title}
         </h2>
         {subtitle && (
-          <p className="font-label text-xs text-secondary uppercase tracking-[0.2em] mt-1">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-secondary sm:text-[0.96rem]">
             {subtitle}
           </p>
         )}
       </div>
-      <div className="flex items-center space-x-3 self-stretch md:self-auto justify-between md:justify-end">
+      <div className="flex w-full items-center justify-between gap-3 md:w-auto md:justify-end">
         {meta && (
-          <div className="font-label text-xs text-primary font-medium tracking-wider">
-            {meta}
+          <div className="app-panel-subtle px-3 py-2">
+            <span className="app-kicker text-primary">{meta}</span>
           </div>
         )}
-        {action && (
-          <div className={meta ? 'pl-3 border-l border-border' : ''}>
-            {action}
-          </div>
-        )}
+        {action && <div className="w-full md:w-auto">{action}</div>}
       </div>
     </header>
   );
