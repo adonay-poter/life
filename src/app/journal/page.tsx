@@ -8,6 +8,7 @@ import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import EmptyState from '@/components/ui/EmptyState';
+import { Input, Textarea } from '@/components/ui/Inputs';
 import { Search, Calendar, ChevronRight, Activity, Moon, Droplet, CheckCircle } from 'lucide-react';
 
 export default function JournalPage() {
@@ -410,11 +411,11 @@ export default function JournalPage() {
 
               <div className="flex items-center space-x-2 font-label text-xs">
                 <Calendar className="h-4 w-4 text-accent" />
-                <input
+                <Input
                   type="date"
                   value={selectedDateStr}
                   onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="min-h-11 rounded-2xl bg-surface border border-border px-3 py-2 font-sans text-xs font-bold text-primary focus:outline-none"
+                  className="min-h-11 px-3 py-2 text-xs font-bold"
                 />
               </div>
             </div>
@@ -427,26 +428,26 @@ export default function JournalPage() {
               </div>
 
               <div className="space-y-2 font-label text-xs">
-                <input
+                <Input
                   type="text"
                   value={mIntention1}
                   onChange={(e) => { setMIntention1(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="1. e.g. Execute clean SQL migrations successfully"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                  className="bg-neutral-bg/45"
                 />
-                <input
+                <Input
                   type="text"
                   value={mIntention2}
                   onChange={(e) => { setMIntention2(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="2. e.g. Interval running outdoors 35 minutes"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                  className="bg-neutral-bg/45"
                 />
-                <input
+                <Input
                   type="text"
                   value={mIntention3}
                   onChange={(e) => { setMIntention3(e.target.value); setSaveStatus('dirty'); }}
                   placeholder="3. e.g. Read draft of design system standard"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
+                  className="bg-neutral-bg/45"
                 />
               </div>
             </div>
@@ -462,27 +463,27 @@ export default function JournalPage() {
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
-                  <input
+                  <Input
                     type="text"
                     value={eLearned1}
                     onChange={(e) => { setELearned1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Next.js fonts load as local stylesheet resources"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
-                />
-                  <input
+                    className="bg-neutral-bg/45"
+                  />
+                  <Input
                     type="text"
                     value={eLearned2}
                     onChange={(e) => { setELearned2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Flat designs require clean negative spaces to feel premium"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
-                />
-                  <input
+                    className="bg-neutral-bg/45"
+                  />
+                  <Input
                     type="text"
                     value={eLearned3}
                     onChange={(e) => { setELearned3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Leitner card deck reviews work best daily"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
-                />
+                    className="bg-neutral-bg/45"
+                  />
                 </div>
               </div>
 
@@ -494,27 +495,27 @@ export default function JournalPage() {
                 </div>
                 
                 <div className="space-y-2 font-label text-xs">
-                  <input
+                  <Input
                     type="text"
                     value={eBetter1}
                     onChange={(e) => { setEBetter1(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="1. e.g. Avoid starting tasks past 9 PM"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
-                />
-                  <input
+                    className="bg-neutral-bg/45"
+                  />
+                  <Input
                     type="text"
                     value={eBetter2}
                     onChange={(e) => { setEBetter2(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="2. e.g. Set reminders for hydration goals"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
-                />
-                  <input
+                    className="bg-neutral-bg/45"
+                  />
+                  <Input
                     type="text"
                     value={eBetter3}
                     onChange={(e) => { setEBetter3(e.target.value); setSaveStatus('dirty'); }}
                     placeholder="3. e.g. Keep card answers shorter for Leitner system"
-                  className="w-full rounded-2xl bg-neutral-bg/45 border border-border px-4 py-2.5 focus:outline-none focus:border-primary font-sans"
-                />
+                    className="bg-neutral-bg/45"
+                  />
                 </div>
               </div>
 
@@ -526,12 +527,12 @@ export default function JournalPage() {
                 <span className="font-serif text-lg font-bold text-primary">IV. Daily Log</span>
                 <span className="font-label text-xs text-secondary uppercase tracking-wider font-bold">&mdash; Free thoughts and reflections</span>
               </div>
-              <textarea
+              <Textarea
                 value={freeText}
                 onChange={(e) => { setFreeText(e.target.value); setSaveStatus('dirty'); }}
                 rows={5}
                 placeholder="Write freely here..."
-                className="w-full rounded-[20px] bg-neutral-bg/45 border border-border px-4 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans resize-none leading-relaxed"
+                className="bg-neutral-bg/45 resize-none leading-relaxed min-h-[160px]"
               />
             </div>
 
@@ -603,14 +604,14 @@ export default function JournalPage() {
                   <Moon className="h-3.5 w-3.5 text-secondary" />
                   <span className="uppercase text-secondary font-bold">Sleep (Hrs)</span>
                 </div>
-                <input
+                <Input
                   type="number"
                   min="0"
                   max="24"
                   step="0.5"
                   value={sleepHours}
                   onChange={(e) => handleMetricChange(mood, parseFloat(e.target.value) || 0, waterIntake)}
-                  className="w-full rounded-2xl bg-neutral-bg border border-border px-3 py-2 font-sans text-xs font-semibold text-primary focus:outline-none focus:border-primary"
+                  className="bg-neutral-bg text-xs font-semibold"
                 />
               </div>
               <div className="space-y-1.5 font-label text-xs">
@@ -618,14 +619,14 @@ export default function JournalPage() {
                   <Droplet className="h-3.5 w-3.5 text-accent" />
                   <span className="uppercase text-secondary font-bold">Water (L)</span>
                 </div>
-                <input
+                <Input
                   type="number"
                   min="0"
                   max="10"
                   step="0.25"
                   value={waterIntake}
                   onChange={(e) => handleMetricChange(mood, sleepHours, parseFloat(e.target.value) || 0)}
-                  className="w-full rounded-2xl bg-neutral-bg border border-border px-3 py-2 font-sans text-xs font-semibold text-primary focus:outline-none focus:border-primary"
+                  className="bg-neutral-bg text-xs font-semibold"
                 />
               </div>
             </div>
@@ -688,12 +689,12 @@ export default function JournalPage() {
               {/* Search Input Bar */}
               <div className="relative font-label text-xs">
                 <Search className="h-4 w-4 text-secondary absolute left-3 top-2.5" />
-                <input
+                <Input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search past logs..."
-                  className="w-full rounded-2xl bg-neutral-bg border border-border py-2.5 pl-9 pr-3 font-sans focus:outline-none focus:border-primary"
+                  className="bg-neutral-bg pl-9 pr-3"
                 />
               </div>
 

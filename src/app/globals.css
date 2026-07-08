@@ -27,9 +27,9 @@
   --gradient-composer-bg: linear-gradient(180deg, rgba(247, 245, 242, 0.1), rgba(247, 245, 242, 0.92) 18%, rgba(247, 245, 242, 0.98) 100%);
   --gradient-header-bg: linear-gradient(180deg, rgba(247, 245, 242, 0.92), rgba(247, 245, 242, 0.72));
   
-  --font-fraunces: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-public-sans: var(--font-public-sans), Arial, Helvetica, sans-serif;
-  --font-space-grotesk: var(--font-space-grotesk), "Courier New", Courier, monospace;
+  --font-fraunces: 'Fraunces', Georgia, "Times New Roman", serif;
+  --font-public-sans: 'Public Sans', Arial, Helvetica, sans-serif;
+  --font-space-grotesk: 'Space Grotesk', "Courier New", Courier, monospace;
 }
 
 .dark {

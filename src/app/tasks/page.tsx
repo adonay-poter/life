@@ -31,7 +31,10 @@ import {
 
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
+import EditorialCard from '@/components/ui/EditorialCard';
+import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import { Input, Select, Textarea } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
 
 const STATUS_META: Array<{
@@ -490,12 +493,12 @@ function TasksContent() {
         />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-pulse mt-8">
           {[1, 2, 3, 4].map((col) => (
-            <div key={col} className="bg-surface border border-border p-4 space-y-4">
-              <div className="h-4 bg-secondary/15 w-1/2" />
+            <div key={col} className="app-panel space-y-4">
+              <div className="h-4 bg-secondary/15 w-1/2 rounded-full" />
               {[1, 2].map((card) => (
-                <div key={card} className="bg-background border border-border p-4 space-y-2">
-                  <div className="h-4 bg-secondary/10 w-3/4" />
-                  <div className="h-3 bg-secondary/5 w-1/2" />
+                <div key={card} className="app-panel-subtle space-y-2">
+                  <div className="h-4 bg-secondary/10 w-3/4 rounded-full" />
+                  <div className="h-3 bg-secondary/5 w-1/2 rounded-full" />
                 </div>
               ))}
             </div>
@@ -521,7 +524,7 @@ function TasksContent() {
         )}
       />
 
-      <section className="bg-surface border border-primary overflow-hidden">
+      <section className="app-panel overflow-hidden p-0">
         <div className="grid grid-cols-2 md:grid-cols-4">
           {[
             { label: 'Due today', value: dueTodayTasks.length, icon: CalendarIcon, tone: dueTodayTasks.length > 0 ? 'text-accent' : 'text-primary' },
@@ -543,7 +546,7 @@ function TasksContent() {
         </div>
 
         <div className="border-t border-border p-3 md:p-4 space-y-4">
-          <div className="grid grid-cols-3 border border-border bg-neutral-bg font-label text-[10px] md:text-xs uppercase tracking-wider font-bold">
+          <div className="grid grid-cols-3 border border-border bg-neutral-bg font-label text-[10px] md:text-xs uppercase tracking-wider font-bold rounded-2xl overflow-hidden">
             {[
               { key: 'today', label: 'Today', icon: CheckSquare },
               { key: 'kanban', label: 'Board', icon: Layers },
@@ -555,7 +558,7 @@ function TasksContent() {
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as typeof activeTab)}
                   className={`py-3 px-2 flex items-center justify-center gap-1.5 border-r border-border last:border-r-0 transition-all cursor-pointer btn-press ${
-                    activeTab === tab.key ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface'
+                    activeTab === tab.key ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface-muted'
                   }`}
                 >
                   <Icon className="h-3.5 w-3.5" />
@@ -567,7 +570,7 @@ function TasksContent() {
 
           <div className="space-y-2 font-label text-xs">
             <div className="flex gap-2 md:hidden">
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 flex-1">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 flex-1 rounded-2xl">
                 <Search className="h-4 w-4 text-secondary shrink-0" />
                 <input
                   value={searchQuery}
@@ -587,7 +590,7 @@ function TasksContent() {
             </div>
 
             <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))_auto] gap-3">
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 rounded-2xl">
                 <Search className="h-4 w-4 text-secondary shrink-0" />
                 <input
                   value={searchQuery}
@@ -597,50 +600,43 @@ function TasksContent() {
                 />
               </label>
 
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-                <Tag className="h-4 w-4 text-secondary shrink-0" />
-                <select
+              <label className="flex items-center gap-2">
+                <Select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-                >
-                  {CATEGORY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option === 'All' ? 'All Categories' : option}
-                    </option>
-                  ))}
-                </select>
+                  className="text-xs font-bold uppercase"
+                  options={CATEGORY_OPTIONS.map((option) => ({
+                    value: option,
+                    label: option === 'All' ? 'All Categories' : option
+                  }))}
+                />
               </label>
 
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-                <SlidersHorizontal className="h-4 w-4 text-secondary shrink-0" />
-                <select
+              <label className="flex items-center gap-2">
+                <Select
                   value={selectedPriorityFilter}
                   onChange={(e) => setSelectedPriorityFilter(e.target.value)}
-                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-                >
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option === 'All' ? 'All Priorities' : getPriorityLabel(option)}
-                    </option>
-                  ))}
-                </select>
+                  className="text-xs font-bold uppercase"
+                  options={PRIORITY_OPTIONS.map((option) => ({
+                    value: option,
+                    label: option === 'All' ? 'All Priorities' : getPriorityLabel(option)
+                  }))}
+                />
               </label>
 
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2">
-                <FolderKanban className="h-4 w-4 text-secondary shrink-0" />
-                <select
+              <label className="flex items-center gap-2">
+                <Select
                   value={selectedProjectFilter}
                   onChange={(e) => setSelectedProjectFilter(e.target.value)}
-                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-                >
-                  <option value="All">All Projects</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
+                  className="text-xs font-bold uppercase"
+                  options={[
+                    { value: 'All', label: 'All Projects' },
+                    ...projects.map((project) => ({
+                      value: project.id,
+                      label: project.name.toUpperCase()
+                    }))
+                  ]}
+                />
               </label>
 
               <button
@@ -662,7 +658,7 @@ function TasksContent() {
 
       {showMobileFilters && (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[3px] p-4 pb-[calc(4.25rem+env(safe-area-inset-bottom)+1rem)] md:hidden flex items-end">
-          <div className="w-full bg-surface border border-border shadow-2xl">
+          <div className="w-full app-panel shadow-2xl p-0 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-neutral-bg/50">
               <div>
                 <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Task Filters</div>
@@ -678,51 +674,38 @@ function TasksContent() {
             </div>
 
             <div className="p-4 space-y-3 font-label text-xs">
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3">
-                <Tag className="h-4 w-4 text-secondary shrink-0" />
-                <select
+              <Select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-                >
-                  {CATEGORY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option === 'All' ? 'All Categories' : option}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  className="text-xs font-bold uppercase"
+                  options={CATEGORY_OPTIONS.map((option) => ({
+                    value: option,
+                    label: option === 'All' ? 'All Categories' : option
+                  }))}
+                />
 
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3">
-                <SlidersHorizontal className="h-4 w-4 text-secondary shrink-0" />
-                <select
+              <Select
                   value={selectedPriorityFilter}
                   onChange={(e) => setSelectedPriorityFilter(e.target.value)}
-                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-                >
-                  {PRIORITY_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option === 'All' ? 'All Priorities' : getPriorityLabel(option)}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  className="text-xs font-bold uppercase"
+                  options={PRIORITY_OPTIONS.map((option) => ({
+                    value: option,
+                    label: option === 'All' ? 'All Priorities' : getPriorityLabel(option)
+                  }))}
+                />
 
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3">
-                <FolderKanban className="h-4 w-4 text-secondary shrink-0" />
-                <select
+              <Select
                   value={selectedProjectFilter}
                   onChange={(e) => setSelectedProjectFilter(e.target.value)}
-                  className="w-full bg-transparent focus:outline-none text-xs font-bold uppercase cursor-pointer text-primary"
-                >
-                  <option value="All">All Projects</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name.toUpperCase()}
-                    </option>
-                  ))}
-                </select>
-              </label>
+                  className="text-xs font-bold uppercase"
+                  options={[
+                    { value: 'All', label: 'All Projects' },
+                    ...projects.map((project) => ({
+                      value: project.id,
+                      label: project.name.toUpperCase()
+                    }))
+                  ]}
+                />
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-4 border-t border-border">
@@ -741,7 +724,7 @@ function TasksContent() {
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[3px] p-4 flex items-center justify-center">
           <form
             onSubmit={handleAddTaskSubmit}
-            className="w-full max-w-xl bg-surface border border-border shadow-2xl overflow-hidden"
+            className="w-full max-w-xl app-panel shadow-2xl overflow-hidden p-0"
           >
             <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-neutral-bg/50">
               <div>
@@ -760,63 +743,64 @@ function TasksContent() {
             <div className="p-5 space-y-4 max-h-[82vh] overflow-y-auto">
               <div className="space-y-2">
                 <label className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Task Name</label>
-                <input
+                <Input
                   type="text"
                   value={newTaskName}
                   onChange={(e) => setNewTaskName(e.target.value)}
                   placeholder="What needs to happen?"
                   autoFocus
                   required
-                  className="w-full bg-neutral-bg border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
+                  className="bg-neutral-bg text-sm"
                 />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <label className="space-y-2">
                   <span className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Due Date</span>
-                  <input
+                  <Input
                     type="date"
                     value={newTaskDueDate}
                     onChange={(e) => setNewTaskDueDate(e.target.value)}
-                    className="w-full bg-neutral-bg border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
+                    className="bg-neutral-bg text-sm"
                   />
                 </label>
 
                 <label className="space-y-2">
                   <span className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Priority</span>
-                  <select
+                  <Select
                     value={newTaskPriority}
                     onChange={(e) => setNewTaskPriority(e.target.value as Task['priority'])}
-                    className="w-full bg-neutral-bg border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
-                  >
-                    <option value="high">High</option>
-                    <option value="medium">Medium</option>
-                    <option value="low">Low</option>
-                  </select>
+                    className="bg-neutral-bg text-sm"
+                    options={[
+                      { value: 'high', label: 'High' },
+                      { value: 'medium', label: 'Medium' },
+                      { value: 'low', label: 'Low' }
+                    ]}
+                  />
                 </label>
 
                 <label className="space-y-2">
                   <span className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Category</span>
-                  <select
+                  <Select
                     value={newTaskCategory}
                     onChange={(e) => setNewTaskCategory(e.target.value as Task['category'])}
-                    className="w-full bg-neutral-bg border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
-                  >
-                    {CATEGORY_OPTIONS.filter((option) => option !== 'All').map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
+                    className="bg-neutral-bg text-sm"
+                    options={CATEGORY_OPTIONS.filter((option) => option !== 'All').map((option) => ({
+                      value: option,
+                      label: option
+                    }))}
+                  />
                 </label>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Description</label>
-                <textarea
+                <Textarea
                   value={newTaskDesc}
                   onChange={(e) => setNewTaskDesc(e.target.value)}
                   rows={3}
                   placeholder="Optional context, deliverables, or notes"
-                  className="w-full resize-none bg-neutral-bg border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
+                  className="resize-none bg-neutral-bg text-sm min-h-[120px]"
                 />
               </div>
 
@@ -835,53 +819,55 @@ function TasksContent() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <label className="space-y-2">
                         <span className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Project</span>
-                        <select
+                        <Select
                           value={newTaskProjId}
                           onChange={(e) => {
                             setNewTaskProjId(e.target.value);
                             setNewTaskParentId('');
                             setNewTaskDepIds([]);
                           }}
-                          className="w-full bg-background border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
-                        >
-                          <option value="">Standalone task</option>
-                          {projects.map((project) => (
-                            <option key={project.id} value={project.id}>{project.name}</option>
-                          ))}
-                        </select>
+                          className="bg-neutral-bg text-sm"
+                          options={[
+                            { value: '', label: 'Standalone task' },
+                            ...projects.map((project) => ({
+                              value: project.id,
+                              label: project.name
+                            }))
+                          ]}
+                        />
                       </label>
 
                       <label className="space-y-2">
                         <span className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Recurring</span>
-                        <select
+                        <Select
                           value={newTaskRecurring}
                           onChange={(e) => setNewTaskRecurring(e.target.value as Task['recurring'])}
-                          className="w-full bg-background border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
-                        >
-                          {RECURRING_OPTIONS.map((option) => (
-                            <option key={option} value={option}>
-                              {option === 'none' ? 'One time' : option}
-                            </option>
-                          ))}
-                        </select>
+                          className="bg-neutral-bg text-sm"
+                          options={RECURRING_OPTIONS.map((option) => ({
+                            value: option,
+                            label: option === 'none' ? 'One time' : option
+                          }))}
+                        />
                       </label>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <label className="space-y-2">
                         <span className="block text-[10px] uppercase text-secondary font-bold tracking-[0.16em]">Parent Task</span>
-                        <select
+                        <Select
                           value={newTaskParentId}
                           onChange={(e) => setNewTaskParentId(e.target.value)}
-                          className="w-full bg-background border border-border px-3 py-3 text-sm text-primary focus:outline-none focus:border-primary font-sans"
-                        >
-                          <option value="">None</option>
-                          {tasks
-                            .filter((task) => task.project_id === (newTaskProjId || undefined) && !task.parent_task_id && task.status !== 'done')
-                            .map((task) => (
-                              <option key={task.id} value={task.id}>{task.name}</option>
-                            ))}
-                        </select>
+                          className="bg-neutral-bg text-sm"
+                          options={[
+                            { value: '', label: 'None' },
+                            ...tasks
+                              .filter((task) => task.project_id === (newTaskProjId || undefined) && !task.parent_task_id && task.status !== 'done')
+                              .map((task) => ({
+                                value: task.id,
+                                label: task.name
+                              }))
+                          ]}
+                        />
                       </label>
 
                       <div className="space-y-2">
@@ -959,7 +945,7 @@ function TasksContent() {
             ))}
           </section>
 
-          <div className="flex md:hidden border border-border font-label text-xs uppercase tracking-wider overflow-x-auto bg-surface">
+          <div className="flex md:hidden border border-border font-label text-xs uppercase tracking-wider overflow-x-auto bg-neutral-bg rounded-2xl">
             {kanbanColumns.map((column) => (
               <button
                 key={column.status}
@@ -1003,9 +989,9 @@ function TasksContent() {
                   onDragEnter={(e) => handleDragEnter(e, column.status)}
                   onDragLeave={(e) => handleDragLeave(e, column.status)}
                   onDrop={(e) => handleDrop(e, column.status)}
-                  className={`border p-4 flex flex-col min-h-[420px] xl:min-h-[540px] transition-all ${
+                  className={`app-panel-subtle p-4 flex flex-col min-h-[420px] xl:min-h-[540px] transition-all ${
                     isVisibleOnMobile ? 'flex' : 'hidden md:hidden xl:flex'
-                  } ${isDraggedOver ? 'border-dashed border-primary bg-primary/5' : 'border-border bg-surface'}`}
+                  } ${isDraggedOver ? 'border-dashed border-primary bg-primary/5' : ''}`}
                 >
                   <div className="flex items-center justify-between pb-3 border-b border-border">
                     <div>
@@ -1183,10 +1169,12 @@ function TasksContent() {
                                   e.stopPropagation();
                                   handleUpdateTaskStatusWithUndo(task.id, e.target.value as Task['status']);
                                 }}
-                                className="md:hidden min-w-0 flex-1 bg-neutral-bg border border-border px-2 py-1 text-[10px] text-primary focus:outline-none font-sans"
+                                className="md:hidden min-w-0 bg-neutral-bg dark:bg-surface-muted text-primary text-[10px] font-sans border border-border rounded-lg px-2 pr-6 py-1 h-[28px] cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239BA1A6%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22m6%209%206%206%206-6%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_4px_center] bg-[size:12px_12px] bg-no-repeat transition-colors focus:outline-none focus:border-accent"
                               >
                                 {STATUS_META.map((option) => (
-                                  <option key={option.status} value={option.status}>{option.name}</option>
+                                  <option key={option.status} value={option.status} className="bg-surface dark:bg-surface-muted text-primary">
+                                    {option.name}
+                                  </option>
                                 ))}
                               </select>
 
@@ -1196,7 +1184,7 @@ function TasksContent() {
                                   e.stopPropagation();
                                   triggerDeleteTask(task.id, task.name);
                                 }}
-                                className="shrink-0 border border-border bg-neutral-bg text-stone-400 hover:text-accent hover:border-primary transition-colors cursor-pointer p-1.5 btn-press"
+                                className="shrink-0 h-[28px] w-[28px] flex items-center justify-center border border-border bg-neutral-bg dark:bg-surface-muted text-stone-400 hover:text-accent hover:border-primary transition-colors cursor-pointer rounded-lg btn-press"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </button>
@@ -1207,14 +1195,10 @@ function TasksContent() {
                     })}
 
                     {columnTasks.length === 0 && (
-                      <div className="border border-dashed border-border bg-neutral-bg/30 p-4 text-center">
-                        <p className="text-sm text-primary font-semibold">
-                          {column.status === 'done' ? 'No recent completions here.' : `No tasks in ${column.name.toLowerCase()}.`}
-                        </p>
-                        <p className="text-xs text-secondary mt-1">
-                          {column.status === 'todo' ? 'Drag a task here when it is ready to start or waiting on a dependency.' : 'Use the board to pull work forward deliberately.'}
-                        </p>
-                      </div>
+                      <EmptyState
+                        title={column.status === 'done' ? 'No recent completions here.' : `No tasks in ${column.name.toLowerCase()}.`}
+                        description={column.status === 'todo' ? 'Drag a task here when it is ready to start or waiting on a dependency.' : 'Use the board to pull work forward deliberately.'}
+                      />
                     )}
                   </div>
                 </section>
@@ -1226,7 +1210,7 @@ function TasksContent() {
 
       {activeTab === 'calendar' && (
         <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.45fr)_380px] gap-6">
-          <section className="bg-surface border border-border p-4 md:p-6 space-y-5">
+          <EditorialCard className="space-y-5">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
                 <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Schedule Planner</div>
@@ -1381,7 +1365,7 @@ function TasksContent() {
               })}
             </div>
 
-            <div className="md:hidden border border-border bg-neutral-bg/35 p-4 space-y-3">
+            <div className="app-panel-subtle p-4 space-y-3 md:hidden">
               <div className="flex items-center justify-between">
                 <div>
                   <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Day Agenda</div>
@@ -1430,16 +1414,16 @@ function TasksContent() {
                     </div>
                   );
                 }) : (
-                  <div className="border border-dashed border-border bg-neutral-bg/30 p-4 text-center">
-                    <p className="text-sm text-primary font-semibold">No tasks scheduled for this day.</p>
-                    <p className="text-xs text-secondary mt-1">Tap a date dot or create a task directly here.</p>
-                  </div>
+                  <EmptyState
+                    title="No tasks scheduled for this day."
+                    description="Tap a date dot or create a task directly here."
+                  />
                 )}
               </div>
             </div>
-          </section>
+          </EditorialCard>
 
-          <aside className="hidden xl:block bg-surface border border-border p-4 md:p-5 space-y-5">
+          <EditorialCard className="hidden xl:block space-y-5">
             <div className="border-b border-border pb-4">
               <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Selected Day</div>
               <h3 className="font-display text-2xl text-primary font-bold mt-1">{formatLongDate(selectedCalendarDate)}</h3>
@@ -1541,10 +1525,10 @@ function TasksContent() {
                   </div>
                 );
               }) : (
-                <div className="border border-dashed border-border bg-neutral-bg/30 p-4 text-center">
-                  <p className="text-sm text-primary font-semibold">No tasks scheduled for this day.</p>
-                  <p className="text-xs text-secondary mt-1">Create one directly here or pull an unscheduled task into the date.</p>
-                </div>
+                <EmptyState
+                  title="No tasks scheduled for this day."
+                  description="Create one directly here or pull an unscheduled task into the date."
+                />
               )}
             </div>
 
@@ -1587,9 +1571,10 @@ function TasksContent() {
               ))}
 
               {unscheduledTasks.length === 0 && (
-                <div className="border border-dashed border-border bg-neutral-bg/30 p-4 text-center text-xs text-secondary">
-                  Every open task in the current filter already has a date.
-                </div>
+                <EmptyState
+                  title="Everything is scheduled."
+                  description="Every open task in the current filter already has a date."
+                />
               )}
             </div>
 
@@ -1623,13 +1608,13 @@ function TasksContent() {
                 </button>
               ))}
             </div>
-          </aside>
+          </EditorialCard>
         </div>
       )}
 
       {activeTab === 'today' && (
         <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
-          <aside className="bg-surface border border-border p-5 space-y-5">
+          <EditorialCard className="space-y-5">
             <div>
               <span className="font-label text-[10px] text-secondary uppercase tracking-[0.18em] font-bold">Focus Plan</span>
               <h3 className="font-display text-2xl text-primary font-bold mt-1">
@@ -1661,9 +1646,9 @@ function TasksContent() {
               <Plus className="h-4 w-4" />
               Add Focus Task
             </PrimaryButton>
-          </aside>
+          </EditorialCard>
 
-          <div className="bg-surface border border-border p-4 md:p-6 space-y-4">
+          <EditorialCard className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 border-b border-border pb-3">
               <div>
                 <span className="font-label text-xs text-secondary uppercase tracking-[0.15em] block font-bold">
@@ -1771,13 +1756,13 @@ function TasksContent() {
                   </div>
                 );
               }) : (
-                <div className="font-sans text-center py-12 border border-dashed border-border bg-neutral-bg/35">
-                  <p className="text-sm text-primary font-semibold">No focus tasks active for today.</p>
-                  <p className="text-xs text-secondary mt-1">Pin a task, assign a due date, or create a new focus task.</p>
-                </div>
+                <EmptyState
+                  title="No focus tasks active for today."
+                  description="Pin a task, assign a due date, or create a new focus task."
+                />
               )}
             </div>
-          </div>
+          </EditorialCard>
         </div>
       )}
 
@@ -1805,7 +1790,7 @@ function TasksContent() {
 
       {showDoneModal && (
         <div className="fixed inset-0 bg-primary/25 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
-          <div className="bg-surface border border-border w-full max-w-3xl max-h-[85vh] flex flex-col">
+          <div className="app-panel w-full max-w-3xl max-h-[85vh] flex flex-col p-0">
             <div className="flex justify-between items-center p-6 border-b border-border shrink-0">
               <h2 className="font-display text-2xl font-bold text-primary uppercase tracking-tight">Done Log History</h2>
               <button
@@ -1819,29 +1804,32 @@ function TasksContent() {
             <div className="p-6 border-b border-border flex flex-col md:flex-row gap-4 shrink-0 bg-neutral-bg/50">
               <div className="flex-1">
                 <label className="font-label text-xs uppercase tracking-wider text-secondary block mb-1.5 font-bold">Category</label>
-                <select
+                <Select
                   value={doneFilterCategory}
                   onChange={(e) => setDoneFilterCategory(e.target.value as typeof doneFilterCategory)}
-                  className="w-full bg-surface border border-border text-primary text-sm p-2 focus:border-accent outline-none font-sans"
-                >
-                  <option value="All">All Categories</option>
-                  {CATEGORY_OPTIONS.filter((option) => option !== 'All').map((category) => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
-                </select>
+                  className="bg-neutral-bg text-sm"
+                  options={[
+                    { value: 'All', label: 'All Categories' },
+                    ...CATEGORY_OPTIONS.filter((option) => option !== 'All').map((category) => ({
+                      value: category,
+                      label: category
+                    }))
+                  ]}
+                />
               </div>
               <div className="flex-1">
                 <label className="font-label text-xs uppercase tracking-wider text-secondary block mb-1.5 font-bold">Sort By</label>
-                <select
+                <Select
                   value={doneSortBy}
                   onChange={(e) => setDoneSortBy(e.target.value as typeof doneSortBy)}
-                  className="w-full bg-surface border border-border text-primary text-sm p-2 focus:border-accent outline-none font-sans"
-                >
-                  <option value="date_desc">Completion Date (Newest)</option>
-                  <option value="date_asc">Completion Date (Oldest)</option>
-                  <option value="priority">Priority</option>
-                  <option value="name">Name (A-Z)</option>
-                </select>
+                  className="bg-neutral-bg text-sm"
+                  options={[
+                    { value: 'date_desc', label: 'Completion Date (Newest)' },
+                    { value: 'date_asc', label: 'Completion Date (Oldest)' },
+                    { value: 'priority', label: 'Priority' },
+                    { value: 'name', label: 'Name (A-Z)' }
+                  ]}
+                />
               </div>
             </div>
 
@@ -1887,7 +1875,10 @@ function TasksContent() {
                 ))}
 
               {filteredTasks.filter((task) => task.status === 'done' && (doneFilterCategory === 'All' || task.category === doneFilterCategory)).length === 0 && (
-                <p className="text-secondary text-sm italic text-center py-8">No completed tasks match your filters.</p>
+                <EmptyState
+                  title="No completed tasks match your filters."
+                  description="Try broadening the category or sort view to inspect more finished work."
+                />
               )}
             </div>
           </div>
@@ -1901,7 +1892,7 @@ export default function TasksPage() {
   return (
     <Suspense
       fallback={(
-        <div className="bg-surface border border-secondary/30 py-16 text-center rounded-sm">
+        <div className="app-panel-subtle py-16 text-center">
           <p className="font-sans text-sm text-secondary italic">Loading Tasks Workspace...</p>
         </div>
       )}

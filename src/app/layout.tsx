@@ -1,30 +1,11 @@
 import type { Metadata, Viewport } from 'next';
 import localFont from 'next/font/local';
-import { Fraunces, Public_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
 import ClientWrapper from '@/components/ClientWrapper';
 
 const zemach = localFont({
   src: '../../Zemach_Regular_eafc59f80a.otf',
   variable: '--font-zemach',
-  display: 'swap',
-});
-
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-fraunces',
-  display: 'swap',
-});
-
-const publicSans = Public_Sans({
-  subsets: ['latin'],
-  variable: '--font-public-sans',
-  display: 'swap',
-});
-
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
-  variable: '--font-space-grotesk',
   display: 'swap',
 });
 
@@ -58,10 +39,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${zemach.variable} ${fraunces.variable} ${publicSans.variable} ${spaceGrotesk.variable} h-full antialiased`}
+      className={`${zemach.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,100..900;1,9..144,100..900&family=Public+Sans:ital,wght@0,100..900;1,100..900&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet" />
         <script
           dangerouslySetInnerHTML={{
             __html: `
