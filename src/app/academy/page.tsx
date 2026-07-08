@@ -1188,7 +1188,7 @@ function AcademyContent() {
             />
           ) : (
             <div className="space-y-3">
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {courses
                   .filter(c => 
                     c.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -1300,20 +1300,20 @@ function AcademyContent() {
             VIEW 2: SPLIT-SCREEN STUDY STUDIO
            ========================================== */
         <div className="space-y-6">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="app-panel-subtle p-4 min-h-[92px] flex flex-col justify-between">
               <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Modules</span>
               <span className="text-2xl font-bold text-primary">{activeCourseModules.length}</span>
             </div>
-            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+            <div className="app-panel-subtle p-4 min-h-[92px] flex flex-col justify-between">
               <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Lessons Done</span>
               <span className="text-2xl font-bold text-primary">{completedActiveLessons}/{activeCourseLessons.length}</span>
             </div>
-            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+            <div className="app-panel-subtle p-4 min-h-[92px] flex flex-col justify-between">
               <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Reader Time</span>
               <span className="text-2xl font-bold text-primary">{estimatedReadMinutes} min</span>
             </div>
-            <div className="border border-border bg-surface p-4 min-h-[92px] flex flex-col justify-between">
+            <div className="app-panel-subtle p-4 min-h-[92px] flex flex-col justify-between">
               <span className="font-label text-[10px] uppercase tracking-[0.16em] text-secondary font-bold">Cards</span>
               <span className="text-2xl font-bold text-accent">{activeCourseCards.length}</span>
             </div>
@@ -1340,7 +1340,7 @@ function AcademyContent() {
             </button>
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-[360px_minmax(0,1fr)] gap-6 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] xl:grid-cols-[360px_1fr] gap-6 items-start">
             <section className={`space-y-4 ${mobileStudioTab !== 'index' ? 'hidden lg:block' : ''}`}>
               <EditorialCard
                 title={activeCourse?.title || 'Course Overview'}
@@ -1355,23 +1355,20 @@ function AcademyContent() {
                   </PrimaryButton>
                 }
               >
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-                  <div className="space-y-1 min-w-0">
-                    {activeCourse?.description && (
-                      <p className="text-sm text-secondary leading-relaxed">{activeCourse.description}</p>
-                    )}
+                <div className="space-y-4">
+                  {activeCourse?.description && (
+                    <p className="text-sm text-secondary leading-relaxed">{activeCourse.description}</p>
+                  )}
+                  <div className="relative w-full">
+                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
+                    <Input
+                      type="text"
+                      placeholder="Search modules or lessons..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
                   </div>
-                </div>
-
-                <div className="relative w-full">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-secondary" />
-                  <Input
-                    type="text"
-                    placeholder="Search modules or lessons..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
                 </div>
               </EditorialCard>
 
@@ -1399,11 +1396,19 @@ function AcademyContent() {
                       return (
                         <div
                           key={mod.id}
-                          className={`app-panel-subtle space-y-3 transition-all ${isSelected ? 'border-primary bg-surface-muted shadow-[0_18px_36px_rgba(26,28,30,0.08)]' : ''}`}
+                          onClick={() => {
+                            if (editingModuleId !== mod.id) {
+                              setSelectedModuleId(mod.id);
+                              setMobileStudioTab('notepad');
+                            }
+                          }}
+                          className={`app-panel-subtle p-4 space-y-4 transition-all cursor-pointer ${
+                            isSelected ? 'border-primary bg-surface-muted shadow-[0_18px_36px_rgba(26,28,30,0.08)]' : 'hover:border-primary/50'
+                          }`}
                         >
                           <div className="flex justify-between items-start gap-3 group/mod">
                             {editingModuleId === mod.id ? (
-                              <div className="flex-grow flex gap-2">
+                              <div className="flex-grow flex gap-2" onClick={(e) => e.stopPropagation()}>
                                 <Input
                                   type="text"
                                   value={editModuleName}
@@ -1411,7 +1416,8 @@ function AcademyContent() {
                                   className="min-h-10"
                                 />
                                 <PrimaryButton
-                                  onClick={async () => {
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
                                     if (!editModuleName.trim()) return;
                                     await updateModule(mod.id, { title: editModuleName });
                                     setEditingModuleId(null);
@@ -1424,24 +1430,51 @@ function AcademyContent() {
                               </div>
                             ) : (
                               <>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setSelectedModuleId(mod.id);
-                                    setMobileStudioTab('notepad');
-                                  }}
-                                  className="text-left min-w-0"
-                                >
+                                <div className="text-left min-w-0">
                                   <span className="block font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">
                                     Module {mod.order_index}
                                   </span>
                                   <h4 className="font-serif text-base font-bold text-primary leading-tight mt-1">{mod.title}</h4>
-                                </button>
-                                <div className="hidden group-hover/mod:flex items-center space-x-1 opacity-70 transition-opacity shrink-0">
-                                  <button onClick={() => { setEditingModuleId(mod.id); setEditModuleName(mod.title); }} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><Edit3 className="h-3 w-3" /></button>
-                                  <button onClick={() => { setItemToDelete({ id: mod.id, title: mod.title, type: 'module' }); setDeleteModalOpen(true); }} className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"><Trash2 className="h-3 w-3" /></button>
-                                  <button onClick={() => handleReorderModule(mod.id, 'up')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowUp className="h-3 w-3" /></button>
-                                  <button onClick={() => handleReorderModule(mod.id, 'down')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowDown className="h-3 w-3" /></button>
+                                </div>
+                                <div className="flex lg:hidden lg:group-hover/mod:flex items-center space-x-1 opacity-70 transition-opacity shrink-0">
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingModuleId(mod.id);
+                                      setEditModuleName(mod.title);
+                                    }}
+                                    className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setItemToDelete({ id: mod.id, title: mod.title, type: 'module' });
+                                      setDeleteModalOpen(true);
+                                    }}
+                                    className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleReorderModule(mod.id, 'up');
+                                    }}
+                                    className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
+                                  >
+                                    <ArrowUp className="h-3 w-3" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleReorderModule(mod.id, 'down');
+                                    }}
+                                    className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
+                                  >
+                                    <ArrowDown className="h-3 w-3" />
+                                  </button>
                                 </div>
                               </>
                             )}
@@ -1454,7 +1487,11 @@ function AcademyContent() {
 
                           <div className="space-y-2">
                             {modLessons.map((lesson) => (
-                              <div key={lesson.id} className="app-panel-subtle flex items-center justify-between gap-2 p-3 group/les">
+                              <div
+                                key={lesson.id}
+                                className="app-panel-subtle flex items-center justify-between gap-2 p-3 group/les cursor-default"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 {editingLessonId === lesson.id ? (
                                   <div className="flex-grow flex flex-col gap-1.5 font-label text-xs w-full">
                                     <Input
@@ -1495,7 +1532,10 @@ function AcademyContent() {
                                       <input
                                         type="checkbox"
                                         checked={lesson.completed}
-                                        onChange={() => toggleLessonCompleted(lesson.id, !lesson.completed)}
+                                        onChange={(e) => {
+                                          e.stopPropagation();
+                                          toggleLessonCompleted(lesson.id, !lesson.completed);
+                                        }}
                                         className="h-4.5 w-4.5 accent-accent shrink-0 cursor-pointer"
                                       />
                                       <span className={`font-sans text-xs truncate font-semibold ${lesson.completed ? 'line-through text-secondary opacity-65' : 'text-primary'}`}>
@@ -1504,15 +1544,56 @@ function AcademyContent() {
                                     </label>
                                     <div className="flex items-center space-x-2 shrink-0">
                                       {lesson.link && (
-                                        <a href={lesson.link} target="_blank" rel="noreferrer" className="text-secondary hover:text-accent btn-press">
+                                        <a
+                                          href={lesson.link}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-secondary hover:text-accent btn-press"
+                                        >
                                           <ExternalLink className="h-3.5 w-3.5" />
                                         </a>
                                       )}
-                                      <div className="hidden group-hover/les:flex items-center space-x-1 opacity-70 transition-opacity">
-                                        <button onClick={() => { setEditingLessonId(lesson.id); setEditLessonName(lesson.title); setEditLessonLink(lesson.link || ''); }} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><Edit3 className="h-3 w-3" /></button>
-                                        <button onClick={() => { setItemToDelete({ id: lesson.id, title: lesson.title, type: 'lesson' }); setDeleteModalOpen(true); }} className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"><Trash2 className="h-3 w-3" /></button>
-                                        <button onClick={() => handleReorderLesson(lesson.id, 'up')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowUp className="h-3 w-3" /></button>
-                                        <button onClick={() => handleReorderLesson(lesson.id, 'down')} className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"><ArrowDown className="h-3 w-3" /></button>
+                                      <div className="flex lg:hidden lg:group-hover/les:flex items-center space-x-1 opacity-70 transition-opacity">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingLessonId(lesson.id);
+                                            setEditLessonName(lesson.title);
+                                            setEditLessonLink(lesson.link || '');
+                                          }}
+                                          className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
+                                        >
+                                          <Edit3 className="h-3 w-3" />
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setItemToDelete({ id: lesson.id, title: lesson.title, type: 'lesson' });
+                                            setDeleteModalOpen(true);
+                                          }}
+                                          className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReorderLesson(lesson.id, 'up');
+                                          }}
+                                          className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
+                                        >
+                                          <ArrowUp className="h-3 w-3" />
+                                        </button>
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleReorderLesson(lesson.id, 'down');
+                                          }}
+                                          className="text-secondary hover:text-primary p-0.5 cursor-pointer btn-press"
+                                        >
+                                          <ArrowDown className="h-3 w-3" />
+                                        </button>
                                       </div>
                                     </div>
                                   </>
@@ -1522,14 +1603,14 @@ function AcademyContent() {
                           </div>
 
                           {isSelected && (
-                            <div className="pt-3 border-t border-border space-y-2 font-label text-xs">
+                            <div className="pt-3 border-t border-border space-y-2 font-label text-xs" onClick={(e) => e.stopPropagation()}>
                               <Input
                                 type="text"
                                 value={newLessonName}
                                 onChange={(e) => setNewLessonName(e.target.value)}
                                 placeholder="Add lesson title..."
                               />
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 items-center">
                                 <Input
                                   type="text"
                                   value={newLessonLink}
@@ -1539,9 +1620,10 @@ function AcademyContent() {
                                 />
                                 <PrimaryButton
                                   onClick={() => handleAddLesson(mod.id)}
-                                  className="shrink-0"
+                                  className="shrink-0 h-11 w-11 !p-0 flex items-center justify-center rounded-2xl"
+                                  title="Add lesson"
                                 >
-                                  Add
+                                  <Plus className="h-4.5 w-4.5" />
                                 </PrimaryButton>
                               </div>
                             </div>
@@ -1624,28 +1706,6 @@ function AcademyContent() {
                       </div>
                     </div>
 
-                    {(previousModule || nextModule) && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          disabled={!previousModule}
-                          onClick={() => previousModule && setSelectedModuleId(previousModule.id)}
-                          className="app-panel-subtle text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
-                        >
-                          <span className="font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold flex items-center gap-1"><ChevronLeft className="h-3 w-3" />Previous</span>
-                          <span className="block mt-1 text-sm font-semibold text-primary truncate">{previousModule?.title || 'Start of course'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!nextModule}
-                          onClick={() => nextModule && setSelectedModuleId(nextModule.id)}
-                          className="app-panel-subtle text-left disabled:opacity-40 disabled:cursor-not-allowed hover:border-primary transition-all"
-                        >
-                          <span className="font-label text-[10px] uppercase tracking-[0.14em] text-secondary font-bold flex items-center justify-end gap-1">Next<ChevronRight className="h-3 w-3" /></span>
-                          <span className="block mt-1 text-sm font-semibold text-primary truncate text-left">{nextModule?.title || 'End of course'}</span>
-                        </button>
-                      </div>
-                    )}
                   </EditorialCard>
 
                   {noteHeadings.length > 0 && (
@@ -1678,8 +1738,8 @@ function AcademyContent() {
                     </EditorialCard>
                   )}
 
-                  <div className="app-panel min-h-[560px] flex flex-col">
-                    <div className="flex-grow mt-1 flex flex-col">
+                  <div className="app-panel min-h-[560px] flex flex-col p-6 space-y-6">
+                    <div className="flex-grow flex flex-col">
                       {!isNotePreview ? (
                         <textarea
                           value={localNotes}
@@ -1694,7 +1754,42 @@ function AcademyContent() {
                       )}
                     </div>
 
-                    <div className="border-t border-border pt-3 mt-4 flex flex-col sm:flex-row justify-between gap-2 text-xs font-label text-secondary font-bold">
+                    {/* Premium Notes Pagination */}
+                    {(previousModule || nextModule) && (
+                      <div className="flex items-center justify-between gap-4 pt-4 border-t border-border/60">
+                        <button
+                          type="button"
+                          disabled={!previousModule}
+                          onClick={() => previousModule && setSelectedModuleId(previousModule.id)}
+                          className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-border bg-surface text-left text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 min-w-0 max-w-[45%] btn-press"
+                        >
+                          <ChevronLeft className="h-5 w-5 shrink-0 text-secondary" />
+                          <div className="min-w-0">
+                            <span className="block font-label text-[9px] uppercase tracking-wider text-secondary font-bold">Previous</span>
+                            <span className="block text-xs font-semibold truncate mt-0.5">{previousModule?.title || 'Start'}</span>
+                          </div>
+                        </button>
+
+                        <div className="hidden sm:block text-center font-label text-[9px] uppercase tracking-widest text-secondary font-bold">
+                          Module {activeModuleIndex + 1} of {activeCourseModules.length}
+                        </div>
+
+                        <button
+                          type="button"
+                          disabled={!nextModule}
+                          onClick={() => nextModule && setSelectedModuleId(nextModule.id)}
+                          className="flex items-center justify-end gap-2 px-4 py-3 rounded-2xl border border-border bg-surface text-right text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 min-w-0 max-w-[45%] btn-press"
+                        >
+                          <div className="min-w-0">
+                            <span className="block font-label text-[9px] uppercase tracking-wider text-secondary font-bold">Next</span>
+                            <span className="block text-xs font-semibold truncate mt-0.5">{nextModule?.title || 'End'}</span>
+                          </div>
+                          <ChevronRight className="h-5 w-5 shrink-0 text-secondary" />
+                        </button>
+                      </div>
+                    )}
+
+                    <div className="border-t border-border/60 pt-4 flex flex-col sm:flex-row justify-between gap-2 text-xs font-label text-secondary font-bold">
                       <span>{isSavingNotes ? 'Saving...' : 'Notes auto-saved to backend'}</span>
                       <span className="font-mono text-secondary/65 font-normal">Markdown syntax supported</span>
                     </div>
@@ -2136,31 +2231,68 @@ function AcademyContent() {
             </div>
 
             <div ref={readerViewportRef} className="flex-1 overflow-y-auto px-3 py-3 md:px-5 md:py-4">
-              <div className={`mx-auto ${readerWidth === 'focused' ? 'max-w-2xl' : 'max-w-4xl'}`}>
-                {!isNotePreview ? (
-                  <textarea
-                    value={localNotes}
-                    onChange={(e) => setLocalNotes(e.target.value)}
-                    placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                    className="w-full min-h-[calc(100dvh-5.5rem)] app-panel text-primary focus:outline-none font-mono resize-none"
-                    style={{ fontSize: `${Math.max(14, readerFontSize - 1)}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
-                  />
-                ) : (
-                  <div
-                    className="app-panel md:px-8 md:py-7"
-                    style={{ fontSize: `${readerFontSize}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
-                  >
-                    {renderMarkdown(localNotes, {
-                      paragraphClassName: 'text-[1em] leading-[inherit] my-3',
-                      heading1ClassName: 'text-[1.6em] mt-6',
-                      heading2ClassName: 'text-[1.3em] mt-5',
-                      heading3ClassName: 'text-[1.05em] mt-4 uppercase tracking-[0.08em]',
-                      listClassName: 'text-[1em] leading-[inherit] my-3 space-y-2',
-                      blockquoteClassName: 'text-[0.95em] py-3 px-4',
-                      codeBlockClassName: 'text-[0.82em] leading-relaxed',
-                      tableClassName: 'text-[0.88em]',
-                      emptyClassName: 'italic text-secondary'
-                    })}
+              <div className={`mx-auto ${readerWidth === 'focused' ? 'max-w-2xl' : 'max-w-4xl'} flex flex-col gap-6`}>
+                <div className="flex-1">
+                  {!isNotePreview ? (
+                    <textarea
+                      value={localNotes}
+                      onChange={(e) => setLocalNotes(e.target.value)}
+                      placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
+                      className="w-full min-h-[calc(100dvh-12rem)] app-panel text-primary focus:outline-none font-mono resize-none p-6"
+                      style={{ fontSize: `${Math.max(14, readerFontSize - 1)}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
+                    />
+                  ) : (
+                    <div
+                      className="app-panel p-6 md:px-8 md:py-7"
+                      style={{ fontSize: `${readerFontSize}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
+                    >
+                      {renderMarkdown(localNotes, {
+                        paragraphClassName: 'text-[1em] leading-[inherit] my-3',
+                        heading1ClassName: 'text-[1.6em] mt-6',
+                        heading2ClassName: 'text-[1.3em] mt-5',
+                        heading3ClassName: 'text-[1.05em] mt-4 uppercase tracking-[0.08em]',
+                        listClassName: 'text-[1em] leading-[inherit] my-3 space-y-2',
+                        blockquoteClassName: 'text-[0.95em] py-3 px-4',
+                        codeBlockClassName: 'text-[0.82em] leading-relaxed',
+                        tableClassName: 'text-[0.88em]',
+                        emptyClassName: 'italic text-secondary'
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Reader Pagination */}
+                {(previousModule || nextModule) && (
+                  <div className="flex items-center justify-between gap-4 mt-2 pt-6 border-t border-border/40 pb-12">
+                    <button
+                      type="button"
+                      disabled={!previousModule}
+                      onClick={() => previousModule && setSelectedModuleId(previousModule.id)}
+                      className="flex items-center gap-2 px-4 py-3 rounded-2xl border border-border bg-surface text-left text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 min-w-0 max-w-[45%] btn-press"
+                    >
+                      <ChevronLeft className="h-5 w-5 shrink-0 text-secondary" />
+                      <div className="min-w-0">
+                        <span className="block font-label text-[9px] uppercase tracking-wider text-secondary font-bold">Previous</span>
+                        <span className="block text-xs font-semibold truncate mt-0.5">{previousModule?.title || 'Start'}</span>
+                      </div>
+                    </button>
+
+                    <div className="hidden sm:block text-center font-label text-[9px] uppercase tracking-widest text-secondary font-bold">
+                      Module {activeModuleIndex + 1} of {activeCourseModules.length}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={!nextModule}
+                      onClick={() => nextModule && setSelectedModuleId(nextModule.id)}
+                      className="flex items-center justify-end gap-2 px-4 py-3 rounded-2xl border border-border bg-surface text-right text-primary hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200 min-w-0 max-w-[45%] btn-press"
+                    >
+                      <div className="min-w-0">
+                        <span className="block font-label text-[9px] uppercase tracking-wider text-secondary font-bold">Next</span>
+                        <span className="block text-xs font-semibold truncate mt-0.5">{nextModule?.title || 'End'}</span>
+                      </div>
+                      <ChevronRight className="h-5 w-5 shrink-0 text-secondary" />
+                    </button>
                   </div>
                 )}
               </div>
