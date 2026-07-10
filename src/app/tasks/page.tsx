@@ -1612,34 +1612,34 @@ function TasksContent() {
 
       {activeTab === 'today' && (
         <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
-          <EditorialCard className="space-y-5">
+          <EditorialCard className="space-y-5 w-full max-w-md mx-auto lg:mx-0 lg:max-w-none lg:h-fit">
             <div>
               <span className="font-label text-[10px] text-secondary uppercase tracking-[0.18em] font-bold">Focus Plan</span>
               <h3 className="font-display text-2xl text-primary font-bold mt-1">
                 {sortedTodayTasks.length} item{sortedTodayTasks.length === 1 ? '' : 's'} in play
               </h3>
             </div>
-            <div className="grid grid-cols-2 gap-2 font-label text-[10px] uppercase tracking-wider">
-              <div className="border border-border bg-neutral-bg p-3">
-                <span className="text-secondary block">Due</span>
-                <span className="font-display text-2xl text-primary font-bold">{dueTodayTasks.length}</span>
+            <div className="grid grid-cols-2 gap-3 font-label text-[10px] uppercase tracking-wider">
+              <div className="border border-border bg-neutral-bg/50 p-4 rounded-2xl flex flex-col justify-between min-h-[76px] transition-colors hover:bg-neutral-bg/80">
+                <span className="text-secondary block font-bold tracking-[0.14em]">Due</span>
+                <span className="font-display text-2xl text-primary font-bold mt-1.5">{dueTodayTasks.length}</span>
               </div>
-              <div className="border border-border bg-neutral-bg p-3">
-                <span className="text-secondary block">Late</span>
-                <span className="font-display text-2xl text-danger font-bold">{overdueTasks.length}</span>
+              <div className="border border-border bg-neutral-bg/50 p-4 rounded-2xl flex flex-col justify-between min-h-[76px] transition-colors hover:bg-neutral-bg/80">
+                <span className="text-secondary block font-bold tracking-[0.14em]">Late</span>
+                <span className="font-display text-2xl text-danger font-bold mt-1.5">{overdueTasks.length}</span>
               </div>
-              <div className="border border-border bg-neutral-bg p-3">
-                <span className="text-secondary block">Pinned</span>
-                <span className="font-display text-2xl text-accent font-bold">{pinnedTasks.length}</span>
+              <div className="border border-border bg-neutral-bg/50 p-4 rounded-2xl flex flex-col justify-between min-h-[76px] transition-colors hover:bg-neutral-bg/80">
+                <span className="text-secondary block font-bold tracking-[0.14em]">Pinned</span>
+                <span className="font-display text-2xl text-accent font-bold mt-1.5">{pinnedTasks.length}</span>
               </div>
-              <div className="border border-border bg-neutral-bg p-3">
-                <span className="text-secondary block">Blocked</span>
-                <span className="font-display text-2xl text-warning font-bold">{blockedTasks.length}</span>
+              <div className="border border-border bg-neutral-bg/50 p-4 rounded-2xl flex flex-col justify-between min-h-[76px] transition-colors hover:bg-neutral-bg/80">
+                <span className="text-secondary block font-bold tracking-[0.14em]">Blocked</span>
+                <span className="font-display text-2xl text-warning font-bold mt-1.5">{blockedTasks.length}</span>
               </div>
             </div>
             <PrimaryButton
               onClick={() => openCreateTaskModal(todayStr)}
-              className="w-full flex items-center justify-center gap-2"
+              className="w-full flex items-center justify-center gap-2 mt-1"
             >
               <Plus className="h-4 w-4" />
               Add Focus Task
