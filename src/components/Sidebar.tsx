@@ -277,10 +277,10 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
                     href={item.href}
                     className={`nav-link stagger-item flex items-center relative group ${
                       isSidebarCollapsed
-                        ? 'justify-center p-2.5 w-10 h-10 mx-auto rounded-none'
+                        ? 'justify-center p-2.5 w-10 h-10 mx-auto rounded-2xl'
                         : isDenseMode
-                          ? 'space-x-3 px-3 py-2 rounded-none'
-                          : 'space-x-3 px-4 py-2.5 rounded-none'
+                          ? 'space-x-3 px-3 py-2 rounded-2xl'
+                          : 'space-x-3 px-4 py-2.5 rounded-2xl'
                     } text-sm font-label tracking-wide ${
                       isActive
                         ? 'bg-primary text-on-primary font-bold border border-primary shadow-[0_10px_26px_rgba(26,28,30,0.16)]'
@@ -346,10 +346,10 @@ export default function Sidebar({ onCaptureTrigger }: { onCaptureTrigger: () => 
           className={`flex items-center ${
             isSidebarCollapsed
               ? 'justify-center p-2.5 w-10 h-10 mx-auto'
-              : isDenseMode
+            : isDenseMode
                 ? 'space-x-3 px-3 py-2 w-full'
                 : 'space-x-3 px-4 py-2.5 w-full'
-          } text-sm font-label tracking-wide rounded-none text-secondary hover:text-accent hover:bg-surface-muted border border-transparent hover:border-border cursor-pointer relative group btn-press`}
+          } text-sm font-label tracking-wide rounded-2xl text-secondary hover:text-accent hover:bg-surface-muted border border-transparent hover:border-border cursor-pointer relative group btn-press`}
           title={isSidebarCollapsed ? 'Log Out' : undefined}
         >
           <LogOut className="h-4 w-4 shrink-0" />

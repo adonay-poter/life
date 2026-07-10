@@ -2,6 +2,8 @@ import React, { useState, useRef, useEffect } from 'react';
 import { HelpCircle, MessageSquare, Send, Loader2, X, Sparkles } from 'lucide-react';
 import { useSoulBlueprint } from '@/context/SoulBlueprintContext';
 import { buildSoulBlueprintChatContext } from '@/utils/soulBlueprint';
+import EmptyState from '@/components/ui/EmptyState';
+import { Input } from '@/components/ui/Inputs';
 
 interface QAPanelProps {
   courseTitle: string;
@@ -92,12 +94,12 @@ export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }
       </div>
 
       {/* Chat Area */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-background/50 font-sans" ref={scrollRef}>
+        <div className="flex-grow overflow-y-auto p-4 space-y-4 bg-background/50 font-sans" ref={scrollRef}>
         {conversation.length === 0 ? (
-          <div className="text-center text-secondary text-xs mt-10">
-            <Sparkles className="w-8 h-8 mx-auto mb-2 opacity-50 text-accent animate-pulse" />
-            <p className="font-serif italic">Ask a question about this module's notes!</p>
-          </div>
+          <EmptyState
+            title="Start with a study question."
+            description="Ask about this module's notes and Oracle will answer in context."
+          />
         ) : (
           conversation.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
@@ -105,7 +107,7 @@ export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }
                 className={`max-w-[85%] rounded-[20px] p-3 text-sm leading-relaxed ${
                   msg.role === 'user' 
                     ? 'bg-neutral-bg border border-border text-primary' 
-                    : 'bg-surface border border-border text-primary font-medium'
+                    : 'app-panel-subtle text-primary font-medium'
                 }`}
                 style={{ whiteSpace: 'pre-wrap' }}
               >
@@ -129,12 +131,11 @@ export default function QAPanel({ courseTitle, moduleTitle, topic, moduleNotes }
           onSubmit={(e) => { e.preventDefault(); askQuestion(); }}
           className="flex items-center gap-2"
         >
-          <input
-            type="text"
+          <Input
             placeholder="Ask anything..."
-            className="min-h-11 flex-grow rounded-2xl border border-border bg-neutral-bg px-3 py-2.5 text-sm text-primary font-sans focus:outline-none focus:border-primary"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            className="flex-grow bg-neutral-bg text-sm"
           />
           <button
             type="submit"

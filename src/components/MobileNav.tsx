@@ -235,7 +235,7 @@ export default function MobileNav({ onCaptureTrigger }: { onCaptureTrigger: () =
           />
           
           {/* Drawer Card */}
-          <div className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-3 right-3 rounded-[24px] bg-surface border border-primary shadow-[0_18px_50px_rgba(0,0,0,0.22)] z-[9999] md:hidden animate-drawer overflow-hidden">
+          <div className="fixed bottom-[calc(4.25rem+env(safe-area-inset-bottom))] left-3 right-3 app-panel p-0 shadow-[0_18px_50px_rgba(0,0,0,0.22)] z-[9999] md:hidden animate-drawer overflow-hidden">
             <div className="flex justify-between items-start border-b border-border p-4 font-label">
               <div>
                 <span className="font-label text-[10px] text-secondary uppercase tracking-[0.18em] font-semibold">

@@ -6,6 +6,7 @@ import { supabase } from '@/utils/supabaseClient';
 import { Eye, EyeOff, Lock, Mail, RefreshCw } from 'lucide-react';
 import SkeletonLoader from './SkeletonLoader';
 import { useToast } from '@/context/ToastContext';
+import { Input } from './ui/Inputs';
 
 export default function AuthGuard({ children }: { children: React.ReactNode }) {
   const { session, loading: authLoading, configError } = useAuth();
@@ -93,7 +94,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-secondary/70">
                 <Mail className="h-4 w-4" />
               </span>
-              <input
+              <Input
                 id="email"
                 name="email"
                 type="email"
@@ -102,7 +103,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-3 bg-neutral-bg/30 border border-secondary/35 rounded-sm focus:outline-none focus:border-primary text-primary font-sans text-sm placeholder-secondary/50 transition-colors"
+                className="pl-10 pr-4 bg-neutral-bg/30 border-secondary/35 rounded-sm"
               />
             </div>
           </div>
@@ -116,7 +117,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-secondary/70">
                 <Lock className="h-4 w-4" />
               </span>
-              <input
+              <Input
                 id="current-password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
@@ -125,7 +126,7 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-10 py-3 bg-neutral-bg/30 border border-secondary/35 rounded-sm focus:outline-none focus:border-primary text-primary font-sans text-sm placeholder-secondary/50 transition-colors"
+                className="pl-10 pr-10 bg-neutral-bg/30 border-secondary/35 rounded-sm"
               />
               <button
                 type="button"

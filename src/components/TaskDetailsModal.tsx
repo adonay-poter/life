@@ -5,6 +5,10 @@ import Link from 'next/link';
 import { useDashboard, Task } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import Checkbox from '@/components/ui/Checkbox';
+import EmptyState from '@/components/ui/EmptyState';
+import { Input, Select, Textarea } from '@/components/ui/Inputs';
 import { getLocalDateString } from '@/utils/dateUtils';
 import {
   AlertTriangle,
@@ -354,7 +358,7 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
           role="dialog"
           aria-modal="true"
           aria-labelledby="task-detail-title"
-          className={`${isClosing ? 'animate-drawer-out md:animate-modal-out' : 'animate-drawer md:animate-modal'} flex min-h-dvh w-full max-w-5xl flex-col rounded-none border-x-0 border-b-0 border-t border-white/10 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.22)] md:max-h-[92vh] md:min-h-0 md:overflow-hidden md:rounded-[28px] md:border md:border-white/10`}
+          className={`${isClosing ? 'animate-drawer-out md:animate-modal-out' : 'animate-drawer md:animate-modal'} flex min-h-dvh w-full max-w-5xl flex-col rounded-t-[28px] border-x-0 border-b-0 border-t border-white/10 bg-surface shadow-[0_24px_80px_rgba(0,0,0,0.22)] md:max-h-[92vh] md:min-h-0 md:overflow-hidden md:rounded-[28px] md:border md:border-white/10`}
         >
           <div className="sticky top-0 z-10 flex justify-end px-4 pt-[calc(env(safe-area-inset-top)+0.75rem)] md:hidden">
             <button
@@ -390,12 +394,12 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                 </div>
 
                 {isEditingTask ? (
-                  <input
+                  <Input
                     id="task-detail-title"
                     type="text"
                     value={editTaskName}
                     onChange={(e) => setEditTaskName(e.target.value)}
-                    className="w-full border-none bg-transparent font-display text-2xl font-semibold text-primary outline-none md:text-3xl"
+                    className="border-none bg-transparent px-0 py-0 text-2xl font-display font-semibold text-primary shadow-none md:text-3xl"
                     placeholder="Task name"
                   />
                 ) : (
@@ -527,12 +531,12 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   </div>
 
                   {isEditingTask ? (
-                    <textarea
+                    <Textarea
                       value={editTaskDesc}
                       onChange={(e) => setEditTaskDesc(e.target.value)}
                       rows={6}
                       placeholder="Add context, acceptance criteria, links, or handoff notes."
-                      className="min-h-[180px] w-full rounded-[20px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors placeholder:text-secondary/60 focus:border-accent"
+                      className="min-h-[180px] bg-surface text-sm resize-none"
                     />
                   ) : (
                     <div className="rounded-[20px] border border-border bg-surface px-4 py-4">
@@ -561,11 +565,10 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                       subtasks.map((sub) => (
                         <div key={sub.id} className="flex items-center justify-between gap-3 rounded-[18px] border border-border bg-surface px-3 py-3">
                           <label className="flex min-w-0 flex-1 items-center gap-3">
-                            <input
-                              type="checkbox"
+                            <Checkbox
                               checked={sub.status === 'done'}
                               onChange={() => handleUpdateTaskStatusWithUndo(sub.id, sub.status === 'done' ? 'todo' : 'done')}
-                              className="h-4 w-4 shrink-0 accent-accent"
+                              className="h-4 w-4"
                             />
                             <div className="min-w-0">
                               <span className={`block truncate text-sm font-medium ${sub.status === 'done' ? 'text-secondary line-through' : 'text-primary'}`}>
@@ -588,29 +591,25 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                         </div>
                       ))
                     ) : (
-                      <div className="rounded-[20px] border border-dashed border-border bg-surface px-4 py-6 text-center">
-                        <p className="text-sm font-medium text-primary">No subtasks yet.</p>
-                        <p className="mt-1 text-xs text-secondary">Add the next step so this task is easier to execute on mobile or desktop.</p>
-                      </div>
+                      <EmptyState
+                        title="No subtasks yet."
+                        description="Add the next step so this task is easier to execute on mobile or desktop."
+                      />
                     )}
                   </div>
 
                   <form onSubmit={handleAddSubtask} className="mt-4 flex flex-col gap-2 sm:flex-row">
-                    <input
+                    <Input
                       type="text"
                       placeholder="Add a subtask"
                       value={newSubtaskName}
                       onChange={(e) => setNewSubtaskName(e.target.value)}
-                      className="min-w-0 flex-1 rounded-[18px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors placeholder:text-secondary/60 focus:border-accent"
+                      className="min-w-0 flex-1 bg-surface text-sm"
                     />
-                    <button
-                      type="submit"
-                      disabled={!newSubtaskName.trim()}
-                      className="btn-press inline-flex items-center justify-center gap-2 rounded-[18px] bg-primary px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.24em] text-on-primary disabled:cursor-not-allowed disabled:opacity-40"
-                    >
+                    <PrimaryButton type="submit" disabled={!newSubtaskName.trim()} className="rounded-[18px] px-4 py-3 text-[11px]">
                       <Plus className="h-3.5 w-3.5" />
                       Add
-                    </button>
+                    </PrimaryButton>
                   </form>
                 </section>
 
@@ -688,18 +687,18 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                         Project
                       </label>
                       {isEditingTask ? (
-                        <select
+                        <Select
                           value={editTaskProjId}
                           onChange={(e) => setEditTaskProjId(e.target.value)}
-                          className="w-full rounded-[16px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors focus:border-accent"
-                        >
-                          <option value="">Standalone</option>
-                          {projects.map((project) => (
-                            <option key={project.id} value={project.id}>
-                              {project.name}
-                            </option>
-                          ))}
-                        </select>
+                          className="bg-surface text-sm"
+                          options={[
+                            { value: '', label: 'Standalone' },
+                            ...projects.map((project) => ({
+                              value: project.id,
+                              label: project.name
+                            }))
+                          ]}
+                        />
                       ) : (
                         <div className="rounded-[16px] border border-border bg-surface px-4 py-3 text-sm font-medium text-primary">
                           {parentProject ? parentProject.name : 'Standalone task'}
@@ -713,17 +712,15 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                           Priority
                         </label>
                         {isEditingTask ? (
-                          <select
+                          <Select
                             value={editTaskPriority}
                             onChange={(e) => setEditTaskPriority(e.target.value as Task['priority'])}
-                            className="w-full rounded-[16px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors focus:border-accent"
-                          >
-                            {PRIORITY_OPTIONS.map((priority) => (
-                              <option key={priority} value={priority}>
-                                {priority}
-                              </option>
-                            ))}
-                          </select>
+                            className="bg-surface text-sm"
+                            options={PRIORITY_OPTIONS.map((priority) => ({
+                              value: priority,
+                              label: priority
+                            }))}
+                          />
                         ) : (
                           <div className={`rounded-[16px] border px-4 py-3 text-sm font-semibold capitalize ${getPriorityPillClass(activeTask.priority)}`}>
                             {activeTask.priority}
@@ -736,17 +733,15 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                           Category
                         </label>
                         {isEditingTask ? (
-                          <select
+                          <Select
                             value={editTaskCategory}
                             onChange={(e) => setEditTaskCategory(e.target.value as Task['category'])}
-                            className="w-full rounded-[16px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors focus:border-accent"
-                          >
-                            {CATEGORY_OPTIONS.map((category) => (
-                              <option key={category} value={category}>
-                                {category}
-                              </option>
-                            ))}
-                          </select>
+                            className="bg-surface text-sm"
+                            options={CATEGORY_OPTIONS.map((category) => ({
+                              value: category,
+                              label: category
+                            }))}
+                          />
                         ) : (
                           <div className="rounded-[16px] border border-border bg-surface px-4 py-3 text-sm font-medium text-primary">
                             {activeTask.category || 'No category'}
@@ -761,11 +756,11 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                           Due Date
                         </label>
                         {isEditingTask ? (
-                          <input
+                          <Input
                             type="date"
                             value={editTaskDueDate}
                             onChange={(e) => setEditTaskDueDate(e.target.value)}
-                            className="w-full rounded-[16px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors focus:border-accent"
+                            className="bg-surface text-sm"
                           />
                         ) : (
                           <div className={`rounded-[16px] border border-border bg-surface px-4 py-3 text-sm font-medium ${getDueTone(activeTask.due_date)}`}>
@@ -779,17 +774,15 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                           Recurring
                         </label>
                         {isEditingTask ? (
-                          <select
+                          <Select
                             value={editTaskRecurring}
                             onChange={(e) => setEditTaskRecurring(e.target.value as Task['recurring'])}
-                            className="w-full rounded-[16px] border border-border bg-surface px-4 py-3 text-sm text-primary outline-none transition-colors focus:border-accent"
-                          >
-                            {RECURRING_OPTIONS.map((recurring) => (
-                              <option key={recurring} value={recurring}>
-                                {recurring === 'none' ? 'one-time' : recurring}
-                              </option>
-                            ))}
-                          </select>
+                            className="bg-surface text-sm"
+                            options={RECURRING_OPTIONS.map((recurring) => ({
+                              value: recurring,
+                              label: recurring === 'none' ? 'one-time' : recurring
+                            }))}
+                          />
                         ) : (
                           <div className="rounded-[16px] border border-border bg-surface px-4 py-3 text-sm font-medium capitalize text-primary">
                             {activeTask.recurring === 'none' ? 'One-time' : activeTask.recurring}
@@ -871,23 +864,20 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
                   <p className="mt-1 text-sm text-primary">Close after discarding, or keep editing and save when ready.</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDiscardPrompt(false)}
-                    className="btn-press rounded-[16px] border border-border bg-surface px-4 py-2.5 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-primary"
-                  >
+                  <SecondaryButton type="button" onClick={() => setShowDiscardPrompt(false)} className="rounded-[16px] px-4 py-2.5 text-[10px]">
                     Keep Editing
-                  </button>
-                  <button
+                  </SecondaryButton>
+                  <PrimaryButton
                     type="button"
+                    variant="danger"
                     onClick={() => {
                       handleDiscardTaskEdit();
                       requestClose();
                     }}
-                    className="btn-press rounded-[16px] border border-warning/30 bg-warning/10 px-4 py-2.5 font-label text-[10px] font-bold uppercase tracking-[0.2em] text-warning"
+                    className="rounded-[16px] px-4 py-2.5 text-[10px] shadow-none"
                   >
                     Discard & Close
-                  </button>
+                  </PrimaryButton>
                 </div>
               </div>
             )}
@@ -900,41 +890,25 @@ export default function TaskDetailsModal({ taskId, onClose }: TaskDetailsModalPr
               </p>
 
               <div className="flex flex-col-reverse gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={requestClose}
-                  className="btn-press rounded-[18px] border border-border bg-background px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.24em] text-primary"
-                >
+                <SecondaryButton type="button" onClick={requestClose} className="rounded-[18px] px-4 py-3 text-[11px]">
                   Close
-                </button>
+                </SecondaryButton>
 
                 {isEditingTask ? (
                   <>
-                    <button
-                      type="button"
-                      onClick={handleDiscardTaskEdit}
-                      className="btn-press rounded-[18px] border border-border bg-background px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.24em] text-primary"
-                    >
+                    <SecondaryButton type="button" onClick={handleDiscardTaskEdit} className="rounded-[18px] px-4 py-3 text-[11px]">
                       Discard Changes
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleSaveTaskEdit()}
-                      className="btn-press inline-flex items-center justify-center gap-2 rounded-[18px] bg-primary px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.24em] text-on-primary"
-                    >
+                    </SecondaryButton>
+                    <PrimaryButton type="button" onClick={() => void handleSaveTaskEdit()} className="rounded-[18px] px-4 py-3 text-[11px]">
                       <Save className="h-3.5 w-3.5" />
                       Save Changes
-                    </button>
+                    </PrimaryButton>
                   </>
                 ) : (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingTask(true)}
-                    className="btn-press inline-flex items-center justify-center gap-2 rounded-[18px] bg-primary px-4 py-3 font-label text-[11px] font-bold uppercase tracking-[0.24em] text-on-primary"
-                  >
+                  <PrimaryButton type="button" onClick={() => setIsEditingTask(true)} className="rounded-[18px] px-4 py-3 text-[11px]">
                     <Pencil className="h-3.5 w-3.5" />
                     Edit Task
-                  </button>
+                  </PrimaryButton>
                 )}
               </div>
             </div>

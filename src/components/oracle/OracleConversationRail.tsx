@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { supabase } from '@/utils/supabaseClient';
 import EmptyState from '@/components/ui/EmptyState';
+import { Input } from '@/components/ui/Inputs';
 
 interface Conversation {
   id: string;
@@ -126,12 +127,11 @@ export default function OracleConversationRail({
         <div className="mt-4 rounded-2xl border border-border bg-surface px-3 py-2.5">
           <div className="flex items-center gap-2 text-secondary">
             <Search className="h-4 w-4" />
-            <input
-              type="text"
+            <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Search threads"
-              className="w-full bg-transparent text-sm text-primary outline-none placeholder:text-secondary"
+              className="border-none bg-transparent px-0 py-0 text-sm shadow-none"
             />
           </div>
         </div>

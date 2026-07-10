@@ -3,6 +3,8 @@
 import React, { useMemo, useState } from 'react';
 import { Copy, RefreshCw, Search } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import EmptyState from '@/components/ui/EmptyState';
+import { Input } from '@/components/ui/Inputs';
 import { useSoulBlueprint } from '@/context/SoulBlueprintContext';
 import { useToast } from '@/context/ToastContext';
 import {
@@ -178,12 +180,11 @@ export default function BlueprintContextViewer() {
           <div className="border-b border-border bg-surface/80 px-2 py-2 sm:px-4 sm:py-3 shrink-0">
             <div className="flex items-center gap-2 border border-border bg-neutral-bg/40 px-3 py-1.5 sm:py-2 text-secondary">
               <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <input
-                type="text"
+              <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder="Find in context"
-                className="w-full bg-transparent text-xs sm:text-sm text-primary outline-none placeholder:text-secondary"
+                className="border-none bg-transparent px-0 py-0 text-xs shadow-none sm:text-sm"
               />
             </div>
           </div>
@@ -194,11 +195,10 @@ export default function BlueprintContextViewer() {
                 <span className="font-serif italic text-secondary text-sm">Loading snapshot...</span>
               </div>
             ) : !snapshot ? (
-              <div className="flex h-full items-center justify-center border border-border bg-surface p-6 text-center">
-                <p className="font-serif italic text-secondary text-sm">
-                  No operating context has been generated yet.
-                </p>
-              </div>
+              <EmptyState
+                title="No operating context yet."
+                description="Generate or save context first, then it will appear here for review."
+              />
             ) : (
               <div className="h-full min-h-0 overflow-y-auto border border-border bg-surface p-3 sm:p-4 font-sans text-xs leading-6 text-primary whitespace-pre-wrap break-words">
                 {renderContent()}

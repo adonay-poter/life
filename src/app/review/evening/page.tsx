@@ -6,7 +6,8 @@ import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
 import ReviewFlowShell from '@/components/ui/ReviewFlowShell';
 import PageShell from '@/components/ui/PageShell';
-import { Input } from '@/components/ui/Inputs';
+import EmptyState from '@/components/ui/EmptyState';
+import { Input, Textarea } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
 import {
   Square,
@@ -145,8 +146,8 @@ export default function EveningReview() {
   if (completed) {
     return (
       <PageShell>
-        <div className="max-w-md mx-auto text-center py-16 px-6 border border-border bg-surface space-y-6">
-          <div className="w-12 h-12 bg-success/10 text-success rounded-none flex items-center justify-center mx-auto border border-success/30">
+        <div className="app-panel max-w-md mx-auto text-center py-16 px-6 space-y-6">
+          <div className="w-12 h-12 bg-success/10 text-success rounded-2xl flex items-center justify-center mx-auto border border-success/30">
             <CheckCircle className="h-6 w-6" />
           </div>
           <h2 className="font-display text-2xl font-bold text-primary">Day Successfully Closed</h2>
@@ -160,7 +161,7 @@ export default function EveningReview() {
           <div className="pt-4">
             <Link
               href="/"
-              className="w-full text-center bg-primary text-on-primary hover:opacity-90 transition-all font-label text-xs uppercase tracking-wider py-2.5 font-bold cursor-pointer inline-block"
+              className="btn-press inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-accent px-4 py-2.5 text-center font-label text-xs font-bold uppercase tracking-[0.18em] text-on-accent shadow-[0_10px_24px_rgba(26,28,30,0.08)] transition-all hover:opacity-95"
             >
               Return to Dashboard
             </Link>
@@ -235,13 +236,13 @@ export default function EveningReview() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="bestInsight" className="font-label text-xs uppercase font-bold text-secondary">Best Insight of the Day</label>
-              <input
+              <Input
                 id="bestInsight"
                 type="text"
                 value={bestInsight}
                 onChange={(e) => setBestInsight(e.target.value)}
                 placeholder="The single most important concept I understood today is..."
-                className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent rounded-none transition-colors"
+                className="bg-neutral-bg text-sm"
               />
             </div>
 
@@ -280,9 +281,10 @@ export default function EveningReview() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12 border border-dashed border-border bg-background/30">
-                <p className="font-sans text-xs text-secondary italic">No tasks completed with due dates today.</p>
-              </div>
+              <EmptyState
+                title="No completed dated tasks."
+                description="No tasks with due dates were closed today."
+              />
             )}
           </div>
         </div>
@@ -322,12 +324,12 @@ export default function EveningReview() {
 
           <div className="space-y-2">
             <label htmlFor="tomorrowInherits" className="font-label text-xs uppercase font-bold text-secondary">Inheritance Focus</label>
-            <textarea
+            <Textarea
               id="tomorrowInherits"
               value={tomorrowInherits}
               onChange={(e) => setTomorrowInherits(e.target.value)}
               placeholder="Tomorrow will start with: [specific action / focus]..."
-              className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent resize-none rounded-none transition-colors"
+              className="bg-neutral-bg text-sm resize-none min-h-[132px]"
               rows={4}
               required
             />
@@ -348,36 +350,36 @@ export default function EveningReview() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="ref1" className="font-label text-xs uppercase font-bold text-secondary">What did I learn today?</label>
-              <input
+              <Input
                 id="ref1"
                 type="text"
                 value={reflection1}
                 onChange={(e) => setReflection1(e.target.value)}
                 placeholder="Insights or takeaways discovered..."
-                className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent rounded-none transition-colors"
+                className="bg-neutral-bg text-sm"
               />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="ref2" className="font-label text-xs uppercase font-bold text-secondary">What did I avoid or could improve?</label>
-              <input
+              <Input
                 id="ref2"
                 type="text"
                 value={reflection2}
                 onChange={(e) => setReflection2(e.target.value)}
                 placeholder="Frictions, blocks, or areas of resistance..."
-                className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent rounded-none transition-colors"
+                className="bg-neutral-bg text-sm"
               />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="ref3" className="font-label text-xs uppercase font-bold text-secondary">Freeform Diary Notes</label>
-              <textarea
+              <Textarea
                 id="ref3"
                 value={reflection3}
                 onChange={(e) => setReflection3(e.target.value)}
                 placeholder="Any general thoughts, events, or musings..."
-                className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent resize-none rounded-none transition-colors"
+                className="bg-neutral-bg text-sm resize-none min-h-[120px]"
                 rows={3}
               />
             </div>

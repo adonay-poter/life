@@ -7,6 +7,7 @@ import { useToast } from '@/context/ToastContext';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import Checkbox from '@/components/ui/Checkbox';
 import EmptyState from '@/components/ui/EmptyState';
 import { Input, Textarea } from '@/components/ui/Inputs';
 import { Search, Calendar, ChevronRight, Activity, Moon, Droplet, CheckCircle } from 'lucide-react';
@@ -645,11 +646,10 @@ export default function JournalPage() {
                         {habit.name}
                         {habit.type === 'numeric' && ` (Goal: ${habit.goal}${habit.unit || ''})`}
                       </span>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={checked}
                         onChange={() => handleHabitToggle(habit.id, checked)}
-                        className="h-4.5 w-4.5 accent-accent cursor-pointer shrink-0"
+                        className="h-4.5 w-4.5"
                       />
                     </label>
                   );

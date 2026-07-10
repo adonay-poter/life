@@ -31,6 +31,7 @@ import {
 
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
+import Checkbox from '@/components/ui/Checkbox';
 import EditorialCard from '@/components/ui/EditorialCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
@@ -570,19 +571,19 @@ function TasksContent() {
 
           <div className="space-y-2 font-label text-xs">
             <div className="flex gap-2 md:hidden">
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 flex-1 rounded-2xl">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-4 h-11 flex-1 rounded-2xl">
                 <Search className="h-4 w-4 text-secondary shrink-0" />
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tasks, descriptions, projects"
-                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60"
+                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
                 />
               </label>
               <button
                 type="button"
                 onClick={() => setShowMobileFilters(true)}
-                className="border border-border px-3 py-2 text-primary hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center gap-2 shrink-0"
+                className="border border-border px-4 h-11 text-primary hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center gap-2 shrink-0 rounded-2xl"
               >
                 <SlidersHorizontal className="h-4 w-4" />
                 <span>Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</span>
@@ -590,13 +591,13 @@ function TasksContent() {
             </div>
 
             <div className="hidden md:grid md:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))_auto] gap-3">
-              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 rounded-2xl">
+              <label className="flex items-center gap-2 bg-neutral-bg border border-border px-4 h-11 rounded-2xl">
                 <Search className="h-4 w-4 text-secondary shrink-0" />
                 <input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search tasks, descriptions, projects"
-                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60"
+                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
                 />
               </label>
 
@@ -643,7 +644,7 @@ function TasksContent() {
                 type="button"
                 onClick={resetFilters}
                 disabled={activeFilterCount === 0}
-                className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press"
+                className="border border-border px-4 h-11 flex items-center justify-center rounded-2xl text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press"
               >
                 Reset {activeFilterCount > 0 ? `(${activeFilterCount})` : ''}
               </button>
@@ -1137,15 +1138,14 @@ function TasksContent() {
                                         <span className={`text-[11px] font-sans ${subtask.status === 'done' ? 'line-through text-secondary' : 'text-primary'}`}>
                                           {subtask.name}
                                         </span>
-                                        <input
-                                          type="checkbox"
+                                        <Checkbox
                                           checked={subtask.status === 'done'}
                                           onClick={(e) => e.stopPropagation()}
                                           onChange={(e) => {
                                             e.stopPropagation();
                                             handleUpdateTaskStatusWithUndo(subtask.id, subtask.status === 'done' ? 'todo' : 'done');
                                           }}
-                                          className="h-3.5 w-3.5 accent-accent cursor-pointer"
+                                          className="h-3.5 w-3.5"
                                         />
                                       </label>
                                     ))}
@@ -1401,15 +1401,14 @@ function TasksContent() {
                           </span>
                         </div>
                       </div>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={task.status === 'done'}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                           e.stopPropagation();
                           handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done');
                         }}
-                        className="h-4 w-4 accent-accent cursor-pointer shrink-0"
+                        className="h-4 w-4"
                       />
                     </div>
                   );
@@ -1472,15 +1471,14 @@ function TasksContent() {
                           </span>
                         </div>
                       </div>
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={task.status === 'done'}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                           e.stopPropagation();
                           handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done');
                         }}
-                        className="h-4 w-4 accent-accent cursor-pointer"
+                        className="h-4 w-4"
                       />
                     </div>
 
@@ -1683,15 +1681,14 @@ function TasksContent() {
                     } ${isLate ? 'border-danger/50' : 'border-border'}`}
                   >
                     <div className="flex items-start space-x-3 min-w-0">
-                      <input
-                        type="checkbox"
+                      <Checkbox
                         checked={task.status === 'done'}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) => {
                           e.stopPropagation();
                           handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done');
                         }}
-                        className="h-4.5 w-4.5 accent-accent shrink-0 cursor-pointer"
+                        className="h-4.5 w-4.5"
                       />
                       {task.status !== 'done' && (
                         <button

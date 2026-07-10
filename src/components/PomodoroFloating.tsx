@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDashboard } from '@/context/DashboardContext';
 import { Play, Pause, RotateCcw, Timer, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import EmptyState from './ui/EmptyState';
+import { Select } from './ui/Inputs';
 
 export default function PomodoroFloating() {
   const { tasks, updateTaskPomodoro } = useDashboard();
@@ -313,19 +315,20 @@ export default function PomodoroFloating() {
               Link Focus Task
             </label>
             {pendingTasks.length > 0 ? (
-              <select
+              <Select
                 value={activeTaskId}
                 onChange={handleTaskChange}
-                className="w-full rounded-2xl bg-neutral-bg border border-border px-3 py-2.5 text-xs text-primary focus:outline-none focus:border-accent font-sans"
-              >
-                {pendingTasks.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
+                className="bg-neutral-bg text-xs"
+                options={pendingTasks.map((t) => ({
+                  value: t.id,
+                  label: t.name
+                }))}
+              />
             ) : (
-              <p className="rounded-2xl border border-dashed border-border bg-neutral-bg/30 px-3 py-3 text-center font-sans text-xs text-secondary italic">No active tasks available</p>
+              <EmptyState
+                title="No active tasks available."
+                description="Pick or create a task first, then link it to this focus session."
+              />
             )}
 
             {activeTask && (

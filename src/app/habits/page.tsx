@@ -7,9 +7,9 @@ import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import { IconButton, PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import EmptyState from '@/components/ui/EmptyState';
-import { Input, Select } from '@/components/ui/Inputs';
+import { CompactInput, CompactSelect, Input, Select } from '@/components/ui/Inputs';
 import { Trash2, Check, Smile, Moon, Droplet, Archive, X } from 'lucide-react';
 
 export default function HabitsPage() {
@@ -256,7 +256,6 @@ export default function HabitsPage() {
     if (selectedCategoryFilter === 'All') return true;
     return h.category === selectedCategoryFilter;
   });
-
   return (
     <PageShell>
       {/* Header */}
@@ -397,33 +396,33 @@ export default function HabitsPage() {
                 {/* HABIT ROWS */}
                 {filteredHabits.map((habit) => (
                   <tr key={habit.id} className="border-b border-border/60 hover:bg-neutral-bg/20">
-                    <td className="p-3 border-r border-border font-sans sticky left-0 bg-surface z-10 flex flex-col justify-center group min-h-[55px]">
+                    <td className="p-3 border-r border-border font-sans sticky left-0 bg-neutral-bg z-10 flex flex-col justify-center group min-h-[55px]">
                       <div className="flex justify-between items-center w-full">
                         <span className="font-semibold text-primary truncate max-w-[100px]">{habit.name}</span>
                         <div className="opacity-0 group-hover:opacity-100 flex items-center space-x-1.5 transition-opacity shrink-0">
-                          <button
+                          <IconButton
                             type="button"
                             onClick={async () => {
                               const nextArchived = !habit.is_archived;
                               await archiveHabit(habit.id, nextArchived);
                               showToast(nextArchived ? 'Habit archived.' : 'Habit unarchived.', 'success');
                             }}
-                            className={`hover:text-accent p-0.5 cursor-pointer btn-press ${habit.is_archived ? 'text-accent font-bold' : 'text-secondary'}`}
+                            className={`h-7 w-7 ${habit.is_archived ? 'text-accent border-border bg-surface-muted' : 'text-secondary'}`}
                             title={habit.is_archived ? 'Unarchive Habit' : 'Archive Habit'}
                           >
                             <Archive className="h-3.5 w-3.5" />
-                          </button>
-                          <button
+                          </IconButton>
+                          <IconButton
                             type="button"
                             onClick={() => {
                               setHabitToDelete({ id: habit.id, name: habit.name });
                               setDeleteModalOpen(true);
                             }}
-                            className="text-secondary hover:text-accent p-0.5 cursor-pointer btn-press"
+                            className="h-7 w-7 text-secondary hover:text-accent"
                             title="Delete Habit"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </button>
+                          </IconButton>
                         </div>
                       </div>
                       <div className="flex items-center space-x-1.5 mt-1 font-label text-[9px] text-secondary uppercase font-bold select-none">
@@ -448,13 +447,13 @@ export default function HabitsPage() {
                               <Check className="h-3 w-3" />
                             </button>
                           ) : (
-                            <input
+                            <CompactInput
                               type="text"
                               value={val || ''}
                               onChange={(e) => handleNumericChange(habit.id, day.dateStr, e.target.value)}
                               onBlur={() => showToast('Value updated.', 'info')}
                               placeholder="-"
-                              className="w-10 bg-transparent text-center border-b border-transparent focus:border-accent focus:outline-none font-mono text-xs text-primary font-bold"
+                              className="w-12"
                             />
                           )}
                         </td>
@@ -473,7 +472,7 @@ export default function HabitsPage() {
 
                 {/* MOOD RATING ROW */}
                 <tr className="border-b border-border/60">
-                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
+                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-neutral-bg z-10">
                     <div className="flex items-center space-x-1.5">
                       <Smile className="h-4 w-4 text-accent" />
                       <span>Daily Mood (1-5)</span>
@@ -484,18 +483,18 @@ export default function HabitsPage() {
                     const mood = log ? log.mood : 0;
                     return (
                       <td key={day.day} className="p-2 border-r border-border/40 text-center">
-                        <select
+                        <CompactSelect
                           value={mood || ''}
                           onChange={(e) => handleMoodClick(day.dateStr, parseInt(e.target.value) || 3)}
-                          className="bg-transparent text-center focus:outline-none cursor-pointer text-xs font-mono text-primary font-bold"
-                        >
-                          <option value="">-</option>
-                          <option value="1">1</option>
-                          <option value="2">2</option>
-                          <option value="3">3</option>
-                          <option value="4">4</option>
-                          <option value="5">5</option>
-                        </select>
+                          options={[
+                            { value: '', label: '-' },
+                            { value: '1', label: '1' },
+                            { value: '2', label: '2' },
+                            { value: '3', label: '3' },
+                            { value: '4', label: '4' },
+                            { value: '5', label: '5' }
+                          ]}
+                        />
                       </td>
                     );
                   })}
@@ -503,7 +502,7 @@ export default function HabitsPage() {
 
                 {/* SLEEP HOURS ROW */}
                 <tr className="border-b border-border/60">
-                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
+                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-neutral-bg z-10">
                     <div className="flex items-center space-x-1.5">
                       <Moon className="h-4 w-4 text-secondary" />
                       <span>Sleep (Hours)</span>
@@ -514,13 +513,13 @@ export default function HabitsPage() {
                     const hours = log ? log.sleep_hours : 0;
                     return (
                       <td key={day.day} className="p-2 border-r border-border/40 text-center">
-                        <input
+                        <CompactInput
                           type="text"
                           value={hours || ''}
                           onChange={(e) => handleHealthLogChange(day.dateStr, 'sleep', e.target.value)}
                           onBlur={() => showToast('Wellness log saved.', 'success')}
                           placeholder="-"
-                          className="w-10 bg-transparent text-center border-b border-transparent focus:border-accent focus:outline-none font-mono text-xs text-primary font-bold"
+                          className="w-12"
                         />
                       </td>
                     );
@@ -529,7 +528,7 @@ export default function HabitsPage() {
 
                 {/* WATER INTAKE ROW */}
                 <tr className="border-b border-border">
-                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-surface z-10">
+                  <td className="p-3 border-r border-border font-sans font-semibold text-primary sticky left-0 bg-neutral-bg z-10">
                     <div className="flex items-center space-x-1.5">
                       <Droplet className="h-4 w-4 text-accent" />
                       <span>Water (Liters)</span>
@@ -540,13 +539,13 @@ export default function HabitsPage() {
                     const water = log ? log.water_intake : 0;
                     return (
                       <td key={day.day} className="p-2 border-r border-border/40 text-center">
-                        <input
+                        <CompactInput
                           type="text"
                           value={water || ''}
                           onChange={(e) => handleHealthLogChange(day.dateStr, 'water', e.target.value)}
                           onBlur={() => showToast('Wellness log saved.', 'success')}
                           placeholder="-"
-                          className="w-10 bg-transparent text-center border-b border-transparent focus:border-accent focus:outline-none font-mono text-xs text-primary font-bold"
+                          className="w-12"
                         />
                       </td>
                     );
@@ -661,12 +660,14 @@ export default function HabitsPage() {
           <div className="app-panel max-w-sm w-full space-y-4 p-6 font-label text-xs">
             <div className="flex justify-between items-center border-b border-border pb-2">
               <span className="font-bold uppercase text-primary text-sm tracking-wide">Configure New Habit</span>
-              <button 
-                onClick={() => setShowAddHabitModal(false)} 
-                className="text-secondary hover:text-accent cursor-pointer p-2 rounded-xl btn-press"
+              <IconButton
+                type="button"
+                onClick={() => setShowAddHabitModal(false)}
+                title="Close habit configurator"
+                className="h-9 w-9"
               >
                 <X className="h-4 w-4" />
-              </button>
+              </IconButton>
             </div>
             
             <form onSubmit={handleCreateHabit} className="space-y-4 font-label">

@@ -8,6 +8,7 @@ import OracleConversationRail from '@/components/oracle/OracleConversationRail';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
 import { supabase } from '@/utils/supabaseClient';
+import { Textarea } from '@/components/ui/Inputs';
 
 interface Message {
   id: string;
@@ -227,7 +228,7 @@ export default function OracleChat() {
     <div className="mx-auto w-full max-w-4xl">
       {/* Mobile Composer layout (hidden on desktop) */}
       <div className="flex items-end gap-2 rounded-[24px] border border-border bg-surface p-2 shadow-[0_14px_32px_rgba(26,28,30,0.06)] md:hidden">
-        <textarea
+        <Textarea
           ref={inputRef}
           value={input}
           onChange={(event) => setInput(event.target.value)}
@@ -235,7 +236,7 @@ export default function OracleChat() {
           placeholder="Ask Oracle..."
           disabled={sending || loadingMessages}
           rows={1}
-          className="max-h-[120px] min-h-[38px] flex-1 resize-none bg-transparent py-1.5 px-2 text-sm leading-6 text-primary outline-none placeholder:text-secondary/70 disabled:opacity-60 font-sans"
+          className="max-h-[120px] min-h-[38px] flex-1 resize-none border-none bg-transparent px-2 py-1.5 text-sm leading-6 shadow-none disabled:opacity-60"
         />
         <button
           type="submit"
@@ -250,7 +251,7 @@ export default function OracleChat() {
       {/* Desktop Composer layout (hidden on mobile) */}
       <div className="hidden rounded-[28px] border border-border bg-surface shadow-[0_18px_40px_rgba(26,28,30,0.06)] md:flex flex-col focus-within:border-primary transition-colors">
         <div className="flex items-start gap-3 p-3.5">
-          <textarea
+          <Textarea
             ref={inputRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
@@ -258,7 +259,7 @@ export default function OracleChat() {
             placeholder="Ask Oracle..."
             disabled={sending || loadingMessages}
             rows={1}
-            className="max-h-[200px] min-h-[50px] w-full resize-none bg-transparent text-sm leading-7 text-primary outline-none placeholder:text-secondary/70 disabled:opacity-60"
+            className="max-h-[200px] min-h-[50px] w-full resize-none border-none bg-transparent p-0 text-sm leading-7 shadow-none disabled:opacity-60"
           />
         </div>
 

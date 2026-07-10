@@ -14,6 +14,7 @@ import EditorialCard from '@/components/ui/EditorialCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
 import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
+import Checkbox from '@/components/ui/Checkbox';
 import { Input, Textarea, Select } from '@/components/ui/Inputs';
 import { 
   BookOpen, 
@@ -1529,14 +1530,13 @@ function AcademyContent() {
                                 ) : (
                                   <>
                                     <label className="flex items-center gap-2 min-w-0 flex-1 cursor-pointer">
-                                      <input
-                                        type="checkbox"
+                                      <Checkbox
                                         checked={lesson.completed}
                                         onChange={(e) => {
                                           e.stopPropagation();
                                           toggleLessonCompleted(lesson.id, !lesson.completed);
                                         }}
-                                        className="h-4.5 w-4.5 accent-accent shrink-0 cursor-pointer"
+                                        className="h-4.5 w-4.5"
                                       />
                                       <span className={`font-sans text-xs truncate font-semibold ${lesson.completed ? 'line-through text-secondary opacity-65' : 'text-primary'}`}>
                                         {lesson.title}
@@ -1741,11 +1741,11 @@ function AcademyContent() {
                   <div className="app-panel min-h-[560px] flex flex-col p-6 space-y-6">
                     <div className="flex-grow flex flex-col">
                       {!isNotePreview ? (
-                        <textarea
+                        <Textarea
                           value={localNotes}
                           onChange={(e) => setLocalNotes(e.target.value)}
                           placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                          className="w-full flex-grow min-h-[420px] rounded-[24px] bg-neutral-bg/45 border border-border px-4 py-4 text-sm text-primary focus:outline-none focus:border-accent font-mono resize-none leading-relaxed transition-[border-color,box-shadow,background-color]"
+                          className="w-full flex-grow min-h-[420px] rounded-[24px] bg-neutral-bg/45 text-sm font-mono leading-relaxed resize-none"
                         />
                       ) : (
                         <div className="w-full flex-grow min-h-[420px] rounded-[24px] bg-background border border-border px-4 py-4 overflow-y-auto">
@@ -2234,11 +2234,11 @@ function AcademyContent() {
               <div className={`mx-auto ${readerWidth === 'focused' ? 'max-w-2xl' : 'max-w-4xl'} flex flex-col gap-6`}>
                 <div className="flex-1">
                   {!isNotePreview ? (
-                    <textarea
+                    <Textarea
                       value={localNotes}
                       onChange={(e) => setLocalNotes(e.target.value)}
                       placeholder="# Markdown Notes here&#10;- Bullet point one&#10;- Bullet point two&#10;> An architectural quote"
-                      className="w-full min-h-[calc(100dvh-12rem)] app-panel text-primary focus:outline-none font-mono resize-none p-6"
+                      className="min-h-[calc(100dvh-12rem)] app-panel p-6 text-primary font-mono resize-none"
                       style={{ fontSize: `${Math.max(14, readerFontSize - 1)}px`, lineHeight: readerLineHeight === 'loose' ? 1.9 : 1.65 }}
                     />
                   ) : (

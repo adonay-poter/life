@@ -6,7 +6,9 @@ import { getLocalDateString } from '@/utils/dateUtils';
 import { useToast } from '@/context/ToastContext';
 import { useRouter } from 'next/navigation';
 import ReviewFlowShell from '@/components/ui/ReviewFlowShell';
-import { Input } from '@/components/ui/Inputs';
+import EmptyState from '@/components/ui/EmptyState';
+import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import { Input, Textarea } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
 import {
   Square,
@@ -141,7 +143,7 @@ export default function MiddayReview() {
           {morningCaptures.length > 0 ? (
             <div className="space-y-3">
               {morningCaptures.map(item => (
-                <div key={item.id} className="border border-border bg-background p-4 flex flex-col sm:flex-row justify-between gap-4">
+                <div key={item.id} className="app-panel-subtle p-4 flex flex-col sm:flex-row justify-between gap-4">
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center space-x-2">
                       <span className="font-label text-[9px] bg-secondary/15 px-1 py-0.5 uppercase tracking-wide">{item.type}</span>
@@ -150,32 +152,37 @@ export default function MiddayReview() {
                     {item.content && <p className="font-sans text-[11px] text-secondary line-clamp-2 leading-relaxed">{item.content}</p>}
                   </div>
                   <div className="flex gap-2 shrink-0 self-end sm:self-auto font-label text-[9px] font-bold">
-                    <button
+                    <SecondaryButton
+                      type="button"
                       onClick={() => handleProcessItem(item.id, 'task')}
-                      className="border border-border hover:border-primary px-2.5 py-1 text-primary bg-surface cursor-pointer"
+                      className="min-h-8 px-2.5 py-1 text-[9px]"
                     >
                       TASK
-                    </button>
-                    <button
+                    </SecondaryButton>
+                    <SecondaryButton
+                      type="button"
                       onClick={() => handleProcessItem(item.id, 'knowledge')}
-                      className="border border-border hover:border-primary px-2.5 py-1 text-primary bg-surface cursor-pointer"
+                      className="min-h-8 px-2.5 py-1 text-[9px]"
                     >
                       NOTE
-                    </button>
-                    <button
+                    </SecondaryButton>
+                    <PrimaryButton
+                      type="button"
+                      variant="danger"
                       onClick={() => handleProcessItem(item.id, 'archive')}
-                      className="text-danger border border-danger/20 hover:border-danger bg-surface px-2.5 py-1 cursor-pointer"
+                      className="min-h-8 px-2.5 py-1 text-[9px] shadow-none"
                     >
                       ARCHIVE
-                    </button>
+                    </PrimaryButton>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 border border-dashed border-border bg-background/30">
-              <p className="font-sans text-xs text-secondary italic">No morning captures requiring attention. Desk is clear.</p>
-            </div>
+            <EmptyState
+              title="Morning desk is clear."
+              description="No captures from today still need attention."
+            />
           )}
         </div>
       )}
@@ -193,12 +200,12 @@ export default function MiddayReview() {
           <div className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="dailyFocus" className="font-label text-xs uppercase font-bold text-secondary">Focus Statement</label>
-              <textarea
+              <Textarea
                 id="dailyFocus"
                 value={dailyFocus}
                 onChange={(e) => setDailyFocus(e.target.value)}
                 placeholder="The single thing that matters for the rest of today is..."
-                className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent resize-none rounded-none transition-colors"
+                className="bg-neutral-bg text-sm resize-none min-h-[132px]"
                 rows={4}
                 required
               />
@@ -206,13 +213,13 @@ export default function MiddayReview() {
             
             <div className="space-y-2">
               <label htmlFor="notes" className="font-label text-xs uppercase font-bold text-secondary">Refinement Notes / Details (Optional)</label>
-              <input
+              <Input
                 id="notes"
                 type="text"
                 value={openLoopAnswers.midday_notes || ''}
                 onChange={(e) => setOpenLoopAnswers({ ...openLoopAnswers, midday_notes: e.target.value })}
                 placeholder="Any constraints, tools, or dependencies for this focus..."
-                className="w-full bg-neutral-bg border border-border p-3 text-xs font-sans focus:outline-none focus:border-accent rounded-none transition-colors"
+                className="bg-neutral-bg text-sm"
               />
             </div>
           </div>

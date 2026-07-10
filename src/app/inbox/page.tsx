@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
@@ -10,7 +10,10 @@ import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { getLocalDateString } from '@/utils/dateUtils';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
-import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import EditorialCard from '@/components/ui/EditorialCard';
+import EmptyState from '@/components/ui/EmptyState';
+import { PrimaryButton, SecondaryButton, IconButton } from '@/components/ui/Buttons';
+import { Input, Select, Textarea } from '@/components/ui/Inputs';
 import { 
   Inbox, 
   Link2, 
@@ -40,7 +43,7 @@ import {
 
 export default function InboxPage() {
   return (
-    <Suspense fallback={<div className="py-20 text-center text-secondary font-label uppercase tracking-widest text-xs">Loading Inbox Triage...</div>}>
+    <Suspense fallback={<div className="app-panel-subtle py-20 text-center text-secondary font-label uppercase tracking-widest text-xs">Loading Inbox Triage...</div>}>
       <InboxContent />
     </Suspense>
   );
@@ -57,7 +60,6 @@ function InboxContent() {
     deleteInboxItem,
     updateInboxItem,
     addTask,
-    addLesson,
     addFlashcard,
     addKnowledgeItem,
     addObjectLink,
@@ -311,6 +313,61 @@ function InboxContent() {
     { key: 'processed' as const, label: 'Processed', icon: Check, count: statusCounts.processed },
     { key: 'snoozed' as const, label: 'Snoozed', icon: Clock, count: statusCounts.snoozed },
     { key: 'archived' as const, label: 'Archive', icon: Archive, count: statusCounts.archived },
+  ];
+  const quickTypeOptions = [
+    { value: 'thought', label: 'Thought' },
+    { value: 'idea', label: 'Idea' },
+    { value: 'task', label: 'Task' },
+    { value: 'url', label: 'Link / URL' },
+    { value: 'quote', label: 'Quote' },
+    { value: 'code', label: 'Code Snippet' },
+    { value: 'question', label: 'Question' },
+    { value: 'journal', label: 'Journal Slip' }
+  ];
+  const activeProjectOptions = [
+    { value: '', label: 'No Project (Standalone)' },
+    ...projects.filter((p) => !p.is_archived).map((p) => ({ value: p.id, label: p.name }))
+  ];
+  const linkProjectOptions = [
+    { value: '', label: 'No Project Link' },
+    ...projects.filter((p) => !p.is_archived).map((p) => ({ value: p.id, label: p.name }))
+  ];
+  const attachProjectOptions = [
+    { value: '', label: 'Select Project...' },
+    ...projects.filter((p) => !p.is_archived).map((p) => ({ value: p.id, label: p.name }))
+  ];
+  const inboxTypeOptions = [
+    { value: 'All', label: 'All types' },
+    ...inboxTypes.map((type) => ({ value: type, label: type }))
+  ];
+  const signalOptions = [
+    { value: 'all', label: 'All slips' },
+    { value: 'tagged', label: 'Tagged' },
+    { value: 'with_url', label: 'With URL' },
+    { value: 'with_content', label: 'With notes' }
+  ];
+  const sortOptions = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest first' },
+    { value: 'title', label: 'Title A-Z' },
+    { value: 'type', label: 'Type' }
+  ];
+  const taskCategoryOptions = [
+    { value: 'Work', label: 'Work' },
+    { value: 'Personal', label: 'Personal' },
+    { value: 'Learning', label: 'Learning' },
+    { value: 'Urgent', label: 'Urgent' },
+    { value: 'Other', label: 'Other' }
+  ];
+  const taskPriorityOptions = [
+    { value: 'high', label: 'High' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'low', label: 'Low' }
+  ];
+  const reflectionOptions = [
+    { value: 'learned', label: 'What I Learned' },
+    { value: 'better', label: 'What to Improve' },
+    { value: 'free_text', label: 'Free Text Entry' }
   ];
 
   const resetTriageControls = () => {
@@ -619,13 +676,10 @@ function InboxContent() {
   const renderPanelContent = (isMobile: boolean = false) => {
     if (!selectedItem) {
       return (
-        <div className="py-20 text-center space-y-3">
-          <Inbox className="h-10 w-10 text-secondary/30 mx-auto" />
-          <h5 className="font-display text-md font-bold uppercase tracking-wider text-secondary">No Slip Selected</h5>
-          <p className="font-sans text-xs text-secondary/80 max-w-xs mx-auto leading-relaxed">
-            Choose a captured thought, link, or note from the Intake Queue to start triaging it into permanent output.
-          </p>
-        </div>
+        <EmptyState
+          title="No slip selected."
+          description="Choose a captured thought, link, or note to triage it into a durable output."
+        />
       );
     }
 
@@ -658,12 +712,12 @@ function InboxContent() {
                 {selectedItem.title}
               </h3>
               {selectedItem.content && (
-                <div className="bg-neutral-bg/40 border border-border p-3 font-sans text-xs text-primary leading-relaxed whitespace-pre-wrap">
+                <div className="app-panel-subtle px-4 py-3 font-sans text-xs text-primary leading-relaxed whitespace-pre-wrap">
                   {selectedItem.content}
                 </div>
               )}
               {selectedAttachmentPreviewUrl && (
-                <div className="border border-border bg-neutral-bg/30 p-2">
+                <div className="app-panel-subtle p-2">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={selectedAttachmentPreviewUrl}
@@ -695,54 +749,18 @@ function InboxContent() {
                 </div>
               )}
               <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingSelected(true)}
-                  className="btn-press border border-border hover:border-primary px-3 py-1.5 font-label text-[10px] uppercase font-bold flex items-center gap-1 cursor-pointer bg-surface text-primary"
-                >
+                <SecondaryButton type="button" onClick={() => setIsEditingSelected(true)} className="min-h-9 px-3 py-2 text-[10px]">
                   <Pencil className="h-3 w-3 text-secondary" />
                   <span>Edit Slip</span>
-                </button>
+                </SecondaryButton>
               </div>
             </div>
           ) : (
             <div className="space-y-3 font-label text-xs uppercase">
-              <div className="space-y-1">
-                <label className="block text-[10px] text-secondary font-bold">Edit Title</label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[10px] text-secondary font-bold">Edit Content</label>
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  rows={4}
-                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans resize-none"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[10px] text-secondary font-bold">Edit URL</label>
-                <input
-                  type="text"
-                  value={editUrl}
-                  onChange={(e) => setEditUrl(e.target.value)}
-                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans"
-                />
-              </div>
-              <div className="space-y-1">
-                <label className="block text-[10px] text-secondary font-bold">Edit Tags</label>
-                <input
-                  type="text"
-                  value={editTags}
-                  onChange={(e) => setEditTags(e.target.value)}
-                  className="w-full bg-neutral-bg border border-border px-3 py-2 text-xs focus:outline-none font-sans"
-                />
-              </div>
+              <Input label="Edit Title" type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="bg-neutral-bg text-sm" />
+              <Textarea label="Edit Content" value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} className="resize-none bg-neutral-bg text-sm min-h-[132px]" />
+              <Input label="Edit URL" type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="bg-neutral-bg text-sm" />
+              <Input label="Edit Tags" type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} className="bg-neutral-bg text-sm" />
               <div className="flex gap-2 justify-end pt-1">
                 <SecondaryButton type="button" onClick={() => setIsEditingSelected(false)}>
                   Cancel
@@ -762,7 +780,7 @@ function InboxContent() {
           </span>
 
           {/* Sub Action Tabs */}
-          <div className="grid grid-cols-3 md:grid-cols-6 border border-border font-label text-[8px] uppercase tracking-wider font-bold">
+          <div className="grid grid-cols-3 md:grid-cols-6 border border-border font-label text-[8px] uppercase tracking-wider font-bold rounded-2xl overflow-hidden bg-neutral-bg">
             {[
               { key: 'task', label: 'Task' },
               { key: 'knowledge', label: 'Note' },
@@ -780,7 +798,7 @@ function InboxContent() {
                   className={`py-2 text-center border-r last:border-r-0 border-border cursor-pointer transition-colors ${
                     isActive 
                       ? 'bg-primary text-on-primary' 
-                      : 'hover:bg-neutral-bg text-secondary'
+                      : 'hover:bg-surface-muted text-secondary'
                   }`}
                 >
                   {tab.label}
@@ -790,7 +808,7 @@ function InboxContent() {
           </div>
 
           {/* Action Panels */}
-          <div className="bg-neutral-bg/30 border border-border p-4 font-label text-xs uppercase space-y-4">
+          <div className="app-panel-subtle p-4 font-label text-xs uppercase space-y-4">
             
             {/* PANEL 1: CONVERT TO TASK */}
             {activeActionTab === 'task' && (
@@ -798,56 +816,24 @@ function InboxContent() {
                 <span className="block text-[10px] text-secondary font-bold">File Actionable Task</span>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Target Project</label>
-                  <select
-                    value={taskProjectId}
-                    onChange={(e) => setTaskProjectId(e.target.value)}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                  >
-                    <option value="">No Project (Standalone)</option>
-                    {projects.filter(p => !p.is_archived).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                  <Select value={taskProjectId} onChange={(e) => setTaskProjectId(e.target.value)} className="bg-neutral-bg text-sm" options={activeProjectOptions} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[9px] text-secondary font-bold">Category</label>
-                    <select
-                      value={taskCategory}
-                      onChange={(e) => setTaskCategory(e.target.value as any)}
-                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                    >
-                      <option value="Work">Work</option>
-                      <option value="Personal">Personal</option>
-                      <option value="Learning">Learning</option>
-                      <option value="Urgent">Urgent</option>
-                      <option value="Other">Other</option>
-                    </select>
+                    <Select value={taskCategory} onChange={(e) => setTaskCategory(e.target.value as any)} className="bg-neutral-bg text-sm" options={taskCategoryOptions} />
                   </div>
                   <div className="space-y-1">
                     <label className="block text-[9px] text-secondary font-bold">Priority</label>
-                    <select
-                      value={taskPriority}
-                      onChange={(e) => setTaskPriority(e.target.value as any)}
-                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                    >
-                      <option value="high">High</option>
-                      <option value="medium">Medium</option>
-                      <option value="low">Low</option>
-                    </select>
+                    <Select value={taskPriority} onChange={(e) => setTaskPriority(e.target.value as any)} className="bg-neutral-bg text-sm" options={taskPriorityOptions} />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Due Date (Optional)</label>
-                  <input
-                    type="date"
-                    value={taskDueDate}
-                    onChange={(e) => setTaskDueDate(e.target.value)}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
-                  />
+                  <Input type="date" value={taskDueDate} onChange={(e) => setTaskDueDate(e.target.value)} className="bg-neutral-bg text-sm" />
                 </div>
                 <PrimaryButton type="button" onClick={handleConvertToTaskSubmit} className="w-full mt-2">
-                  Execute Conversion & Complete
+                  Create Task
                 </PrimaryButton>
               </div>
             )}
@@ -858,39 +844,18 @@ function InboxContent() {
                 <span className="block text-[10px] text-secondary font-bold">File Knowledge Note</span>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Topic / Category</label>
-                  <input
-                    type="text"
-                    value={knowledgeTopic}
-                    onChange={(e) => setKnowledgeTopic(e.target.value)}
-                    placeholder="e.g. Design Systems, React"
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
-                  />
+                  <Input type="text" value={knowledgeTopic} onChange={(e) => setKnowledgeTopic(e.target.value)} placeholder="e.g. Design Systems, React" className="bg-neutral-bg text-sm" />
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Summary Synthesis</label>
-                  <textarea
-                    value={knowledgeSummary}
-                    onChange={(e) => setKnowledgeSummary(e.target.value)}
-                    placeholder="Synthesize the core insight in one sentence..."
-                    rows={2}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans resize-none"
-                  />
+                  <Textarea value={knowledgeSummary} onChange={(e) => setKnowledgeSummary(e.target.value)} placeholder="Synthesize the core insight in one sentence..." rows={2} className="resize-none bg-neutral-bg text-sm min-h-[96px]" />
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Link to Project (Optional)</label>
-                  <select
-                    value={knowledgeLinkProjectId}
-                    onChange={(e) => setKnowledgeLinkProjectId(e.target.value)}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                  >
-                    <option value="">No Project Link</option>
-                    {projects.filter(p => !p.is_archived).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                  <Select value={knowledgeLinkProjectId} onChange={(e) => setKnowledgeLinkProjectId(e.target.value)} className="bg-neutral-bg text-sm" options={linkProjectOptions} />
                 </div>
                 <PrimaryButton type="button" onClick={handleCreateKnowledgeSubmit} className="w-full mt-2">
-                  File to Note Ledger
+                  Save Note
                 </PrimaryButton>
               </div>
             )}
@@ -901,19 +866,10 @@ function InboxContent() {
                 <span className="block text-[10px] text-secondary font-bold">Link Intake directly to Sector Project</span>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Target Project</label>
-                  <select
-                    value={projectLinkId}
-                    onChange={(e) => setProjectLinkId(e.target.value)}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                  >
-                    <option value="">Select Project...</option>
-                    {projects.filter(p => !p.is_archived).map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                  <Select value={projectLinkId} onChange={(e) => setProjectLinkId(e.target.value)} className="bg-neutral-bg text-sm" options={attachProjectOptions} />
                 </div>
                 <p className="font-sans text-[10px] text-secondary leading-normal lowercase normal-case">
-                  This links the raw inbox slip directly as a related capture reference inside the project's detail command center.
+                  Link this slip as supporting context inside the selected project.
                 </p>
                 <PrimaryButton 
                   type="button"
@@ -933,24 +889,11 @@ function InboxContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[9px] text-secondary font-bold">Target Date</label>
-                    <input
-                      type="date"
-                      value={journalDate}
-                      onChange={(e) => setJournalDate(e.target.value)}
-                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
-                    />
+                    <Input type="date" value={journalDate} onChange={(e) => setJournalDate(e.target.value)} className="bg-neutral-bg text-sm" />
                   </div>
                   <div className="space-y-1">
                     <label className="block text-[9px] text-secondary font-bold">Reflection Slot</label>
-                    <select
-                      value={journalReflectionType}
-                      onChange={(e) => setJournalReflectionType(e.target.value as any)}
-                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                    >
-                      <option value="learned">What I Learned</option>
-                      <option value="better">What to Improve</option>
-                      <option value="free_text">Free Text Entry</option>
-                    </select>
+                    <Select value={journalReflectionType} onChange={(e) => setJournalReflectionType(e.target.value as any)} className="bg-neutral-bg text-sm" options={reflectionOptions} />
                   </div>
                 </div>
                 <PrimaryButton type="button" onClick={handleAddToJournalSubmit} className="w-full mt-2">
@@ -966,51 +909,31 @@ function InboxContent() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="block text-[9px] text-secondary font-bold">Course</label>
-                    <select
+                    <Select
                       value={flashcardCourseId}
                       onChange={(e) => setFlashcardCourseId(e.target.value)}
-                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
-                    >
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>{c.title}</option>
-                      ))}
-                      {courses.length === 0 && <option value="">No courses available</option>}
-                    </select>
+                      className="bg-neutral-bg text-sm"
+                      options={courses.length > 0 ? courses.map((c) => ({ value: c.id, label: c.title })) : [{ value: '', label: 'No courses available' }]}
+                    />
                   </div>
                   <div className="space-y-1">
                     <label className="block text-[9px] text-secondary font-bold">Module</label>
-                    <select
+                    <Select
                       value={flashcardModuleId}
                       onChange={(e) => setFlashcardModuleId(e.target.value)}
-                      className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans cursor-pointer"
+                      className="bg-neutral-bg text-sm"
                       disabled={activeModules.length === 0}
-                    >
-                      {activeModules.map((m) => (
-                        <option key={m.id} value={m.id}>{m.title}</option>
-                      ))}
-                      {activeModules.length === 0 && <option value="">No modules</option>}
-                    </select>
+                      options={activeModules.length > 0 ? activeModules.map((m) => ({ value: m.id, label: m.title })) : [{ value: '', label: 'No modules' }]}
+                    />
                   </div>
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Front Face</label>
-                  <input
-                    type="text"
-                    value={flashcardFront}
-                    onChange={(e) => setFlashcardFront(e.target.value)}
-                    placeholder="Question / term..."
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
-                  />
+                  <Input type="text" value={flashcardFront} onChange={(e) => setFlashcardFront(e.target.value)} placeholder="Question / term..." className="bg-neutral-bg text-sm" />
                 </div>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Back Face</label>
-                  <textarea
-                    value={flashcardBack}
-                    onChange={(e) => setFlashcardBack(e.target.value)}
-                    placeholder="Explanation / formula / answer..."
-                    rows={2}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans resize-none"
-                  />
+                  <Textarea value={flashcardBack} onChange={(e) => setFlashcardBack(e.target.value)} placeholder="Explanation / formula / answer..." rows={2} className="resize-none bg-neutral-bg text-sm min-h-[96px]" />
                 </div>
                 <PrimaryButton 
                   type="button"
@@ -1029,15 +952,10 @@ function InboxContent() {
                 <span className="block text-[10px] text-secondary font-bold">Snooze Intake Slip</span>
                 <div className="space-y-1">
                   <label className="block text-[9px] text-secondary font-bold">Wake Up Date</label>
-                  <input
-                    type="date"
-                    value={snoozeDate}
-                    onChange={(e) => setSnoozeDate(e.target.value)}
-                    className="w-full bg-surface border border-border px-2.5 py-2 text-xs focus:outline-none font-sans"
-                  />
+                  <Input type="date" value={snoozeDate} onChange={(e) => setSnoozeDate(e.target.value)} className="bg-neutral-bg text-sm" />
                 </div>
                 <p className="font-sans text-[10px] text-secondary leading-normal lowercase normal-case">
-                  Snoozing hides this slip from the unprocessed queue until the selected date, where it will reappear at midnight.
+                  Hide this slip until the selected date, then return it to intake automatically.
                 </p>
                 <PrimaryButton type="button" onClick={handleSnoozeSubmit} className="w-full mt-2">
                   Apply Snooze Duration
@@ -1050,24 +968,14 @@ function InboxContent() {
 
         {/* Fast general actions (Archive, Delete) */}
         <div className="flex gap-2 justify-end border-t border-border pt-4 font-label text-xs uppercase tracking-wider font-bold">
-          <button
-            type="button"
-            onClick={handleArchiveClick}
-            className="px-3.5 py-2 border border-border hover:bg-neutral-bg/60 text-primary transition-colors flex items-center space-x-1.5 cursor-pointer btn-press rounded-none"
-            title="Archive Slip"
-          >
+          <SecondaryButton type="button" onClick={handleArchiveClick} className="min-h-10 px-3.5 py-2">
             <Archive className="h-3.5 w-3.5" />
             <span>Archive</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleDeleteClick}
-            className="px-3.5 py-2 border border-danger/40 text-danger hover:bg-danger/5 transition-colors flex items-center space-x-1.5 cursor-pointer btn-press rounded-none"
-            title="Delete Slip"
-          >
+          </SecondaryButton>
+          <PrimaryButton type="button" onClick={handleDeleteClick} variant="danger" className="min-h-10 px-3.5 py-2 shadow-none">
             <Trash2 className="h-3.5 w-3.5" />
             <span>Delete</span>
-          </button>
+          </PrimaryButton>
         </div>
 
       </div>
@@ -1090,7 +998,7 @@ function InboxContent() {
         }
       />
 
-      <section className="bg-surface border border-primary">
+      <section className="app-panel overflow-hidden p-0">
         <div className="grid grid-cols-2 md:grid-cols-4">
           {[
             { label: 'Waiting', value: statusCounts.unprocessed, icon: Inbox, tone: statusCounts.unprocessed > 0 ? 'text-accent' : 'text-primary' },
@@ -1114,71 +1022,22 @@ function InboxContent() {
 
       {/* Quick Capture Form Drawer */}
       {showQuickCapture && (
-        <form onSubmit={handleQuickCaptureSubmit} className="bg-surface border border-primary p-6 space-y-4 font-label text-xs animate-modal">
+        <form onSubmit={handleQuickCaptureSubmit} className="app-panel p-6 space-y-4 font-label text-xs animate-modal">
           <div className="flex justify-between items-center border-b border-border pb-2">
             <span className="font-bold uppercase text-accent">File Quick Slip</span>
-            <button type="button" onClick={() => setShowQuickCapture(false)} className="text-secondary hover:text-primary">
+            <IconButton type="button" onClick={() => setShowQuickCapture(false)} title="Close quick capture" className="h-9 w-9">
               <X className="h-4 w-4" />
-            </button>
+            </IconButton>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-1">
-              <label className="block uppercase text-[10px] text-secondary font-bold">Title</label>
-              <input
-                type="text"
-                required
-                value={quickTitle}
-                onChange={(e) => setQuickTitle(e.target.value)}
-                placeholder="Core keyword..."
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none"
-              />
+            <Input label="Title" type="text" required value={quickTitle} onChange={(e) => setQuickTitle(e.target.value)} placeholder="Core keyword..." className="bg-neutral-bg text-sm" />
+            <Select label="Category" value={quickType} onChange={(e) => setQuickType(e.target.value as InboxItem['type'])} className="bg-neutral-bg text-sm" options={quickTypeOptions} />
+            <Input label="URL / Reference Link" type="text" value={quickUrl} onChange={(e) => setQuickUrl(e.target.value)} placeholder="https://..." className="bg-neutral-bg text-sm" />
+            <div className="md:col-span-3">
+              <Textarea label="Content Notes" value={quickContent} onChange={(e) => setQuickContent(e.target.value)} placeholder="Content details, notes, quotes..." rows={3} className="resize-none bg-neutral-bg text-sm min-h-[120px]" />
             </div>
-            <div className="space-y-1">
-              <label className="block uppercase text-[10px] text-secondary font-bold">Category</label>
-              <select
-                value={quickType}
-                onChange={(e) => setQuickType(e.target.value as InboxItem['type'])}
-                className="w-full bg-surface border border-border px-3 py-2.5 text-sm focus:outline-none focus:border-accent font-sans rounded-none cursor-pointer"
-              >
-                <option value="thought">Thought</option>
-                <option value="idea">Idea</option>
-                <option value="task">Task</option>
-                <option value="url">Link / URL</option>
-                <option value="quote">Quote</option>
-                <option value="code">Code Snippet</option>
-                <option value="question">Question</option>
-                <option value="journal">Journal Slip</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <label className="block uppercase text-[10px] text-secondary font-bold">URL / Reference Link</label>
-              <input
-                type="text"
-                value={quickUrl}
-                onChange={(e) => setQuickUrl(e.target.value)}
-                placeholder="https://..."
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none"
-              />
-            </div>
-            <div className="space-y-1 md:col-span-3">
-              <label className="block uppercase text-[10px] text-secondary font-bold">Content Notes</label>
-              <textarea
-                value={quickContent}
-                onChange={(e) => setQuickContent(e.target.value)}
-                placeholder="Content details, notes, quotes..."
-                rows={3}
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none resize-none"
-              />
-            </div>
-            <div className="space-y-1 md:col-span-3">
-              <label className="block uppercase text-[10px] text-secondary font-bold">Tags (comma separated)</label>
-              <input
-                type="text"
-                value={quickTags}
-                onChange={(e) => setQuickTags(e.target.value)}
-                placeholder="ideas, health, work"
-                className="w-full bg-neutral-bg border border-border px-3 py-2 text-sm focus:outline-none focus:border-accent font-sans rounded-none"
-              />
+            <div className="md:col-span-3">
+              <Input label="Tags (comma separated)" type="text" value={quickTags} onChange={(e) => setQuickTags(e.target.value)} placeholder="ideas, health, work" className="bg-neutral-bg text-sm" />
             </div>
           </div>
           <div className="flex gap-2 justify-end">
@@ -1192,8 +1051,8 @@ function InboxContent() {
         </form>
       )}
 
-      <section className="bg-surface border border-border p-3 md:p-4 space-y-4">
-        <div className="grid grid-cols-4 border border-border bg-neutral-bg font-label text-[10px] md:text-xs uppercase tracking-wider font-bold">
+      <section className="app-panel p-3 md:p-4 space-y-4">
+        <div className="grid grid-cols-4 border border-border bg-neutral-bg font-label text-[10px] md:text-xs uppercase tracking-wider font-bold rounded-2xl overflow-hidden">
           {channelTabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = statusFilter === tab.key;
@@ -1206,7 +1065,7 @@ function InboxContent() {
                   setSelectedItemId(null);
                 }}
                 className={`py-3 px-2 flex items-center justify-center gap-1.5 border-r border-border last:border-r-0 transition-all cursor-pointer btn-press ${
-                  isActive ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface'
+                  isActive ? 'bg-primary text-on-primary' : 'text-primary hover:bg-surface-muted'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -1219,20 +1078,20 @@ function InboxContent() {
 
         <div className="space-y-2 font-label text-xs">
           <div className="flex gap-2 md:hidden">
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-2 flex-1">
+            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-4 h-11 flex-1 rounded-2xl">
               <Search className="h-4 w-4 text-secondary shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search title, content, or tags"
-                className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
+                className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
               />
             </label>
             <button
               type="button"
               onClick={() => setShowMobileFilters(true)}
-              className="border border-border px-3 py-2 text-primary hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center gap-2 shrink-0"
+              className="border border-border px-4 h-11 text-primary hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center gap-2 shrink-0 rounded-2xl"
             >
               <SlidersHorizontal className="h-4 w-4" />
               <span>Filter{activeFilterCount > 0 ? ` (${activeFilterCount})` : ''}</span>
@@ -1240,64 +1099,28 @@ function InboxContent() {
           </div>
 
           <div className="hidden md:grid md:grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.72fr))_auto] gap-3">
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-3 py-3 md:py-2">
+            <label className="self-end h-11 flex items-center gap-2 bg-neutral-bg border border-border px-4 rounded-2xl">
               <Search className="h-4 w-4 text-secondary shrink-0" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search title, content, or tags"
-                className="w-full bg-transparent text-sm focus:outline-none font-sans placeholder:text-secondary/60"
+                className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
               />
             </label>
 
-            <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Type</span>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])}
-                className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
-              >
-                <option value="All">All types</option>
-                {inboxTypes.map((type) => (
-                  <option key={type} value={type}>{type}</option>
-                ))}
-              </select>
-            </label>
+            <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])} className="bg-neutral-bg text-xs font-bold uppercase" options={inboxTypeOptions} />
 
-            <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Signal</span>
-              <select
-                value={signalFilter}
-                onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)}
-                className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
-              >
-                <option value="all">All slips</option>
-                <option value="tagged">Tagged</option>
-                <option value="with_url">With URL</option>
-                <option value="with_content">With notes</option>
-              </select>
-            </label>
+            <Select label="Signal" value={signalFilter} onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)} className="bg-neutral-bg text-xs font-bold uppercase" options={signalOptions} />
 
-            <label className="bg-neutral-bg border border-border px-3 py-2 flex flex-col gap-1">
-              <span className="text-[10px] uppercase tracking-[0.14em] text-secondary">Sort</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer"
-              >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="title">Title A-Z</option>
-                <option value="type">Type</option>
-              </select>
-            </label>
+            <Select label="Sort" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="bg-neutral-bg text-xs font-bold uppercase" options={sortOptions} />
 
             <button
               type="button"
               onClick={resetTriageControls}
               disabled={activeRefinementCount === 0}
-              className="border border-border px-4 py-2 text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center justify-center gap-2"
+              className="self-end h-11 border border-border px-4 rounded-2xl text-primary disabled:text-secondary/50 disabled:cursor-not-allowed hover:border-primary transition-colors uppercase font-bold cursor-pointer btn-press flex items-center justify-center gap-2"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               Reset {activeRefinementCount > 0 ? `(${activeRefinementCount})` : ''}
@@ -1332,10 +1155,10 @@ function InboxContent() {
                   <div
                     key={item.id}
                     onClick={() => setSelectedItemId(item.id)}
-                    className={`border p-4 rounded-none space-y-2 relative transition-all cursor-pointer ${
+                    className={`app-panel-subtle p-4 space-y-2 relative transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-primary bg-surface shadow-md ring-1 ring-primary'
-                        : 'border-border bg-neutral-bg/40 hover:border-secondary hover:bg-neutral-bg/75'
+                        ? 'border-primary shadow-[0_12px_28px_rgba(26,28,30,0.08)] ring-1 ring-primary'
+                        : 'hover:border-secondary hover:bg-neutral-bg/75'
                     }`}
                   >
                     <div className="flex justify-between items-start gap-3">
@@ -1381,17 +1204,17 @@ function InboxContent() {
                 );
               })
             ) : (
-              <div className="border border-border border-dashed py-16 text-center bg-surface/20">
-                <Inbox className="h-8 w-8 text-secondary/35 mx-auto mb-2" />
-                <p className="font-sans text-xs text-secondary italic">No slips match your selection.</p>
-              </div>
+              <EmptyState
+                title="No slips match your selection."
+                description="Broaden the filters or capture a new slip to refill this queue."
+              />
             )}
           </div>
         </div>
 
-        <div className="hidden md:block bg-surface border border-primary p-6 space-y-6 self-start shadow-sm">
+        <EditorialCard className="hidden md:block self-start space-y-6">
           {renderPanelContent(false)}
-        </div>
+        </EditorialCard>
       </div>
 
       {/* Mobile Details Pop-up Modal overlay */}
@@ -1404,7 +1227,7 @@ function InboxContent() {
           }}
           className="md:hidden fixed inset-0 bg-black/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4"
         >
-          <div className="bg-surface border-2 border-primary w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 space-y-6 shadow-lg animate-modal rounded-none">
+          <div className="app-panel w-full max-w-lg max-h-[80vh] overflow-y-auto p-5 space-y-6 shadow-lg animate-modal">
             {renderPanelContent(true)}
           </div>
         </div>
@@ -1422,7 +1245,7 @@ function InboxContent() {
       {/* Mobile Filters Pop-up Modal overlay */}
       {showMobileFilters && (
         <div className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-[3px] p-4 pb-[calc(4.25rem+env(safe-area-inset-bottom)+1rem)] md:hidden flex items-end">
-          <div className="w-full bg-surface border border-border shadow-2xl">
+          <div className="w-full app-panel shadow-2xl p-0 overflow-hidden">
             <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-neutral-bg/50">
               <div>
                 <div className="font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">Inbox Filters</div>
@@ -1438,47 +1261,11 @@ function InboxContent() {
             </div>
 
             <div className="p-4 space-y-3 font-label text-xs">
-              <label className="bg-neutral-bg border border-border px-3 py-3 flex flex-col gap-1 uppercase">
-                <span className="text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">Type</span>
-                <select
-                  value={typeFilter}
-                  onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])}
-                  className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer w-full"
-                >
-                  <option value="All">All types</option>
-                  {inboxTypes.map((type) => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </label>
+              <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])} className="bg-neutral-bg text-xs font-bold uppercase" options={inboxTypeOptions} />
 
-              <label className="bg-neutral-bg border border-border px-3 py-3 flex flex-col gap-1 uppercase">
-                <span className="text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">Signal</span>
-                <select
-                  value={signalFilter}
-                  onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)}
-                  className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer w-full"
-                >
-                  <option value="all">All slips</option>
-                  <option value="tagged">Tagged</option>
-                  <option value="with_url">With URL</option>
-                  <option value="with_content">With notes</option>
-                </select>
-              </label>
+              <Select label="Signal" value={signalFilter} onChange={(e) => setSignalFilter(e.target.value as typeof signalFilter)} className="bg-neutral-bg text-xs font-bold uppercase" options={signalOptions} />
 
-              <label className="bg-neutral-bg border border-border px-3 py-3 flex flex-col gap-1 uppercase">
-                <span className="text-[10px] uppercase tracking-[0.14em] text-secondary font-bold">Sort</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className="bg-transparent text-primary text-xs font-bold uppercase focus:outline-none cursor-pointer w-full"
-                >
-                  <option value="newest">Newest first</option>
-                  <option value="oldest">Oldest first</option>
-                  <option value="title">Title A-Z</option>
-                  <option value="type">Type</option>
-                </select>
-              </label>
+              <Select label="Sort" value={sortBy} onChange={(e) => setSortBy(e.target.value as typeof sortBy)} className="bg-neutral-bg text-xs font-bold uppercase" options={sortOptions} />
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-4 border-t border-border">

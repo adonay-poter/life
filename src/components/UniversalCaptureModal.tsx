@@ -8,6 +8,7 @@ import { supabase } from '@/utils/supabaseClient';
 import { INTAKE_IMAGES_BUCKET } from '@/utils/storage';
 import { ImagePlus, Sparkles, Upload, X } from 'lucide-react';
 import { PrimaryButton, SecondaryButton } from './ui/Buttons';
+import { Textarea } from './ui/Inputs';
 
 interface UniversalCaptureModalProps {
   isOpen: boolean;
@@ -338,7 +339,7 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
             <label htmlFor="cap-raw-input" className="block font-label text-[10px] uppercase tracking-[0.18em] text-secondary font-bold">
               Paste text, quotes, ideas, or links
             </label>
-            <textarea
+            <Textarea
               ref={textareaRef}
               id="cap-raw-input"
               value={rawInput}
@@ -346,14 +347,14 @@ export default function UniversalCaptureModal({ isOpen, onClose }: UniversalCapt
               onPaste={handlePaste}
               placeholder="Drop the raw thing here. A pasted link files itself automatically."
               rows={7}
-              className="w-full rounded-[22px] bg-neutral-bg border border-border px-4 py-4 text-sm focus:outline-none focus:border-accent font-sans transition-colors resize-none"
+              className="bg-neutral-bg text-sm resize-none min-h-[180px]"
             />
             <p className="text-sm text-secondary">
               Titles, metadata, and AI suggestions are inferred for you. Review happens later.
             </p>
           </div>
 
-          <div className="rounded-[22px] border border-dashed border-border bg-neutral-bg/40 p-4 space-y-3">
+          <div className="app-panel-subtle p-4 space-y-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-sm font-medium text-primary">
                 <ImagePlus className="h-4 w-4 text-accent" />

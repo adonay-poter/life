@@ -97,3 +97,41 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   }
 );
 Select.displayName = 'Select';
+
+interface CompactInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
+
+export const CompactInput = React.forwardRef<HTMLInputElement, CompactInputProps>(
+  ({ className = '', ...props }, ref) => {
+    return (
+      <input
+        ref={ref}
+        className={`h-8 min-w-[2.75rem] rounded-xl border border-transparent bg-neutral-bg/50 px-2 text-center font-mono text-xs font-bold text-primary transition-colors focus:border-accent focus:bg-surface focus:outline-none ${className}`}
+        {...props}
+      />
+    );
+  }
+);
+CompactInput.displayName = 'CompactInput';
+
+interface CompactSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  options: SelectOption[];
+}
+
+export const CompactSelect = React.forwardRef<HTMLSelectElement, CompactSelectProps>(
+  ({ options, className = '', ...props }, ref) => {
+    return (
+      <select
+        ref={ref}
+        className={`h-8 min-w-[2.75rem] rounded-xl border border-transparent bg-neutral-bg/50 px-2 text-center font-mono text-xs font-bold text-primary transition-colors focus:border-accent focus:bg-surface focus:outline-none cursor-pointer ${className}`}
+        {...props}
+      >
+        {options.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    );
+  }
+);
+CompactSelect.displayName = 'CompactSelect';

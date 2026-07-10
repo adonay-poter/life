@@ -4,6 +4,7 @@ import { Search, Loader2, CheckCircle, AlertCircle, ChevronDown, Activity, Minim
 import { useRateLimit, LIMITS } from '@/hooks/useRateLimit';
 import { useResearch } from '@/context/ResearchContext';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import { Input } from '@/components/ui/Inputs';
 
 interface ResearchModalProps {
   isOpen: boolean;
@@ -106,10 +107,10 @@ export default function ResearchModal({
                 <label className="block font-label text-xs text-secondary mb-2 uppercase tracking-wide font-bold">
                   Topic to Research
                 </label>
-                <input
+                <Input
                   type="text"
                   placeholder="e.g., The Cynics of Ancient Greece"
-                  className="w-full rounded-[20px] border border-border bg-neutral-bg px-4 py-3 text-sm text-primary font-sans focus:outline-none focus:border-primary"
+                  className="bg-neutral-bg text-sm"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && !isRateLimited && handleStartResearch()}

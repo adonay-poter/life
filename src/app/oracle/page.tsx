@@ -14,7 +14,7 @@ export default function OraclePage() {
         onClick={() => setActiveTab('chat')}
         className={`flex-1 rounded-xl px-3 py-2 text-[10px] font-label uppercase tracking-[0.2em] text-center transition-all cursor-pointer ${
           activeTab === 'chat'
-            ? 'bg-surface border border-border text-primary font-bold shadow-[0_1px_3px_rgba(0,0,0,0.05)]'
+            ? 'app-panel text-primary font-bold shadow-none'
             : 'text-secondary/80 hover:text-primary border border-transparent bg-transparent'
         }`}
       >
@@ -24,7 +24,7 @@ export default function OraclePage() {
         onClick={() => setActiveTab('context')}
         className={`flex-1 rounded-xl px-3 py-2 text-[10px] font-label uppercase tracking-[0.2em] text-center transition-all cursor-pointer ${
           activeTab === 'context'
-            ? 'bg-surface border border-border text-primary font-bold shadow-[0_1px_3px_rgba(0,0,0,0.05)]'
+            ? 'app-panel text-primary font-bold shadow-none'
             : 'text-secondary/80 hover:text-primary border border-transparent bg-transparent'
         }`}
       >

@@ -27,6 +27,7 @@ import PageShell from '@/components/ui/PageShell';
 import EditorialCard from '@/components/ui/EditorialCard';
 import EmptyState from '@/components/ui/EmptyState';
 import { PrimaryButton, SecondaryButton } from '@/components/ui/Buttons';
+import Checkbox from '@/components/ui/Checkbox';
 import { Input, Textarea, Select } from '@/components/ui/Inputs';
 import StatusBadge from '@/components/ui/StatusBadge';
 import StalenessSignalBadge from '@/components/ui/StalenessSignalBadge';
@@ -728,12 +729,11 @@ function ProjectDetailContent() {
                         </div>
 
                         <div className="flex items-start space-x-3">
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={task.status === 'done'}
                             onClick={(e) => e.stopPropagation()}
                             onChange={() => handleUpdateTaskStatusWithUndo(task.id, task.status === 'done' ? 'todo' : 'done')}
-                            className="mt-0.5 h-4 w-4 accent-accent shrink-0 cursor-pointer"
+                            className="mt-0.5 h-4 w-4"
                           />
                           <span
                             className={`font-sans text-sm font-semibold text-primary leading-snug ${
