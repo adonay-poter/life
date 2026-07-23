@@ -1286,33 +1286,38 @@ function InboxContent() {
           </div>
 
           <div className="hidden md:grid md:grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.72fr))_auto] gap-3">
-            <label className="self-end h-11 flex items-center justify-between gap-2 bg-neutral-bg border border-border px-4 rounded-2xl focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40 transition-all">
-              <div className="flex items-center gap-2 w-full min-w-0">
-                <Search className="h-4 w-4 text-secondary shrink-0" />
-                <input
-                  ref={searchInputRef}
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search title, notes, links, or tags... (Press '/' to focus)"
-                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
-                />
+            <div className="space-y-1">
+              <label className="block text-[9px] text-secondary font-bold uppercase tracking-wider">
+                Search
+              </label>
+              <div className="h-11 flex items-center justify-between gap-2 bg-neutral-bg border border-border px-4 rounded-2xl focus-within:border-primary/60 focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                <div className="flex items-center gap-2.5 w-full min-w-0">
+                  <Search className="h-4 w-4 text-secondary/70 shrink-0" />
+                  <input
+                    ref={searchInputRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Filter title, notes, links, or tags... ('/' to focus)"
+                    className="w-full bg-transparent text-primary font-sans border-0 outline-none ring-0 focus:outline-none focus:ring-0 focus:border-0 p-0 m-0 shadow-none appearance-none placeholder:text-secondary/50 text-sm"
+                  />
+                </div>
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="text-secondary hover:text-primary p-1 cursor-pointer shrink-0 transition-colors"
+                    title="Clear search"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <kbd className="hidden lg:inline-block font-mono text-[9px] text-secondary/50 border border-border/60 px-1.5 py-0.5 rounded bg-surface/40 shrink-0">
+                    /
+                  </kbd>
+                )}
               </div>
-              {searchQuery ? (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  className="text-secondary hover:text-primary p-1 cursor-pointer shrink-0"
-                  title="Clear search"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : (
-                <kbd className="hidden lg:inline-block font-mono text-[9px] text-secondary/60 border border-border px-1.5 py-0.5 rounded bg-surface/50 shrink-0">
-                  /
-                </kbd>
-              )}
-            </label>
+            </div>
 
             <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])} className="bg-neutral-bg text-xs font-bold uppercase" options={inboxTypeOptions} />
 
@@ -1366,12 +1371,14 @@ function InboxContent() {
                   <div
                     key={item.id}
                     onClick={() => setSelectedItemId(item.id)}
-                    className={`app-panel-subtle p-4 space-y-2.5 relative transition-all duration-200 cursor-pointer rounded-2xl border ${
+                    className={`app-panel-subtle p-4 space-y-2.5 relative transition-all duration-200 cursor-pointer rounded-2xl overflow-hidden ${
                       isSelected
-                        ? 'border-accent bg-accent/5 ring-1 ring-accent/40 shadow-lg'
-                        : 'hover:border-accent/40 hover:bg-neutral-bg/75 hover:-translate-y-0.5'
+                        ? 'border-primary/50 bg-neutral-bg/95 shadow-md ring-1 ring-primary/20'
+                        : 'hover:border-border hover:bg-neutral-bg/75 hover:-translate-y-0.5'
                     }`}
                   >
+                    <div className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all ${isSelected ? 'bg-primary' : 'bg-transparent'}`} />
+
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex items-center space-x-2 min-w-0">
                         {getTypeBadge(item.type)}
@@ -1408,7 +1415,7 @@ function InboxContent() {
                             Link
                           </span>
                         )}
-                        <ArrowRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? 'text-accent' : 'text-secondary/40'}`} />
+                        <ArrowRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? 'text-primary' : 'text-secondary/40'}`} />
                       </div>
                     </div>
                   </div>
