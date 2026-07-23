@@ -44,6 +44,8 @@ interface InboxContextProps {
   updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
   updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
   deleteInboxItem: (id: string) => Promise<void>;
+  autoTagItem: (id: string) => Promise<string[]>;
+  autoTagAllItems: (onlyUntagged?: boolean) => Promise<number>;
 }
 
 const InboxContext = createContext<InboxContextProps | undefined>(undefined);
@@ -310,8 +312,40 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').delete().eq('id', id);
-        if (error) throw error;
+      if (error) throw error;
     }
+  };
+
+  const autoTagItem = async (id: string): Promise<string[]> => {
+    if (!isOnline) return [];
+    const { data, error } = await supabase.functions.invoke('tag-inbox-item', {
+      body: { inboxItemId: id },
+    });
+    if (error) throw error;
+    if (Array.isArray(data?.tags)) {
+      commitInboxItems((current) => current.map((item) => (
+        item.id === id ? { ...item, tags: data.tags } : item
+      )));
+      return data.tags;
+    }
+    return [];
+  };
+
+  const autoTagAllItems = async (onlyUntagged = true): Promise<number> => {
+    const targets = inboxItems.filter((item) => (
+      onlyUntagged ? (!item.tags || item.tags.length === 0 || (item.tags.length === 1 && item.tags[0] === '#inbox')) : true
+    ));
+
+    let count = 0;
+    for (const target of targets) {
+      try {
+        await autoTagItem(target.id);
+        count++;
+      } catch (err) {
+        console.error(`Failed to auto-tag item ${target.id}:`, err);
+      }
+    }
+    return count;
   };
 
   return (
@@ -322,7 +356,9 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         addInboxItem,
         updateInboxItemStatus,
         deleteInboxItem,
-        updateInboxItem
+        updateInboxItem,
+        autoTagItem,
+        autoTagAllItems
       }}
     >
       {children}

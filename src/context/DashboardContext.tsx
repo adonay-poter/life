@@ -55,6 +55,8 @@ interface DashboardContextProps {
   updateInboxItemStatus: (id: string, status: InboxItem['status'], projectId?: string, snoozedUntil?: string) => Promise<void>;
   updateInboxItem: (id: string, updates: Partial<Omit<InboxItem, 'id' | 'created_at'>>) => Promise<void>;
   deleteInboxItem: (id: string) => Promise<void>;
+  autoTagItem: (id: string) => Promise<string[]>;
+  autoTagAllItems: (onlyUntagged?: boolean) => Promise<number>;
 
   // Knowledge operations
   addKnowledgeItem: (
@@ -194,6 +196,8 @@ const DashboardContextAggregator: React.FC<{ children: React.ReactNode }> = ({ c
     updateInboxItemStatus: withErrorHandling(inbox.updateInboxItemStatus) as any,
     deleteInboxItem: withErrorHandling(inbox.deleteInboxItem) as any,
     updateInboxItem: withErrorHandling(inbox.updateInboxItem) as any,
+    autoTagItem: withErrorHandling(inbox.autoTagItem) as any,
+    autoTagAllItems: withErrorHandling(inbox.autoTagAllItems) as any,
 
     projects: taskProject.projects,
     tasks: taskProject.tasks,

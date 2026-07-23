@@ -38,7 +38,8 @@ import {
   ArrowRight,
   PlusCircle,
   RotateCcw,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Tag
 } from 'lucide-react';
 
 export default function InboxPage() {
@@ -59,6 +60,8 @@ function InboxContent() {
     updateInboxItemStatus,
     deleteInboxItem,
     updateInboxItem,
+    autoTagItem,
+    autoTagAllItems,
     addTask,
     addFlashcard,
     addKnowledgeItem,
@@ -77,9 +80,12 @@ function InboxContent() {
   const [statusFilter, setStatusFilter] = useState<'unprocessed' | 'processed' | 'snoozed' | 'archived'>('unprocessed');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'All' | InboxItem['type']>('All');
+  const [selectedTagFilter, setSelectedTagFilter] = useState<string>('All');
   const [signalFilter, setSignalFilter] = useState<'all' | 'tagged' | 'with_url' | 'with_content'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'type'>('newest');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [isAutoTaggingCurrent, setIsAutoTaggingCurrent] = useState(false);
+  const [isAutoTaggingAll, setIsAutoTaggingAll] = useState(false);
 
   // Load itemId query param if present
   useEffect(() => {
@@ -249,6 +255,51 @@ function InboxContent() {
     return Array.from(new Set(inboxItems.map((item) => item.type))).sort();
   }, [inboxItems]);
 
+  // Unique tag counts across all items
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    inboxItems.forEach((item) => {
+      (item.tags || []).forEach((t) => {
+        const tag = t.startsWith('#') ? t.toLowerCase() : `#${t.toLowerCase()}`;
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+    return counts;
+  }, [inboxItems]);
+
+  const sortedTags = useMemo(() => {
+    return Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([tag, count]) => ({ tag, count }));
+  }, [tagCounts]);
+
+  const handleAutoTagCurrentItem = async () => {
+    if (!selectedItem) return;
+    setIsAutoTaggingCurrent(true);
+    try {
+      const newTags = await autoTagItem(selectedItem.id);
+      showToast(newTags.length > 0 ? `Tagged with ${newTags.join(', ')}` : 'No new tags generated.', 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('AI tagging failed.', 'error');
+    } finally {
+      setIsAutoTaggingCurrent(false);
+    }
+  };
+
+  const handleAutoTagAllInbox = async () => {
+    setIsAutoTaggingAll(true);
+    try {
+      const count = await autoTagAllItems(false);
+      showToast(`AI tagging completed for ${count} inbox items.`, 'success');
+    } catch (err) {
+      console.error(err);
+      showToast('Batch tagging encountered an error.', 'error');
+    } finally {
+      setIsAutoTaggingAll(false);
+    }
+  };
+
   // Keyboard navigation inside list
   const filteredSlips = useMemo(() => {
     const list = inboxItems.filter((item) => {
@@ -263,6 +314,7 @@ function InboxContent() {
       }
       if (!matchesStatus) return false;
       if (typeFilter !== 'All' && item.type !== typeFilter) return false;
+      if (selectedTagFilter !== 'All' && (!item.tags || !item.tags.some((t) => t.toLowerCase() === selectedTagFilter.toLowerCase()))) return false;
       if (signalFilter === 'tagged' && (!item.tags || item.tags.length === 0)) return false;
       if (signalFilter === 'with_url' && !(item.url || item.source_url)) return false;
       if (signalFilter === 'with_content' && !item.content?.trim()) return false;
@@ -286,7 +338,7 @@ function InboxContent() {
       if (sortBy === 'oldest') return a.created_at.localeCompare(b.created_at);
       return b.created_at.localeCompare(a.created_at);
     });
-  }, [inboxItems, statusFilter, searchQuery, typeFilter, signalFilter, sortBy]);
+  }, [inboxItems, statusFilter, searchQuery, typeFilter, selectedTagFilter, signalFilter, sortBy]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -299,15 +351,25 @@ function InboxContent() {
 
   const capturedToday = inboxItems.filter((item) => item.created_at?.split('T')[0] === getLocalDateString()).length;
   const hasSearch = searchQuery.trim().length > 0;
-  const activeRefinementCount = [typeFilter !== 'All', signalFilter !== 'all', hasSearch, sortBy !== 'newest']
+  const activeRefinementCount = [typeFilter !== 'All', selectedTagFilter !== 'All', signalFilter !== 'all', hasSearch, sortBy !== 'newest']
     .filter(Boolean)
     .length;
-  const activeFilterCount = [typeFilter !== 'All', signalFilter !== 'all', sortBy !== 'newest'].filter(Boolean).length;
+  const activeFilterCount = [typeFilter !== 'All', selectedTagFilter !== 'All', signalFilter !== 'all', sortBy !== 'newest'].filter(Boolean).length;
   const activeFilterLabels = [
     typeFilter !== 'All' ? `Type: ${typeFilter}` : null,
+    selectedTagFilter !== 'All' ? `Tag: ${selectedTagFilter}` : null,
     signalFilter !== 'all' ? `Signal: ${signalFilter.replace('_', ' ')}` : null,
     sortBy !== 'newest' ? `Sort: ${sortBy.replace('_', ' ')}` : null
   ].filter(Boolean) as string[];
+
+  const resetTriageControls = () => {
+    setSearchQuery('');
+    setTypeFilter('All');
+    setSelectedTagFilter('All');
+    setSignalFilter('all');
+    setSortBy('newest');
+  };
+
   const channelTabs = [
     { key: 'unprocessed' as const, label: 'Intake', icon: Inbox, count: statusCounts.unprocessed },
     { key: 'processed' as const, label: 'Processed', icon: Check, count: statusCounts.processed },
@@ -369,13 +431,6 @@ function InboxContent() {
     { value: 'better', label: 'What to Improve' },
     { value: 'free_text', label: 'Free Text Entry' }
   ];
-
-  const resetTriageControls = () => {
-    setSearchQuery('');
-    setTypeFilter('All');
-    setSignalFilter('all');
-    setSortBy('newest');
-  };
 
   // Select first item on desktop if nothing is selected or if selected item leaves the current filter list
   useEffect(() => {
@@ -739,15 +794,44 @@ function InboxContent() {
                   </a>
                 </div>
               )}
-              {selectedItem.tags && selectedItem.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  {selectedItem.tags.map((tag) => (
-                    <span key={tag} className="font-label text-[9px] border border-secondary/20 bg-neutral-bg/40 text-secondary px-2 py-0.5 uppercase">
-                      {tag}
-                    </span>
-                  ))}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40">
+                <div className="flex flex-wrap gap-1.5 items-center">
+                  <span className="font-label text-[9px] uppercase tracking-wider text-secondary/70 font-bold mr-1">Tags:</span>
+                  {selectedItem.tags && selectedItem.tags.length > 0 ? (
+                    selectedItem.tags.map((tag) => {
+                      const isSelected = selectedTagFilter.toLowerCase() === tag.toLowerCase();
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setSelectedTagFilter(isSelected ? 'All' : tag)}
+                          className={`font-label text-[9px] border px-2 py-0.5 uppercase rounded-md cursor-pointer font-bold transition-colors ${
+                            isSelected
+                              ? 'border-accent bg-accent/20 text-accent ring-1 ring-accent'
+                              : 'border-accent/30 bg-accent/10 text-accent hover:bg-accent/20'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })
+                  ) : (
+                    <span className="font-label text-[9px] italic text-secondary">No tags set</span>
+                  )}
                 </div>
-              )}
+
+                <button
+                  type="button"
+                  onClick={handleAutoTagCurrentItem}
+                  disabled={isAutoTaggingCurrent}
+                  className="font-label text-[9px] uppercase font-bold text-accent border border-accent/40 bg-accent/5 hover:bg-accent/15 px-2.5 py-1 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  title="Generate or refresh tags using Gemini AI"
+                >
+                  <Sparkles className={`h-3 w-3 ${isAutoTaggingCurrent ? 'animate-spin' : ''}`} />
+                  <span>{isAutoTaggingCurrent ? 'Tagging...' : 'Auto-Tag with AI'}</span>
+                </button>
+              </div>
+
               <div className="flex justify-end pt-1">
                 <SecondaryButton type="button" onClick={() => setIsEditingSelected(true)} className="min-h-9 px-3 py-2 text-[10px]">
                   <Pencil className="h-3 w-3 text-secondary" />
@@ -760,7 +844,42 @@ function InboxContent() {
               <Input label="Edit Title" type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="bg-neutral-bg text-sm" />
               <Textarea label="Edit Content" value={editContent} onChange={(e) => setEditContent(e.target.value)} rows={4} className="resize-none bg-neutral-bg text-sm min-h-[132px]" />
               <Input label="Edit URL" type="text" value={editUrl} onChange={(e) => setEditUrl(e.target.value)} className="bg-neutral-bg text-sm" />
-              <Input label="Edit Tags" type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} className="bg-neutral-bg text-sm" />
+              <div className="space-y-1">
+                <Input label="Edit Tags (comma separated)" type="text" value={editTags} onChange={(e) => setEditTags(e.target.value)} className="bg-neutral-bg text-sm" />
+                {sortedTags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 pt-1">
+                    <span className="text-[9px] text-secondary font-bold mr-1">Suggestions:</span>
+                    {sortedTags.slice(0, 8).map(({ tag }) => {
+                      const cleanTag = tag.replace('#', '');
+                      const currentTags = editTags.split(',').map((t) => t.trim().replace('#', '').toLowerCase());
+                      const hasTag = currentTags.includes(cleanTag.toLowerCase());
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            let newTagsArray = editTags
+                              .split(',')
+                              .map((t) => t.trim())
+                              .filter(Boolean);
+                            if (hasTag) {
+                              newTagsArray = newTagsArray.filter((t) => t.replace('#', '').toLowerCase() !== cleanTag.toLowerCase());
+                            } else {
+                              newTagsArray.push(cleanTag);
+                            }
+                            setEditTags(newTagsArray.join(', '));
+                          }}
+                          className={`font-label text-[8px] px-1.5 py-0.5 uppercase border rounded cursor-pointer ${
+                            hasTag ? 'border-accent bg-accent/20 text-accent font-bold' : 'border-border bg-neutral-bg text-secondary hover:border-secondary'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2 justify-end pt-1">
                 <SecondaryButton type="button" onClick={() => setIsEditingSelected(false)}>
                   Cancel
@@ -988,13 +1107,24 @@ function InboxContent() {
         title="Inbox Command"
         subtitle={`${filteredSlips.length} visible · ${statusCounts.unprocessed} waiting for triage`}
         action={
-          <button
-            onClick={() => setShowQuickCapture(!showQuickCapture)}
-            className="btn-press border border-primary px-4 py-2 font-label text-xs uppercase tracking-widest font-bold flex items-center gap-1.5 bg-primary text-on-primary"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span>Quick Slip</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <SecondaryButton
+              type="button"
+              onClick={handleAutoTagAllInbox}
+              disabled={isAutoTaggingAll}
+              className="btn-press border border-accent/40 px-3.5 py-2 font-label text-xs uppercase tracking-widest font-bold flex items-center gap-1.5 bg-accent/10 text-accent hover:bg-accent/20 cursor-pointer"
+            >
+              <Sparkles className={`h-4 w-4 ${isAutoTaggingAll ? 'animate-spin' : ''}`} />
+              <span>{isAutoTaggingAll ? 'Auto-Tagging...' : 'AI Tag All Slips'}</span>
+            </SecondaryButton>
+            <button
+              onClick={() => setShowQuickCapture(!showQuickCapture)}
+              className="btn-press border border-primary px-4 py-2 font-label text-xs uppercase tracking-widest font-bold flex items-center gap-1.5 bg-primary text-on-primary cursor-pointer"
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span>Quick Slip</span>
+            </button>
+          </div>
         }
       />
 
@@ -1076,7 +1206,7 @@ function InboxContent() {
           })}
         </div>
 
-        <div className="space-y-2 font-label text-xs">
+        <div className="space-y-3 font-label text-xs">
           <div className="flex gap-2 md:hidden">
             <label className="flex items-center gap-2 bg-neutral-bg border border-border px-4 h-11 flex-1 rounded-2xl">
               <Search className="h-4 w-4 text-secondary shrink-0" />
@@ -1126,6 +1256,60 @@ function InboxContent() {
               Reset {activeRefinementCount > 0 ? `(${activeRefinementCount})` : ''}
             </button>
           </div>
+
+          {/* Tag Cloud Filter Pills */}
+          {sortedTags.length > 0 && (
+            <div className="pt-2 border-t border-border/60 space-y-1.5">
+              <div className="flex items-center justify-between font-label text-[10px] uppercase font-bold text-secondary tracking-wider">
+                <div className="flex items-center gap-1.5">
+                  <Tag className="h-3 w-3 text-accent" />
+                  <span>Filter by Tag ({sortedTags.length})</span>
+                </div>
+                {selectedTagFilter !== 'All' && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedTagFilter('All')}
+                    className="text-accent hover:underline text-[9px] uppercase font-bold cursor-pointer"
+                  >
+                    Clear Filter ({selectedTagFilter})
+                  </button>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTagFilter('All')}
+                  className={`font-label text-[10px] uppercase font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
+                    selectedTagFilter === 'All'
+                      ? 'bg-primary text-on-primary shadow-sm'
+                      : 'bg-neutral-bg/80 border border-border text-secondary hover:text-primary hover:border-primary/50'
+                  }`}
+                >
+                  All Tags
+                </button>
+                {sortedTags.map(({ tag, count }) => {
+                  const isSelected = selectedTagFilter.toLowerCase() === tag.toLowerCase();
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      onClick={() => setSelectedTagFilter(isSelected ? 'All' : tag)}
+                      className={`font-label text-[10px] uppercase font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
+                        isSelected
+                          ? 'border-accent bg-accent/15 text-accent shadow-sm ring-1 ring-accent'
+                          : 'border-border bg-neutral-bg/60 text-secondary hover:border-accent/40 hover:text-primary'
+                      }`}
+                    >
+                      <span>{tag}</span>
+                      <span className={`text-[8px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-accent/30 text-accent font-black' : 'bg-surface-muted text-secondary/70'}`}>
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="md:hidden text-[11px] text-secondary min-h-[1rem]">
             {activeFilterLabels.length > 0 ? activeFilterLabels.join(' • ') : 'No filters applied'}
@@ -1185,11 +1369,26 @@ function InboxContent() {
 
                     <div className="flex items-center justify-between gap-3 pt-1">
                       <div className="flex flex-wrap gap-1 min-w-0">
-                        {(item.tags || []).slice(0, 3).map((tag) => (
-                          <span key={tag} className="font-label text-[8px] border border-secondary/20 bg-neutral-bg/30 text-secondary px-1.5 py-0.5 uppercase">
-                            {tag}
-                          </span>
-                        ))}
+                        {(item.tags || []).slice(0, 4).map((tag) => {
+                          const isTagActive = selectedTagFilter.toLowerCase() === tag.toLowerCase();
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedTagFilter(isTagActive ? 'All' : tag);
+                              }}
+                              className={`font-label text-[8px] border px-1.5 py-0.5 uppercase rounded cursor-pointer transition-colors ${
+                                isTagActive
+                                  ? 'border-accent bg-accent/20 text-accent font-bold ring-1 ring-accent'
+                                  : 'border-secondary/20 bg-neutral-bg/60 text-secondary hover:border-secondary hover:text-primary'
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          );
+                        })}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {(item.url || item.source_url) && (
