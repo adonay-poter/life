@@ -207,6 +207,26 @@ export const InboxProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     if (isOnline) {
       const { error } = await supabase.from('inbox_items').insert(newItem);
       if (error) throw error;
+
+      // Tagging happens in the background so capture stays instant. The Edge Function
+      // authenticates as the current user and merges its tags with any manual ones.
+      void supabase.functions.invoke('tag-inbox-item', {
+        body: { inboxItemId: newItem.id },
+      }).then(({ data, error }) => {
+        if (error) {
+          console.warn('Background inbox tagging failed:', error);
+          return;
+        }
+
+        if (Array.isArray(data?.tags)) {
+          commitInboxItems((current) => current.map((item) => (
+            item.id === newItem.id ? { ...item, tags: data.tags } : item
+          )));
+        }
+      }).catch((error) => {
+        console.warn('Background inbox tagging failed:', error);
+      });
+
       if (user) {
         await recordActivityEvent(supabase, {
           userId: user.id,
