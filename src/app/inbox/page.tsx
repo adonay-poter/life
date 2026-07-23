@@ -80,7 +80,6 @@ function InboxContent() {
   const [statusFilter, setStatusFilter] = useState<'unprocessed' | 'processed' | 'snoozed' | 'archived'>('unprocessed');
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'All' | InboxItem['type']>('All');
-  const [selectedTagFilter, setSelectedTagFilter] = useState<string>('All');
   const [signalFilter, setSignalFilter] = useState<'all' | 'tagged' | 'with_url' | 'with_content'>('all');
   const [sortBy, setSortBy] = useState<'newest' | 'oldest' | 'title' | 'type'>('newest');
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -231,24 +230,61 @@ function InboxContent() {
     }
   }, [activeModules]);
 
-  // Helper icons mapper for types
-  const getTypeIcon = (type: string) => {
+  // Helper badge component for item types
+  const getTypeBadge = (type: string) => {
+    let icon = <FileText className="h-3.5 w-3.5" />;
+    let style = 'bg-neutral-bg/60 text-secondary border-border';
+    
     switch (type) {
-      case 'thought': return <Sparkles className="h-4 w-4 text-secondary" />;
-      case 'idea': return <Zap className="h-4 w-4 text-warning" />;
-      case 'task': return <CheckSquare className="h-4 w-4 text-accent" />;
-      case 'url': return <Link2 className="h-4 w-4 text-accent" />;
-      case 'photo': return <Scissors className="h-4 w-4 text-primary" />;
-      case 'quote': return <Quote className="h-4 w-4 text-[#58805F]" />;
-      case 'code': return <FileCode className="h-4 w-4 text-[#8D6E63]" />;
-      case 'question': return <HelpCircle className="h-4 w-4 text-danger" />;
-      case 'journal': return <BookOpen className="h-4 w-4 text-primary" />;
-      case 'book_note': return <Bookmark className="h-4 w-4 text-[#D1A153]" />;
-      case 'course_note': return <GraduationCap className="h-4 w-4 text-accent" />;
-      case 'decision': return <Check className="h-4 w-4 text-success" />;
-      case 'resource': return <FileText className="h-4 w-4 text-secondary" />;
-      default: return <FileText className="h-4 w-4 text-secondary" />;
+      case 'thought':
+        icon = <Sparkles className="h-3.5 w-3.5 text-purple-400" />;
+        style = 'bg-purple-500/10 text-purple-300 border-purple-500/20';
+        break;
+      case 'idea':
+        icon = <Zap className="h-3.5 w-3.5 text-amber-400" />;
+        style = 'bg-amber-500/10 text-amber-300 border-amber-500/20';
+        break;
+      case 'task':
+        icon = <CheckSquare className="h-3.5 w-3.5 text-emerald-400" />;
+        style = 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20';
+        break;
+      case 'url':
+        icon = <Link2 className="h-3.5 w-3.5 text-indigo-400" />;
+        style = 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20';
+        break;
+      case 'quote':
+        icon = <Quote className="h-3.5 w-3.5 text-teal-400" />;
+        style = 'bg-teal-500/10 text-teal-300 border-teal-500/20';
+        break;
+      case 'code':
+        icon = <FileCode className="h-3.5 w-3.5 text-amber-600" />;
+        style = 'bg-amber-700/10 text-amber-300 border-amber-700/20';
+        break;
+      case 'question':
+        icon = <HelpCircle className="h-3.5 w-3.5 text-rose-400" />;
+        style = 'bg-rose-500/10 text-rose-300 border-rose-500/20';
+        break;
+      case 'journal':
+        icon = <BookOpen className="h-3.5 w-3.5 text-sky-400" />;
+        style = 'bg-sky-500/10 text-sky-300 border-sky-500/20';
+        break;
+      case 'book_note':
+      case 'course_note':
+        icon = <Bookmark className="h-3.5 w-3.5 text-yellow-400" />;
+        style = 'bg-yellow-500/10 text-yellow-300 border-yellow-500/20';
+        break;
+      case 'decision':
+        icon = <Check className="h-3.5 w-3.5 text-green-400" />;
+        style = 'bg-green-500/10 text-green-300 border-green-500/20';
+        break;
     }
+
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md border font-label text-[9px] uppercase tracking-wider font-bold ${style}`}>
+        {icon}
+        <span>{type.replace('_', ' ')}</span>
+      </span>
+    );
   };
 
   const inboxTypes = useMemo(() => {
@@ -314,7 +350,6 @@ function InboxContent() {
       }
       if (!matchesStatus) return false;
       if (typeFilter !== 'All' && item.type !== typeFilter) return false;
-      if (selectedTagFilter !== 'All' && (!item.tags || !item.tags.some((t) => t.toLowerCase() === selectedTagFilter.toLowerCase()))) return false;
       if (signalFilter === 'tagged' && (!item.tags || item.tags.length === 0)) return false;
       if (signalFilter === 'with_url' && !(item.url || item.source_url)) return false;
       if (signalFilter === 'with_content' && !item.content?.trim()) return false;
@@ -338,7 +373,7 @@ function InboxContent() {
       if (sortBy === 'oldest') return a.created_at.localeCompare(b.created_at);
       return b.created_at.localeCompare(a.created_at);
     });
-  }, [inboxItems, statusFilter, searchQuery, typeFilter, selectedTagFilter, signalFilter, sortBy]);
+  }, [inboxItems, statusFilter, searchQuery, typeFilter, signalFilter, sortBy]);
 
   const statusCounts = useMemo(() => {
     return {
@@ -351,13 +386,12 @@ function InboxContent() {
 
   const capturedToday = inboxItems.filter((item) => item.created_at?.split('T')[0] === getLocalDateString()).length;
   const hasSearch = searchQuery.trim().length > 0;
-  const activeRefinementCount = [typeFilter !== 'All', selectedTagFilter !== 'All', signalFilter !== 'all', hasSearch, sortBy !== 'newest']
+  const activeRefinementCount = [typeFilter !== 'All', signalFilter !== 'all', hasSearch, sortBy !== 'newest']
     .filter(Boolean)
     .length;
-  const activeFilterCount = [typeFilter !== 'All', selectedTagFilter !== 'All', signalFilter !== 'all', sortBy !== 'newest'].filter(Boolean).length;
+  const activeFilterCount = [typeFilter !== 'All', signalFilter !== 'all', sortBy !== 'newest'].filter(Boolean).length;
   const activeFilterLabels = [
     typeFilter !== 'All' ? `Type: ${typeFilter}` : null,
-    selectedTagFilter !== 'All' ? `Tag: ${selectedTagFilter}` : null,
     signalFilter !== 'all' ? `Signal: ${signalFilter.replace('_', ' ')}` : null,
     sortBy !== 'newest' ? `Sort: ${sortBy.replace('_', ' ')}` : null
   ].filter(Boolean) as string[];
@@ -365,7 +399,6 @@ function InboxContent() {
   const resetTriageControls = () => {
     setSearchQuery('');
     setTypeFilter('All');
-    setSelectedTagFilter('All');
     setSignalFilter('all');
     setSortBy('newest');
   };
@@ -798,23 +831,14 @@ function InboxContent() {
                 <div className="flex flex-wrap gap-1.5 items-center">
                   <span className="font-label text-[9px] uppercase tracking-wider text-secondary/70 font-bold mr-1">Tags:</span>
                   {selectedItem.tags && selectedItem.tags.length > 0 ? (
-                    selectedItem.tags.map((tag) => {
-                      const isSelected = selectedTagFilter.toLowerCase() === tag.toLowerCase();
-                      return (
-                        <button
-                          key={tag}
-                          type="button"
-                          onClick={() => setSelectedTagFilter(isSelected ? 'All' : tag)}
-                          className={`font-label text-[9px] border px-2 py-0.5 uppercase rounded-md cursor-pointer font-bold transition-colors ${
-                            isSelected
-                              ? 'border-accent bg-accent/20 text-accent ring-1 ring-accent'
-                              : 'border-accent/30 bg-accent/10 text-accent hover:bg-accent/20'
-                          }`}
-                        >
-                          {tag}
-                        </button>
-                      );
-                    })
+                    selectedItem.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="font-label text-[9px] border border-accent/30 bg-accent/10 text-accent px-2.5 py-0.5 uppercase rounded-md font-bold"
+                      >
+                        {tag}
+                      </span>
+                    ))
                   ) : (
                     <span className="font-label text-[9px] italic text-secondary">No tags set</span>
                   )}
@@ -1257,60 +1281,6 @@ function InboxContent() {
             </button>
           </div>
 
-          {/* Tag Cloud Filter Pills */}
-          {sortedTags.length > 0 && (
-            <div className="pt-2 border-t border-border/60 space-y-1.5">
-              <div className="flex items-center justify-between font-label text-[10px] uppercase font-bold text-secondary tracking-wider">
-                <div className="flex items-center gap-1.5">
-                  <Tag className="h-3 w-3 text-accent" />
-                  <span>Filter by Tag ({sortedTags.length})</span>
-                </div>
-                {selectedTagFilter !== 'All' && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTagFilter('All')}
-                    className="text-accent hover:underline text-[9px] uppercase font-bold cursor-pointer"
-                  >
-                    Clear Filter ({selectedTagFilter})
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                <button
-                  type="button"
-                  onClick={() => setSelectedTagFilter('All')}
-                  className={`font-label text-[10px] uppercase font-bold px-2.5 py-1 rounded-xl transition-all cursor-pointer ${
-                    selectedTagFilter === 'All'
-                      ? 'bg-primary text-on-primary shadow-sm'
-                      : 'bg-neutral-bg/80 border border-border text-secondary hover:text-primary hover:border-primary/50'
-                  }`}
-                >
-                  All Tags
-                </button>
-                {sortedTags.map(({ tag, count }) => {
-                  const isSelected = selectedTagFilter.toLowerCase() === tag.toLowerCase();
-                  return (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => setSelectedTagFilter(isSelected ? 'All' : tag)}
-                      className={`font-label text-[10px] uppercase font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer flex items-center gap-1.5 ${
-                        isSelected
-                          ? 'border-accent bg-accent/15 text-accent shadow-sm ring-1 ring-accent'
-                          : 'border-border bg-neutral-bg/60 text-secondary hover:border-accent/40 hover:text-primary'
-                      }`}
-                    >
-                      <span>{tag}</span>
-                      <span className={`text-[8px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-accent/30 text-accent font-black' : 'bg-surface-muted text-secondary/70'}`}>
-                        {count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
           <div className="md:hidden text-[11px] text-secondary min-h-[1rem]">
             {activeFilterLabels.length > 0 ? activeFilterLabels.join(' • ') : 'No filters applied'}
           </div>
@@ -1339,25 +1309,22 @@ function InboxContent() {
                   <div
                     key={item.id}
                     onClick={() => setSelectedItemId(item.id)}
-                    className={`app-panel-subtle p-4 space-y-2 relative transition-all cursor-pointer ${
+                    className={`app-panel-subtle p-4 space-y-2.5 relative transition-all duration-200 cursor-pointer rounded-2xl border ${
                       isSelected
-                        ? 'border-primary shadow-[0_12px_28px_rgba(26,28,30,0.08)] ring-1 ring-primary'
-                        : 'hover:border-secondary hover:bg-neutral-bg/75'
+                        ? 'border-accent bg-accent/5 ring-1 ring-accent/40 shadow-lg'
+                        : 'hover:border-accent/40 hover:bg-neutral-bg/75 hover:-translate-y-0.5'
                     }`}
                   >
                     <div className="flex justify-between items-start gap-3">
                       <div className="flex items-center space-x-2 min-w-0">
-                        {getTypeIcon(item.type)}
-                        <span className="font-label text-[9px] uppercase tracking-wider text-secondary font-bold truncate">
-                          {item.type}
-                        </span>
+                        {getTypeBadge(item.type)}
                       </div>
-                      <span className="font-label text-[8px] text-secondary shrink-0">
+                      <span className="font-label text-[9px] text-secondary/80 font-bold shrink-0">
                         {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       </span>
                     </div>
 
-                    <h4 className="font-sans text-sm font-semibold text-primary line-clamp-2 leading-snug">
+                    <h4 className="font-sans text-sm font-bold text-primary line-clamp-2 leading-snug">
                       {item.title}
                     </h4>
 
@@ -1369,34 +1336,22 @@ function InboxContent() {
 
                     <div className="flex items-center justify-between gap-3 pt-1">
                       <div className="flex flex-wrap gap-1 min-w-0">
-                        {(item.tags || []).slice(0, 4).map((tag) => {
-                          const isTagActive = selectedTagFilter.toLowerCase() === tag.toLowerCase();
-                          return (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTagFilter(isTagActive ? 'All' : tag);
-                              }}
-                              className={`font-label text-[8px] border px-1.5 py-0.5 uppercase rounded cursor-pointer transition-colors ${
-                                isTagActive
-                                  ? 'border-accent bg-accent/20 text-accent font-bold ring-1 ring-accent'
-                                  : 'border-secondary/20 bg-neutral-bg/60 text-secondary hover:border-secondary hover:text-primary'
-                              }`}
-                            >
-                              {tag}
-                            </button>
-                          );
-                        })}
+                        {(item.tags || []).slice(0, 4).map((tag) => (
+                          <span
+                            key={tag}
+                            className="font-label text-[8px] border border-secondary/20 bg-neutral-bg/60 text-secondary px-2 py-0.5 uppercase rounded-md font-semibold"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {(item.url || item.source_url) && (
-                          <span className="font-label text-[8px] uppercase text-accent border border-accent/20 bg-accent/5 px-1.5 py-0.5">
+                          <span className="font-label text-[8px] uppercase text-accent border border-accent/30 bg-accent/10 px-1.5 py-0.5 rounded font-bold">
                             Link
                           </span>
                         )}
-                        <ArrowRight className={`h-3.5 w-3.5 ${isSelected ? 'text-accent' : 'text-secondary/50'}`} />
+                        <ArrowRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? 'text-accent' : 'text-secondary/40'}`} />
                       </div>
                     </div>
                   </div>
