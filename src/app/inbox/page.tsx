@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useDashboard, InboxItem } from '@/context/DashboardContext';
 import { useToast } from '@/context/ToastContext';
@@ -8,6 +8,7 @@ import { supabase } from '@/utils/supabaseClient';
 import { INTAKE_IMAGES_BUCKET, isExternalAttachmentUrl } from '@/utils/storage';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { smartSearchMatch } from '@/utils/searchUtils';
 import PageShell from '@/components/ui/PageShell';
 import SectionHeader from '@/components/ui/SectionHeader';
 import EditorialCard from '@/components/ui/EditorialCard';
@@ -85,6 +86,30 @@ function InboxContent() {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [isAutoTaggingCurrent, setIsAutoTaggingCurrent] = useState(false);
   const [isAutoTaggingAll, setIsAutoTaggingAll] = useState(false);
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Focus search bar with '/' keyboard shortcut and clear with 'Esc'
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && (
+        activeEl.tagName === 'INPUT' || 
+        activeEl.tagName === 'TEXTAREA' || 
+        activeEl.hasAttribute('contenteditable')
+      );
+
+      if (e.key === '/' && !isTyping) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.key === 'Escape' && activeEl === searchInputRef.current) {
+        setSearchQuery('');
+        searchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Load itemId query param if present
   useEffect(() => {
@@ -356,16 +381,12 @@ function InboxContent() {
       return true;
     });
 
-    const searchedList = !searchQuery.trim()
-      ? list
-      : list.filter((item) => {
-          const query = searchQuery.toLowerCase();
-          return (
-            item.title.toLowerCase().includes(query) ||
-            (item.content && item.content.toLowerCase().includes(query)) ||
-            (item.tags && item.tags.some((t) => t.toLowerCase().includes(query)))
-          );
-        });
+    const searchedList = list.filter((item) =>
+      smartSearchMatch(
+        [item.title, item.content, item.summary, item.url, item.source_url, item.type, item.tags],
+        searchQuery
+      )
+    );
 
     return [...searchedList].sort((a, b) => {
       if (sortBy === 'title') return a.title.localeCompare(b.title);
@@ -1232,15 +1253,27 @@ function InboxContent() {
 
         <div className="space-y-3 font-label text-xs">
           <div className="flex gap-2 md:hidden">
-            <label className="flex items-center gap-2 bg-neutral-bg border border-border px-4 h-11 flex-1 rounded-2xl">
-              <Search className="h-4 w-4 text-secondary shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search title, content, or tags"
-                className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
-              />
+            <label className="flex items-center justify-between gap-2 bg-neutral-bg border border-border px-4 h-11 flex-1 rounded-2xl focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40 transition-all">
+              <div className="flex items-center gap-2 w-full min-w-0">
+                <Search className="h-4 w-4 text-secondary shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search title, content, or tags..."
+                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
+                />
+              </div>
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-secondary hover:text-primary p-1 cursor-pointer shrink-0"
+                  title="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </label>
             <button
               type="button"
@@ -1253,15 +1286,32 @@ function InboxContent() {
           </div>
 
           <div className="hidden md:grid md:grid-cols-1 xl:grid-cols-[minmax(0,1.4fr)_repeat(3,minmax(0,0.72fr))_auto] gap-3">
-            <label className="self-end h-11 flex items-center gap-2 bg-neutral-bg border border-border px-4 rounded-2xl">
-              <Search className="h-4 w-4 text-secondary shrink-0" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search title, content, or tags"
-                className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
-              />
+            <label className="self-end h-11 flex items-center justify-between gap-2 bg-neutral-bg border border-border px-4 rounded-2xl focus-within:border-accent focus-within:ring-1 focus-within:ring-accent/40 transition-all">
+              <div className="flex items-center gap-2 w-full min-w-0">
+                <Search className="h-4 w-4 text-secondary shrink-0" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search title, notes, links, or tags... (Press '/' to focus)"
+                  className="w-full bg-transparent text-primary font-sans focus:outline-none placeholder:text-secondary/60 text-sm"
+                />
+              </div>
+              {searchQuery ? (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="text-secondary hover:text-primary p-1 cursor-pointer shrink-0"
+                  title="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              ) : (
+                <kbd className="hidden lg:inline-block font-mono text-[9px] text-secondary/60 border border-border px-1.5 py-0.5 rounded bg-surface/50 shrink-0">
+                  /
+                </kbd>
+              )}
             </label>
 
             <Select label="Type" value={typeFilter} onChange={(e) => setTypeFilter(e.target.value as 'All' | InboxItem['type'])} className="bg-neutral-bg text-xs font-bold uppercase" options={inboxTypeOptions} />
@@ -1291,7 +1341,14 @@ function InboxContent() {
         <div className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-2 font-label text-[10px] uppercase tracking-wider text-secondary border-b border-border pb-2 px-1">
             <div>
-              <span className="block text-primary font-bold">{filteredSlips.length} slips visible</span>
+              <span className="block text-primary font-bold">
+                {filteredSlips.length} slips visible
+                {searchQuery.trim() && (
+                  <span className="ml-2 font-semibold text-accent normal-case">
+                    (matching &ldquo;{searchQuery.trim()}&rdquo;)
+                  </span>
+                )}
+              </span>
               <span>
                 {channelTabs.find((tab) => tab.key === statusFilter)?.label || 'Inbox'} channel
                 {typeFilter !== 'All' ? ` · ${typeFilter}` : ''}

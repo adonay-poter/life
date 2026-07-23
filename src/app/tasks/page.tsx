@@ -4,6 +4,7 @@ import React, { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDashboard, Task } from '@/context/DashboardContext';
 import { getLocalDateString } from '@/utils/dateUtils';
+import { smartSearchMatch } from '@/utils/searchUtils';
 import { useToast } from '@/context/ToastContext';
 import ConfirmDeleteModal from '@/components/ConfirmDeleteModal';
 import TaskDetailsModal from '@/components/TaskDetailsModal';
@@ -352,18 +353,11 @@ function TasksContent() {
       if (selectedCategory !== 'All' && task.category !== selectedCategory) return false;
       if (selectedPriorityFilter !== 'All' && task.priority !== selectedPriorityFilter) return false;
       if (selectedProjectFilter !== 'All' && task.project_id !== selectedProjectFilter) return false;
-      if (!query) return true;
-
       const parentProject = projects.find((p) => p.id === task.project_id);
-      const haystack = [
-        task.name,
-        task.description,
-        task.category,
-        task.priority,
-        parentProject?.name
-      ].filter(Boolean).join(' ').toLowerCase();
-
-      return haystack.includes(query);
+      return smartSearchMatch(
+        [task.name, task.description, task.category, task.priority, parentProject?.name],
+        searchQuery
+      );
     };
 
     return tasks.filter((task) => {
